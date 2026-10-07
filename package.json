@@ -10,13 +10,13 @@
   "dependencies": {
     "@react-three/fiber": "^9.7.0",
     "@types/three": "^0.185.4",
+    "framer-motion": "^11.15.0",
     "lucide-react": "^0.468.0",
-    "next": "15.1.0",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "next": "^15.5.27",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "three": "^0.185.1",
-    "typescript": "5.9.3",
-    "framer-motion": "^11.15.0"
+    "typescript": "5.9.3"
   },
   "devDependencies": {
     "@types/node": "^20",
