@@ -399,7 +399,7 @@ export default function StarChart({ onEngageWarp } = {}) {
           </div>
         </div>
 
-        <div className="relative flex-1 min-h-[320px] rounded-md overflow-hidden hud-panel">
+        <div className="relative flex-1 min-h-[320px] rounded-md overflow-hidden hud-panel hud-panel-raised">
           {/* 🌌 The permanent cinematic galaxy background (mounted once at the
               root layout) now shows straight through this glass viewport —
               no local canvas needed here any more. */}
@@ -828,7 +828,7 @@ export default function StarChart({ onEngageWarp } = {}) {
          ══════════════════════════════════════════════════ */}
       <div className="w-full lg:w-72 shrink-0 flex flex-col gap-3 min-h-0">
         {/* Fleet summary */}
-        <div className="scope-frame scope-frame-sm p-3 pt-4 hud-panel space-y-2 shrink-0">
+        <div className="scope-frame scope-frame-sm p-3 pt-4 hud-panel hud-panel-dense space-y-2 shrink-0">
           <div className="font-scope text-[10px] text-slate-500 font-semibold uppercase tracking-widest border-b border-slate-900 pb-1 flex items-center justify-between">
             <span>Fleet Survey Index</span>
             <Gauge className="w-3 h-3" />
@@ -922,7 +922,7 @@ export default function StarChart({ onEngageWarp } = {}) {
         </div>
 
         {/* Contact roster */}
-        <div className="scope-frame scope-frame-sm flex-1 min-h-0 hud-panel flex flex-col overflow-hidden">
+        <div className="scope-frame scope-frame-sm flex-1 min-h-0 hud-panel hud-panel-dense flex flex-col overflow-hidden">
           <div className="px-3 py-1.5 pt-2.5 font-scope text-[10px] text-slate-500 font-semibold uppercase tracking-widest border-b border-slate-900 bg-slate-900/30 shrink-0">
             Contact Roster // {roster.length} Bodies
           </div>

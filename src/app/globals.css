@@ -896,3 +896,124 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .typed-caret { animation: none; }
 }
+
+
+/* ==========================================================
+   🪟 HUD PANEL SYSTEM — density, elevation, header, states.
+   Compose on top of .hud-panel (or use <Panel>):
+     density:   (default airy) | .hud-panel-dense  (text-heavy)
+     elevation: .hud-panel-raised | (default) | .hud-panel-flat | .hud-panel-inset
+     states:    .hud-panel-interactive, .hud-panel-active, .hud-panel-locked
+     extras:    .hud-panel-header, .hud-panel-scan
+   ========================================================== */
+
+/* Readability: for panels full of small text (lessons, editor chrome, lists).
+   The airy default lets the galaxy through; this one keeps text crisp. */
+.hud-panel-dense {
+  background: linear-gradient(180deg, rgba(8, 18, 38, 0.68) 0%, rgba(2, 6, 23, 0.54) 100%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  backdrop-filter: blur(16px) saturate(130%);
+}
+
+/* Elevation: raised = the main surface, flat = a card inside it,
+   inset = a well (code output, readouts). */
+.hud-panel-raised {
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.38),
+    0 0 26px rgba(var(--panel-rgb), 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 36px rgba(var(--panel-rgb), 0.05);
+}
+.hud-panel-flat {
+  background: rgba(var(--panel-rgb), 0.05);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: rgba(var(--panel-rgb), 0.14);
+  box-shadow: none;
+}
+.hud-panel-flat::before,
+.hud-panel-inset::before { display: none; }
+.hud-panel-inset {
+  background: rgba(2, 6, 23, 0.58);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: rgba(var(--panel-rgb), 0.12);
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Performance: a panel inside a panel never blurs again. Tint only. */
+.hud-panel .hud-panel {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Header strip: icon, title in the display face, actions on the right. */
+.hud-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid rgba(var(--panel-rgb), 0.16);
+  background: linear-gradient(90deg, rgba(var(--panel-rgb), 0.12), transparent 75%);
+}
+.hud-panel-header .hud-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* States: hover/focus for clickable cards, a selected outline, a locked look. */
+.hud-panel-interactive {
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.hud-panel-interactive:hover {
+  border-color: rgba(var(--panel-rgb), 0.55);
+  box-shadow:
+    0 0 30px rgba(var(--panel-rgb), 0.18),
+    inset 0 0 36px rgba(var(--panel-rgb), 0.08);
+}
+.hud-panel-interactive:focus-visible {
+  outline: 2px solid rgb(var(--panel-rgb));
+  outline-offset: 3px;
+}
+.hud-panel-active {
+  border-color: rgba(var(--panel-rgb), 0.8);
+  box-shadow:
+    0 0 32px rgba(var(--panel-rgb), 0.24),
+    inset 0 0 36px rgba(var(--panel-rgb), 0.09);
+}
+.hud-panel-locked {
+  opacity: 0.55;
+  filter: saturate(0.5);
+  cursor: not-allowed;
+}
+
+/* A slow light line drifting down a key panel. Use sparingly. */
+.hud-panel-scan { overflow: hidden; }
+.hud-panel-scan::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 40%;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(var(--panel-rgb), 0.07), transparent);
+  transform: translateY(-100%);
+  animation: hud-panel-scan 7s linear infinite;
+}
+@keyframes hud-panel-scan { to { transform: translateY(260%); } }
+
+/* No backdrop-filter support: fall back to a more opaque fill so text stays readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hud-panel { background: rgba(6, 14, 32, 0.82); }
+  .hud-panel-flat { background: rgba(var(--panel-rgb), 0.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-panel-interactive { transition: none; }
+  .hud-panel-scan::after { animation: none; display: none; }
+}
