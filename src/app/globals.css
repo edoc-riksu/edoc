@@ -878,3 +878,21 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .hud-panel { -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
+
+
+/* ==========================================================
+   ⌨️ TYPED TEXT caret — blinking block after typed sentences.
+   ========================================================== */
+.typed-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 0.15em;
+  vertical-align: -0.12em;
+  background: currentColor;
+  animation: typed-caret-blink 1s steps(1) infinite;
+}
+@keyframes typed-caret-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .typed-caret { animation: none; }
+}
