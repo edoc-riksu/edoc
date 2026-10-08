@@ -373,11 +373,11 @@ export default function StarChart({ onEngageWarp } = {}) {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-full gap-4 font-mono text-cyan-400 animate-fade-in">
+    <div className="flex flex-col lg:flex-row h-full gap-4 font-mono text-cyan-400 animate-fade-in overflow-y-auto lg:overflow-visible overscroll-contain scroll-smooth pr-1 lg:pr-0">
       {/* ══════════════════════════════════════════════════
           📡 PRIMARY RADAR DISH
          ══════════════════════════════════════════════════ */}
-      <div className="flex-1 min-h-0 flex flex-col gap-3">
+      <div className="shrink-0 lg:shrink lg:flex-1 lg:min-h-0 flex flex-col gap-3">
         <div className="flex items-start justify-between border-b border-slate-900 pb-2 shrink-0">
           <div>
             <h1 className="font-scope text-base font-semibold uppercase tracking-[0.15em] text-cyan-400 text-shadow-cyan flex items-center gap-2">
@@ -399,7 +399,7 @@ export default function StarChart({ onEngageWarp } = {}) {
           </div>
         </div>
 
-        <div className="relative flex-1 min-h-[320px] rounded-md overflow-hidden hud-panel hud-panel-raised">
+        <div className="relative flex-1 min-h-[360px] rounded-md overflow-hidden hud-panel hud-panel-raised">
           {/* 🌌 The permanent cinematic galaxy background (mounted once at the
               root layout) now shows straight through this glass viewport —
               no local canvas needed here any more. */}
@@ -922,7 +922,7 @@ export default function StarChart({ onEngageWarp } = {}) {
         </div>
 
         {/* Contact roster */}
-        <div className="scope-frame scope-frame-sm flex-1 min-h-0 hud-panel hud-panel-dense flex flex-col overflow-hidden">
+        <div className="scope-frame scope-frame-sm flex-1 min-h-[260px] max-h-[420px] lg:min-h-0 lg:max-h-none hud-panel hud-panel-dense flex flex-col overflow-hidden">
           <div className="px-3 py-1.5 pt-2.5 font-scope text-[10px] text-slate-500 font-semibold uppercase tracking-widest border-b border-slate-900 bg-slate-900/30 shrink-0">
             Contact Roster // {roster.length} Bodies
           </div>
