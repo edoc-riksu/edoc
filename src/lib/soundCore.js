@@ -159,6 +159,19 @@ const VOICES = {
     }
   },
 
+  // A full mechanical-keyboard keystroke for typed text: key-down thud with a
+  // bright contact crack, then a faint key-up. Pitch wobbles a little per hit
+  // so a run of letters sounds like fingers, not a machine gun.
+  KEY: {
+    throttle: 10,
+    render: (ctx) => {
+      const v = 0.9 + Math.random() * 0.25;
+      partial(ctx, { type: "sine", from: 190 * v, to: 105 * v, dur: 0.05, peak: 0.13 });
+      transient(ctx, { dur: 0.032, peak: 0.2, freq: 2700 * v, q: 2.2 });
+      transient(ctx, { at: 0.04, dur: 0.02, peak: 0.05, freq: 1900 * v, q: 3 });
+    }
+  },
+
   // Stepper motor slews onto target, then the gimbal clamp seats.
   LOCK: {
     throttle: 90,

@@ -6,9 +6,8 @@ const KEY_MS = 40; // about 25 characters a second
 
 /**
  * ⌨️ TYPED TEXT — types one sentence a character at a time and fires the
- * existing TYPE key-switch voice for every character (spaces stay silent).
- * playSystemSound already respects the Sound toggle. With reduced motion on,
- * the sentence appears at once and no ticks play.
+ * KEY keystroke voice for every character (spaces stay silent).
+ * playSystemSound already respects the Sound toggle.
  * Screen readers get the full sentence immediately, never the half-typed one.
  */
 export function TypedText({ text, speed = KEY_MS, startDelay = 0, onDone, caret = true, className = "" }) {
@@ -20,12 +19,8 @@ export function TypedText({ text, speed = KEY_MS, startDelay = 0, onDone, caret 
   soundRef.current = playSystemSound;
 
   useEffect(() => {
-    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      setCount(text.length);
-      const t = setTimeout(() => doneRef.current?.(), 0);
-      return () => clearTimeout(t);
-    }
+    // Typing is the point of this component, so it runs even with reduced
+    // motion on (the caret just stops blinking, see globals.css).
     setCount(0);
     let i = 0;
     let timer;
@@ -33,7 +28,7 @@ export function TypedText({ text, speed = KEY_MS, startDelay = 0, onDone, caret 
       i += 1;
       setCount(i);
       const ch = text[i - 1];
-      if (ch && ch !== " ") soundRef.current("TYPE");
+      if (ch && ch !== " ") soundRef.current("KEY");
       if (i >= text.length) {
         doneRef.current?.();
         return;
