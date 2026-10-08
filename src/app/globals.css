@@ -3,16 +3,26 @@
 
 /* ==========================================================
    🛰️  SCOPE DESIGN TOKENS
-   Registering --font-scope in @theme auto-generates the
-   `font-scope` Tailwind utility (Tailwind v4 namespaced tokens).
-   Orbitron is the HUD display face: headings, nav, labels and
-   body copy. Raw telemetry, code and log buffers stay on font-mono,
-   matching how real instrument panels mix a clean display face
-   with a monospace data face.
+   Two faces, used on purpose:
+   - font-display (Orbitron): only the main texts — headings
+     (h1-h3), the five top-level nav labels, the edoc wordmark and
+     panel titles (.hud-label).
+   - Everything else is a plain sans-serif (--font-sans). The
+     existing `font-scope` utility now points at that sans stack, so
+     small labels, body copy and buttons need no changes.
+   Raw telemetry, code and log buffers stay on font-mono.
+   To make another piece of text Orbitron, add `font-display`.
    ========================================================== */
 @theme {
-  --font-scope: "Orbitron", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Orbitron", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Orbitron", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-scope: var(--font-sans);
+}
+
+/* Main headings use the display face. Unlayered on purpose, so a stray
+   font-mono / font-scope class on a heading can't switch it back. */
+h1, h2, h3 {
+  font-family: var(--font-display);
 }
 
 /* ==========================================================
@@ -43,7 +53,7 @@ html, body {
   overflow-x: hidden;
   color: #06b6d4;
   -webkit-font-smoothing: antialiased;
-  font-family: var(--font-scope);
+  font-family: var(--font-sans);
 }
 
 /* Glowing sci-fi HUD scanlines utility filter overlay */
@@ -857,7 +867,7 @@ html, body {
 
 /* Small uppercase label that sits on a panel, in Orbitron. */
 .hud-label {
-  font-family: var(--font-scope);
+  font-family: var(--font-display);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.22em;
