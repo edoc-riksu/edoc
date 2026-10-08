@@ -1,0 +1,72 @@
+{
+  "id": "py-001",
+  "version": 1,
+  "language": "python",
+  "title": "Sum of Two Integers",
+  "difficulty": "easy",
+  "module": "python-basics",
+  "concepts": ["input-output", "arithmetic"],
+  "problem": "Given two integers on a single line of standard input, separated by a space, print their sum.",
+  "starter_code": "# Read two integers from a single line of input, separated by a space.\n# Print their sum.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "2 3",
+        "expected_output": "5",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "10 -4",
+        "expected_output": "6",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "0 0",
+        "expected_output": "0",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "100 200",
+        "expected_output": "300",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "-5 -7",
+        "expected_output": "-12",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "999999 1",
+        "expected_output": "1000000",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "7 -7",
+        "expected_output": "0",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Think about how to read two numbers from a single line of input.",
+    "2": "You can use input().split() to get the two numbers as strings, then convert each to int.",
+    "3": "a, b = map(int, input().split()); print(a + b)"
+  },
+
+  "failure_explanation": "Make sure you convert the input to integers before adding them - adding the raw strings concatenates them instead of summing, and the result must be printed, not just computed or returned."
+}
