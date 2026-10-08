@@ -277,7 +277,7 @@ function NavTab({ icon: Icon, label, active, onClick, coord }) {
     <button
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`group relative flex items-center gap-2 px-3 py-2 shrink-0 font-scope text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] border transition-all duration-200 cursor-pointer hover:-translate-y-0.5 ${
+      className={`group relative flex items-center gap-2 px-3 py-2 shrink-0 font-display text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] border transition-all duration-200 cursor-pointer hover:-translate-y-0.5 ${
         active
           ? "bg-cyan-950/40 border-cyan-500/60 text-cyan-300"
           : "bg-transparent border-transparent text-slate-500 hover:text-cyan-300 hover:border-cyan-500/25 hover:bg-slate-900/40"

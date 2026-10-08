@@ -1,18 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 /* ==========================================================
    🛰️  SCOPE DESIGN TOKENS
-   Registering --font-scope in @theme auto-generates the
-   `font-scope` Tailwind utility (Tailwind v4 namespaced tokens).
-   Rajdhani stands in for Solar System Scope's proprietary
-   Gotham/SF-Fourche pairing: thin, wide-tracked, geometric —
-   used for headings and HUD labels. Raw telemetry, code and log
-   buffers stay on font-mono, matching how real instrument panels
-   mix a clean display face with a monospace data face.
+   Two faces, used on purpose:
+   - font-display (Orbitron): only the main texts — headings
+     (h1-h3), the five top-level nav labels, the edoc wordmark and
+     panel titles (.hud-label).
+   - Everything else is a plain sans-serif (--font-sans). The
+     existing `font-scope` utility now points at that sans stack, so
+     small labels, body copy and buttons need no changes.
+   Raw telemetry, code and log buffers stay on font-mono.
+   To make another piece of text Orbitron, add `font-display`.
    ========================================================== */
 @theme {
-  --font-scope: "Rajdhani", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Orbitron", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-scope: var(--font-sans);
+}
+
+/* Main headings use the display face. Unlayered on purpose, so a stray
+   font-mono / font-scope class on a heading can't switch it back. */
+h1, h2, h3 {
+  font-family: var(--font-display);
 }
 
 /* ==========================================================
@@ -43,6 +53,7 @@ html, body {
   overflow-x: hidden;
   color: #06b6d4;
   -webkit-font-smoothing: antialiased;
+  font-family: var(--font-sans);
 }
 
 /* Glowing sci-fi HUD scanlines utility filter overlay */
@@ -808,3 +819,201 @@ html, body {
 .glow-emerald { box-shadow: 0 0 55px -10px rgba(16, 185, 129, 0.35); }
 .glow-purple { box-shadow: 0 0 55px -10px rgba(168, 85, 247, 0.35); }
 .glow-cyan { box-shadow: 0 0 55px -10px rgba(34, 211, 238, 0.35); }
+
+
+/* ==========================================================
+   🪟 HUD PANEL — the one shared glass panel.
+   Translucent so the galaxy shows through, with corner
+   brackets and a faint inner glow. Tint follows
+   --hud-accent-rgb, so Night/Day Vision recolours it.
+   Use <Panel> (src/components/ui/Panel.js) or the .hud-panel
+   class directly. Never add an opaque full-screen background
+   behind it.
+   ========================================================== */
+.hud-panel {
+  --panel-rgb: var(--hud-accent-rgb);
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(10, 22, 44, 0.34) 0%, rgba(2, 6, 23, 0.20) 100%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(var(--panel-rgb), 0.22);
+  border-radius: 2px;
+  box-shadow:
+    0 0 24px rgba(var(--panel-rgb), 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 36px rgba(var(--panel-rgb), 0.04);
+}
+/* Corner brackets: two hairlines per corner, drawn as gradients. */
+.hud-panel::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  --b: rgb(var(--panel-rgb));
+  background:
+    linear-gradient(var(--b), var(--b)) top left / 14px 2px no-repeat,
+    linear-gradient(var(--b), var(--b)) top left / 2px 14px no-repeat,
+    linear-gradient(var(--b), var(--b)) top right / 14px 2px no-repeat,
+    linear-gradient(var(--b), var(--b)) top right / 2px 14px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom left / 14px 2px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom left / 2px 14px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / 14px 2px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / 2px 14px no-repeat;
+  opacity: 0.85;
+}
+.hud-panel-danger { --panel-rgb: 248, 113, 113; }
+.hud-panel-warn { --panel-rgb: 251, 191, 36; }
+
+/* Small uppercase label that sits on a panel, in Orbitron. */
+.hud-label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(var(--hud-accent-rgb), 0.85);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-panel { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+
+/* ==========================================================
+   ⌨️ TYPED TEXT caret — blinking block after typed sentences.
+   ========================================================== */
+.typed-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 0.15em;
+  vertical-align: -0.12em;
+  background: currentColor;
+  animation: typed-caret-blink 1s steps(1) infinite;
+}
+@keyframes typed-caret-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .typed-caret { animation: none; }
+}
+
+
+/* ==========================================================
+   🪟 HUD PANEL SYSTEM — density, elevation, header, states.
+   Compose on top of .hud-panel (or use <Panel>):
+     density:   (default airy) | .hud-panel-dense  (text-heavy)
+     elevation: .hud-panel-raised | (default) | .hud-panel-flat | .hud-panel-inset
+     states:    .hud-panel-interactive, .hud-panel-active, .hud-panel-locked
+     extras:    .hud-panel-header, .hud-panel-scan
+   ========================================================== */
+
+/* Readability: for panels full of small text (lessons, editor chrome, lists).
+   The airy default lets the galaxy through; this one keeps text crisp. */
+.hud-panel-dense {
+  background: linear-gradient(180deg, rgba(8, 18, 38, 0.68) 0%, rgba(2, 6, 23, 0.54) 100%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  backdrop-filter: blur(16px) saturate(130%);
+}
+
+/* Elevation: raised = the main surface, flat = a card inside it,
+   inset = a well (code output, readouts). */
+.hud-panel-raised {
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.38),
+    0 0 26px rgba(var(--panel-rgb), 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 36px rgba(var(--panel-rgb), 0.05);
+}
+.hud-panel-flat {
+  background: rgba(var(--panel-rgb), 0.05);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: rgba(var(--panel-rgb), 0.14);
+  box-shadow: none;
+}
+.hud-panel-flat::before,
+.hud-panel-inset::before { display: none; }
+.hud-panel-inset {
+  background: rgba(2, 6, 23, 0.58);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: rgba(var(--panel-rgb), 0.12);
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Performance: a panel inside a panel never blurs again. Tint only. */
+.hud-panel .hud-panel {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Header strip: icon, title in the display face, actions on the right. */
+.hud-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid rgba(var(--panel-rgb), 0.16);
+  background: linear-gradient(90deg, rgba(var(--panel-rgb), 0.12), transparent 75%);
+}
+.hud-panel-header .hud-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* States: hover/focus for clickable cards, a selected outline, a locked look. */
+.hud-panel-interactive {
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.hud-panel-interactive:hover {
+  border-color: rgba(var(--panel-rgb), 0.55);
+  box-shadow:
+    0 0 30px rgba(var(--panel-rgb), 0.18),
+    inset 0 0 36px rgba(var(--panel-rgb), 0.08);
+}
+.hud-panel-interactive:focus-visible {
+  outline: 2px solid rgb(var(--panel-rgb));
+  outline-offset: 3px;
+}
+.hud-panel-active {
+  border-color: rgba(var(--panel-rgb), 0.8);
+  box-shadow:
+    0 0 32px rgba(var(--panel-rgb), 0.24),
+    inset 0 0 36px rgba(var(--panel-rgb), 0.09);
+}
+.hud-panel-locked {
+  opacity: 0.55;
+  filter: saturate(0.5);
+  cursor: not-allowed;
+}
+
+/* A slow light line drifting down a key panel. Use sparingly. */
+.hud-panel-scan { overflow: hidden; }
+.hud-panel-scan::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 40%;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(var(--panel-rgb), 0.07), transparent);
+  transform: translateY(-100%);
+  animation: hud-panel-scan 7s linear infinite;
+}
+@keyframes hud-panel-scan { to { transform: translateY(260%); } }
+
+/* No backdrop-filter support: fall back to a more opaque fill so text stays readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hud-panel { background: rgba(6, 14, 32, 0.82); }
+  .hud-panel-flat { background: rgba(var(--panel-rgb), 0.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-panel-interactive { transition: none; }
+  .hud-panel-scan::after { animation: none; display: none; }
+}

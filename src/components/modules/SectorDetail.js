@@ -222,7 +222,7 @@ export default function SectorDetail({ sector, onBack }) {
         <ChevronLeft className="w-3.5 h-3.5" /> Return to Syllabus Map
       </button>
 
-      <div className="relative z-10 flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto pr-1">
+      <div className="relative z-10 flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-y-auto overscroll-contain scroll-smooth pr-1">
         {/* MAIN COLUMN */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           {/* HERO STRIP */}
@@ -264,7 +264,7 @@ export default function SectorDetail({ sector, onBack }) {
               boxed timeline. `state` and every click handler below are the
               exact same ones the flat version used — only the markup and
               classes around them changed. */}
-          <div className="scope-frame flex-1 bg-slate-950/40 border border-slate-900 p-4 sm:p-5 backdrop-blur-md relative overflow-hidden">
+          <div className="scope-frame shrink-0 bg-slate-950/40 border border-slate-900 p-4 sm:p-5 backdrop-blur-md relative overflow-hidden">
             <div className="flex items-center gap-3 mb-5 relative z-10">
               <div className={`w-7 h-7 rounded-full border flex items-center justify-center font-scope text-[11px] font-bold shrink-0 ${isLocked ? "border-slate-800 text-slate-700" : "border-cyan-500/60 text-cyan-400"}`}>1</div>
               <h2 className="font-scope text-[13px] font-semibold uppercase tracking-wide text-slate-200">Core Directives // Flight Coordinate Path</h2>
