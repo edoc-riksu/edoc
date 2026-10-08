@@ -1,0 +1,44 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      PISTON_BASE_URL: http://piston:2000
+      ENCOUNTERS_DIR: /app/encounters
+      LOG_LEVEL: INFO
+    depends_on:
+      - piston
+
+  piston:
+    image: ghcr.io/engineer-man/piston
+    privileged: true
+    ports:
+      - "2000:2000"
+    volumes:
+      - piston_data:/piston/packages
+
+  # Not wired into the backend yet (no SQLAlchemy/DB code in app/ as of Day 1).
+  # Defined here so Backend 2's platform work and our later persistence can
+  # plug in without changing this compose file. See README "Deferred" section.
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: edoc
+      POSTGRES_PASSWORD: edoc
+      POSTGRES_DB: edoc
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  piston_data:
+  postgres_data:
