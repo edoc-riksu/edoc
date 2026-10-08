@@ -1,12 +1,25 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import StartIntro from "../components/ui/StartIntro";
+import Button from "../components/ui/Button";
 import SpaceWindshield from "../components/SpaceWindshield";
 import { usePilot } from "../context/PilotContext";
 import { Compass, Radio, ArrowDown, ShieldAlert } from "lucide-react";
 
 export default function CosmicJourneyLaunchpad() {
   const { fuelCells, setWarpSpeed, setTargetVirtualScroll, virtualScroll } = usePilot();
+  const router = useRouter();
+  const [starting, setStarting] = useState(false);
+
+  // Start buttons open the typed welcome first, then hand off to the cockpit.
+  // Modified clicks (new tab etc.) keep the plain link behaviour.
+  const startJourney = (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    setStarting(true);
+  };
 
   // 🎥 CALIBRATING GLOBAL WINDOW SCROLL VECTOR PATHS
   useEffect(() => {
@@ -44,6 +57,7 @@ export default function CosmicJourneyLaunchpad() {
 
   return (
     <div className="relative w-full min-h-[400vh] bg-black font-mono text-cyan-400 select-none antialiased">
+      {starting && <StartIntro onDone={() => router.push("/cockpit")} />}
       
       {/* 🌌 HARDWARE-ACCELERATED HIGH-FIDELITY WEBGL UNIVERSE WINDSHIELD */}
       <div className="fixed inset-0 z-0 w-screen h-screen pointer-events-auto">
@@ -56,7 +70,7 @@ export default function CosmicJourneyLaunchpad() {
           <div className="flex items-center gap-3">
             <Compass className="w-5 h-5 text-cyan-400 animate-spin-slow" />
             <div className="flex flex-col">
-              <span className="font-scope text-sm font-semibold tracking-[0.2em] text-slate-100 uppercase leading-none">edoc</span>
+              <span className="font-display text-sm font-semibold tracking-[0.2em] text-slate-100 uppercase leading-none">edoc</span>
               <span className="text-[8px] text-cyan-500/50 font-bold uppercase tracking-wider mt-0.5">JOURNEY TRACK // PLAYLIST_EMULATION</span>
             </div>
           </div>
@@ -64,12 +78,9 @@ export default function CosmicJourneyLaunchpad() {
             <div className="flex items-center gap-1.5"><Radio className="w-3.5 h-3.5 animate-pulse text-emerald-400" /> Link Active</div>
             <div>Energy <span className="text-amber-400 font-bold">{fuelCells} CLS</span></div>
           </div>
-          <Link
-            href="/cockpit"
-            className="scope-btn scope-frame scope-frame-sm font-scope text-[11px] font-semibold tracking-[0.15em] uppercase bg-cyan-950/50 border border-cyan-500/40 px-4 py-2 text-cyan-400 hover:bg-cyan-400 hover:text-black transition-all duration-300"
-          >
+          <Button as={Link} href="/cockpit" onClick={startJourney} size="sm">
             Bridge Deck →
-          </Link>
+          </Button>
         </header>
       </div>
 
@@ -91,9 +102,9 @@ export default function CosmicJourneyLaunchpad() {
               No list menus. Pilot through real cosmic coordinate streams. Scan code anomalies inside high-danger planetary spheres to patch engine grids.
             </p>
             <div className="pt-2 flex items-center gap-3 pointer-events-auto">
-              <Link href="/cockpit" className="scope-btn scope-frame scope-frame-sm scope-glow font-scope text-[11px] font-semibold tracking-wide uppercase bg-cyan-600 text-slate-100 px-5 py-2.5 hover:brightness-110 transition">
+              <Button as={Link} href="/cockpit" onClick={startJourney} variant="primary" className="scope-glow">
                 Launch Jump Sequence
-              </Link>
+              </Button>
               <div className="text-[9px] text-slate-500 font-bold uppercase flex items-center gap-1 animate-pulse">
                 <span>Scroll down to travel</span> <ArrowDown className="w-3 h-3 text-cyan-400" />
               </div>

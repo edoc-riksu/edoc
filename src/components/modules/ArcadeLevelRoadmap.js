@@ -77,7 +77,7 @@ export default function ArcadeLevelRoadmap({ planetName, lessons, onLaunchMissio
               </motion.button>
 
               {/* Floating label box pinned directly beneath the milestone capsule node */}
-              <div className="mt-2 bg-slate-950/70 border border-slate-800 backdrop-blur-sm rounded-md px-3 py-1 max-w-[150px] text-center shadow-md">
+              <div className="mt-2 hud-panel hud-panel-flat px-3 py-1 max-w-[150px] text-center">
                 <p className="text-[10px] font-mono font-bold truncate text-slate-300 uppercase tracking-tight">
                   {lesson.name}
                 </p>

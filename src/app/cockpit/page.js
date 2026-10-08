@@ -5,6 +5,7 @@ import HudScreens from "../../components/HudScreens";
 import BiometricLinkModal from "../../components/ui/BiometricLinkModal";
 import TravelSequence from "../../components/ui/TravelSequence";
 import CockpitDial from "../../components/ui/CockpitDial";
+import Button from "../../components/ui/Button";
 import { usePilot } from "../../context/PilotContext";
 import { findSector } from "../../lib/planetarySystem";
 import { Terminal, Shield, Users, Radio, Zap, ShieldAlert, LogIn, Sun, Moon, Eye, EyeOff, Gauge, UserRound } from "lucide-react";
@@ -181,10 +182,9 @@ export default function HyperGamingCockpitBridge() {
               tipSide="bottom"
               onClick={toggleNightVision}
             />
-            <button onClick={() => (isPilotLoggedIn ? disconnectPilot() : beginBiometricLink())} className={`scope-btn scope-frame scope-frame-sm flex items-center gap-1.5 px-3 py-1.5 font-scope text-[11px] font-semibold tracking-[0.15em] uppercase border transition-all duration-200 cursor-pointer hover:-translate-y-0.5 ${isPilotLoggedIn ? "bg-emerald-950/40 border-emerald-500/50 text-emerald-400" : "bg-cyan-950/30 border-cyan-500/50 text-cyan-400"}`}>
-              <LogIn className="w-3 h-3" />
+            <Button size="sm" icon={LogIn} tone={isPilotLoggedIn ? "success" : "default"} onClick={() => (isPilotLoggedIn ? disconnectPilot() : beginBiometricLink())}>
               {isPilotLoggedIn ? "Disconnect" : "Biometric Link"}
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -277,7 +277,7 @@ function NavTab({ icon: Icon, label, active, onClick, coord }) {
     <button
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`group relative flex items-center gap-2 px-3 py-2 shrink-0 font-scope text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] border transition-all duration-200 cursor-pointer hover:-translate-y-0.5 ${
+      className={`group relative flex items-center gap-2 px-3 py-2 shrink-0 font-display text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] border transition-all duration-200 cursor-pointer hover:-translate-y-0.5 ${
         active
           ? "bg-cyan-950/40 border-cyan-500/60 text-cyan-300"
           : "bg-transparent border-transparent text-slate-500 hover:text-cyan-300 hover:border-cyan-500/25 hover:bg-slate-900/40"

@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { usePilot } from "../../context/PilotContext";
 import { Rocket, ChevronsRight } from "lucide-react";
+import { TypedText } from "./TypedText";
 
 /**
  * 🚀 CANOPY POWER-ON SEQUENCE
@@ -12,6 +13,10 @@ import { Rocket, ChevronsRight } from "lucide-react";
  * Runs once per browser tab (sessionStorage) so client-side route
  * changes never replay it. Any key or click skips straight to the
  * iris retraction.
+ *
+ * Each diagnostic line is typed out one character at a time, with a
+ * key-switch tick for every letter (see TypedText). A line finishes
+ * typing, its status lands, then the next line starts.
  */
 
 const DIAGNOSTIC_LINES = [
@@ -25,7 +30,9 @@ const DIAGNOSTIC_LINES = [
 ];
 
 const STORAGE_KEY = "HUD_BOOT_SEQUENCE_DONE";
-const LINE_INTERVAL = 260;
+// Key-switch voice is throttled to 18ms, so stay above that for a tick per letter.
+const TYPE_MS = 22;
+const LINE_PAUSE = 180;
 
 export default function BootSequence() {
   const { completeBoot, playSystemSound } = usePilot();
@@ -69,19 +76,20 @@ export default function BootSequence() {
     }
   }, [completeBoot]);
 
-  // Advance the diagnostics readout.
+  // Once every line has typed, hold a beat and open the canopy.
   useEffect(() => {
-    if (phase !== "running") return undefined;
-    if (lineIndex >= DIAGNOSTIC_LINES.length) {
-      const hold = window.setTimeout(() => finish.current(), 420);
-      return () => window.clearTimeout(hold);
-    }
-    const step = window.setTimeout(() => {
-      setLineIndex((i) => i + 1);
-      playSystemSound("TYPE");
-    }, LINE_INTERVAL);
-    return () => window.clearTimeout(step);
-  }, [phase, lineIndex, playSystemSound]);
+    if (phase !== "running" || lineIndex < DIAGNOSTIC_LINES.length) return undefined;
+    const hold = window.setTimeout(() => finish.current(), 420);
+    return () => window.clearTimeout(hold);
+  }, [phase, lineIndex]);
+
+  // The line being typed calls this when its last letter lands.
+  const lineTimer = useRef(null);
+  const onLineTyped = () => {
+    window.clearTimeout(lineTimer.current);
+    lineTimer.current = window.setTimeout(() => setLineIndex((i) => i + 1), LINE_PAUSE);
+  };
+  useEffect(() => () => window.clearTimeout(lineTimer.current), []);
 
   // Any input skips ahead.
   useEffect(() => {
@@ -156,8 +164,9 @@ export default function BootSequence() {
             {lineIndex < DIAGNOSTIC_LINES.length && (
               <div className="flex items-center gap-2 text-[10px] text-cyan-400">
                 <ChevronsRight className="w-2.5 h-2.5 shrink-0" />
-                <span className="truncate">{DIAGNOSTIC_LINES[lineIndex].label}</span>
-                <span className="animate-caret">▌</span>
+                <span className="truncate">
+                  <TypedText key={lineIndex} text={DIAGNOSTIC_LINES[lineIndex].label} speed={TYPE_MS} onDone={onLineTyped} />
+                </span>
               </div>
             )}
           </div>

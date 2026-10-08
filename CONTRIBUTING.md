@@ -19,3 +19,9 @@ Never commit keys. Copy `.env.example` to `.env.local`. Staging and production v
 
 ## Changing the API or database
 Post the new shape in the team channel before merging. Database changes ship as migration files, never by hand.
+
+## UI building blocks
+
+Use `<Panel>` (`src/components/ui/Panel.js`) or the `.hud-panel` classes for any glass surface instead of writing `bg-slate-950/xx backdrop-blur` by hand. Options: `density="dense"` for text-heavy panels, `elevation="raised | flat | inset"`, a header (`title`, `icon`, `actions`), and states (`interactive`, `active`, `locked`). Headings and the five nav labels use Orbitron (`font-display`); everything else is sans-serif.
+
+Use `<Button>` (`src/components/ui/Button.js`) or the `.hud-btn` classes for every button and button-like link instead of styling one by hand. Options: `variant="primary | secondary | ghost"` (one primary per screen), `tone="danger | success | warn"`, `size="sm | md | lg"`, `icon` / `iconRight`, `iconOnly` (always add an `aria-label`), `pressed` for toggles, `loading`, `full`, and `as={Link} href="..."` for navigation. Hover, focus, pressed, disabled and loading states come with it, and the colour follows Night/Day Vision.
