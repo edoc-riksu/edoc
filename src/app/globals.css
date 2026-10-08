@@ -1,18 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 /* ==========================================================
    🛰️  SCOPE DESIGN TOKENS
    Registering --font-scope in @theme auto-generates the
    `font-scope` Tailwind utility (Tailwind v4 namespaced tokens).
-   Rajdhani stands in for Solar System Scope's proprietary
-   Gotham/SF-Fourche pairing: thin, wide-tracked, geometric —
-   used for headings and HUD labels. Raw telemetry, code and log
-   buffers stay on font-mono, matching how real instrument panels
-   mix a clean display face with a monospace data face.
+   Orbitron is the HUD display face: headings, nav, labels and
+   body copy. Raw telemetry, code and log buffers stay on font-mono,
+   matching how real instrument panels mix a clean display face
+   with a monospace data face.
    ========================================================== */
 @theme {
-  --font-scope: "Rajdhani", ui-sans-serif, system-ui, sans-serif;
+  --font-scope: "Orbitron", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Orbitron", ui-sans-serif, system-ui, sans-serif;
 }
 
 /* ==========================================================
@@ -43,6 +43,7 @@ html, body {
   overflow-x: hidden;
   color: #06b6d4;
   -webkit-font-smoothing: antialiased;
+  font-family: var(--font-scope);
 }
 
 /* Glowing sci-fi HUD scanlines utility filter overlay */
@@ -808,3 +809,62 @@ html, body {
 .glow-emerald { box-shadow: 0 0 55px -10px rgba(16, 185, 129, 0.35); }
 .glow-purple { box-shadow: 0 0 55px -10px rgba(168, 85, 247, 0.35); }
 .glow-cyan { box-shadow: 0 0 55px -10px rgba(34, 211, 238, 0.35); }
+
+
+/* ==========================================================
+   🪟 HUD PANEL — the one shared glass panel.
+   Translucent so the galaxy shows through, with corner
+   brackets and a faint inner glow. Tint follows
+   --hud-accent-rgb, so Night/Day Vision recolours it.
+   Use <Panel> (src/components/ui/Panel.js) or the .hud-panel
+   class directly. Never add an opaque full-screen background
+   behind it.
+   ========================================================== */
+.hud-panel {
+  --panel-rgb: var(--hud-accent-rgb);
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(10, 22, 44, 0.34) 0%, rgba(2, 6, 23, 0.20) 100%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(var(--panel-rgb), 0.22);
+  border-radius: 2px;
+  box-shadow:
+    0 0 24px rgba(var(--panel-rgb), 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 36px rgba(var(--panel-rgb), 0.04);
+}
+/* Corner brackets: two hairlines per corner, drawn as gradients. */
+.hud-panel::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  --b: rgb(var(--panel-rgb));
+  background:
+    linear-gradient(var(--b), var(--b)) top left / 14px 2px no-repeat,
+    linear-gradient(var(--b), var(--b)) top left / 2px 14px no-repeat,
+    linear-gradient(var(--b), var(--b)) top right / 14px 2px no-repeat,
+    linear-gradient(var(--b), var(--b)) top right / 2px 14px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom left / 14px 2px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom left / 2px 14px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / 14px 2px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / 2px 14px no-repeat;
+  opacity: 0.85;
+}
+.hud-panel-danger { --panel-rgb: 248, 113, 113; }
+.hud-panel-warn { --panel-rgb: 251, 191, 36; }
+
+/* Small uppercase label that sits on a panel, in Orbitron. */
+.hud-label {
+  font-family: var(--font-scope);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(var(--hud-accent-rgb), 0.85);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-panel { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}

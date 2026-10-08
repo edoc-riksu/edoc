@@ -4,7 +4,7 @@ import { Compass, ArrowLeft } from "lucide-react";
 export default function NotFound() {
   return (
     <main className="relative min-h-screen w-full flex items-center justify-center px-4 font-mono text-cyan-400">
-      <div className="w-full max-w-lg bg-slate-950/25 backdrop-blur-md border border-cyan-500/20 shadow-[0_0_20px_rgba(0,240,255,0.05)] p-8 text-center">
+      <div className="w-full max-w-lg hud-panel p-8 text-center">
         <Compass className="w-8 h-8 mx-auto mb-4 text-amber-400 animate-pulse" aria-hidden="true" />
         <p className="text-[10px] tracking-[0.4em] uppercase text-cyan-500">Error 404 // Signal lost</p>
         <h1 className="mt-3 text-2xl font-extrabold tracking-wide text-white uppercase">

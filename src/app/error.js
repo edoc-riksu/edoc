@@ -13,7 +13,7 @@ export default function Error({ error, reset }) {
     <main className="relative min-h-screen w-full flex items-center justify-center px-4 font-mono text-cyan-400">
       <div
         role="alert"
-        className="w-full max-w-lg bg-slate-950/25 backdrop-blur-md border border-red-500/30 shadow-[0_0_20px_rgba(255,60,60,0.08)] p-8 text-center"
+        className="w-full max-w-lg hud-panel hud-panel-danger p-8 text-center"
       >
         <TriangleAlert className="w-8 h-8 mx-auto mb-4 text-red-400 animate-pulse" aria-hidden="true" />
         <p className="text-[10px] tracking-[0.4em] uppercase text-red-400">System fault // Avionics</p>

@@ -165,7 +165,7 @@ export default function FlightAcademy() {
 
       {/* SEARCH + TIER FILTER ROW */}
       <div className="flex flex-col sm:flex-row gap-2">
-        <div className="scope-frame scope-frame-sm flex items-center gap-2 px-3 py-1.5 bg-slate-950/25 backdrop-blur-md border border-cyan-500/20 shadow-[0_0_20px_rgba(0,240,255,0.05)] flex-1">
+        <div className="scope-frame scope-frame-sm flex items-center gap-2 px-3 py-1.5 hud-panel flex-1">
           <Search className="w-3.5 h-3.5 text-slate-600 shrink-0" />
           <input
             value={query}
