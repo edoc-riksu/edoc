@@ -40,7 +40,8 @@ export function TypedText({ text, speed = KEY_MS, startDelay = 0, onDone, caret 
       }
       // A little human wobble, plus a breath after punctuation.
       const pause = /[.,!?…]/.test(ch) ? 180 : 0;
-      timer = setTimeout(tick, speed * (0.7 + Math.random() * 0.7) + pause);
+      // Never closer than 20ms, so the 18ms-throttled key voice ticks on every letter.
+      timer = setTimeout(tick, Math.max(20, speed * (0.7 + Math.random() * 0.7)) + pause);
     };
     timer = setTimeout(tick, startDelay + speed);
     return () => clearTimeout(timer);
