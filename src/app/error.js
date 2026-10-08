@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { TriangleAlert, RotateCcw } from "lucide-react";
+import Button from "../components/ui/Button";
 
 export default function Error({ error, reset }) {
   useEffect(() => {
@@ -24,19 +25,12 @@ export default function Error({ error, reset }) {
           A system on the ship failed. Your saved progress is not affected. Try the module again, or head back to base.
         </p>
         <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            type="button"
-            onClick={() => reset()}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-[11px] font-semibold tracking-wide uppercase bg-cyan-600 text-slate-100 hover:brightness-110 transition cursor-pointer"
-          >
-            <RotateCcw size={14} aria-hidden="true" /> Try again
-          </button>
-          <Link
-            href="/"
-            className="px-5 py-2.5 text-[11px] tracking-wide uppercase text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition"
-          >
+          <Button variant="primary" icon={RotateCcw} onClick={() => reset()}>
+            Try again
+          </Button>
+          <Button as={Link} href="/" tone="warn">
             Back to base
-          </Link>
+          </Button>
         </div>
       </div>
     </main>

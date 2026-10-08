@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { usePilot } from "../../context/PilotContext";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { Fingerprint, ShieldCheck, X, ArrowRight } from "lucide-react";
+import Button from "./Button";
 
 const SCAN_DURATION_MS = 1400;
 
@@ -106,12 +107,9 @@ export default function BiometricLinkModal() {
                   maxLength={18}
                   className="w-full text-center bg-slate-900/60 border border-slate-800 focus:border-cyan-500/50 outline-hidden px-3 py-2 text-sm text-slate-100 placeholder-slate-600 font-mono uppercase tracking-wider transition-colors"
                 />
-                <button
-                  type="submit"
-                  className="scope-btn scope-frame scope-frame-sm w-full py-2 font-scope text-[11px] font-semibold uppercase tracking-widest border border-cyan-500/40 bg-cyan-950/30 text-cyan-400 hover:bg-cyan-400 hover:text-black transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  Initiate Scan <ArrowRight className="w-3 h-3" />
-                </button>
+                <Button type="submit" full iconRight={ArrowRight}>
+                  Initiate Scan
+                </Button>
               </>
             )}
 

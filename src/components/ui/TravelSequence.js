@@ -5,6 +5,7 @@ import { findSector } from "../../lib/planetarySystem";
 import { FastForward } from "lucide-react";
 import TypedLines from "./TypedText";
 import AtmosphericEntry from "./AtmosphericEntry";
+import Button from "./Button";
 
 // Each phase lasts at least this long (so the 3D flight never gets cut short)
 // and until its typed narration has finished, whichever is later.
@@ -157,14 +158,14 @@ export default function TravelSequence() {
         <span className="hidden sm:inline text-[10px] tracking-[0.2em] uppercase text-slate-400/80">
           Press <kbd className="px-1.5 py-0.5 rounded border border-white/20 bg-black/30 text-slate-200">S</kbd> to skip
         </span>
-        <button
+        <Button
+          iconOnly
+          variant="ghost"
+          icon={FastForward}
           onClick={skip}
           aria-label="Skip travel sequence"
           title="Skip (S)"
-          className="w-9 h-9 rounded-full flex items-center justify-center border border-white/15 bg-black/30 backdrop-blur-sm text-slate-300/80 hover:text-cyan-300 hover:border-cyan-400/50 transition-all cursor-pointer"
-        >
-          <FastForward className="w-3.5 h-3.5" />
-        </button>
+        />
       </div>
 
       {/* Progress — four small dots, no label */}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Compass, ArrowLeft } from "lucide-react";
+import Button from "../components/ui/Button";
 
 export default function NotFound() {
   return (
@@ -14,18 +15,12 @@ export default function NotFound() {
           The link you followed doesn&apos;t lead anywhere on the star chart. Return to the cockpit and plot a new course.
         </p>
         <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/cockpit"
-            className="px-5 py-2.5 text-[11px] font-semibold tracking-wide uppercase bg-cyan-600 text-slate-100 hover:brightness-110 transition"
-          >
+          <Button as={Link} href="/cockpit" variant="primary">
             Return to cockpit
-          </Link>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-[11px] tracking-wide uppercase text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition"
-          >
-            <ArrowLeft size={14} aria-hidden="true" /> Back to base
-          </Link>
+          </Button>
+          <Button as={Link} href="/" tone="warn" icon={ArrowLeft}>
+            Back to base
+          </Button>
         </div>
       </div>
     </main>

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import StartIntro from "../components/ui/StartIntro";
+import Button from "../components/ui/Button";
 import SpaceWindshield from "../components/SpaceWindshield";
 import { usePilot } from "../context/PilotContext";
 import { Compass, Radio, ArrowDown, ShieldAlert } from "lucide-react";
@@ -77,13 +78,9 @@ export default function CosmicJourneyLaunchpad() {
             <div className="flex items-center gap-1.5"><Radio className="w-3.5 h-3.5 animate-pulse text-emerald-400" /> Link Active</div>
             <div>Energy <span className="text-amber-400 font-bold">{fuelCells} CLS</span></div>
           </div>
-          <Link
-            href="/cockpit"
-            onClick={startJourney}
-            className="scope-btn scope-frame scope-frame-sm font-scope text-[11px] font-semibold tracking-[0.15em] uppercase bg-cyan-950/50 border border-cyan-500/40 px-4 py-2 text-cyan-400 hover:bg-cyan-400 hover:text-black transition-all duration-300"
-          >
+          <Button as={Link} href="/cockpit" onClick={startJourney} size="sm">
             Bridge Deck →
-          </Link>
+          </Button>
         </header>
       </div>
 
@@ -105,9 +102,9 @@ export default function CosmicJourneyLaunchpad() {
               No list menus. Pilot through real cosmic coordinate streams. Scan code anomalies inside high-danger planetary spheres to patch engine grids.
             </p>
             <div className="pt-2 flex items-center gap-3 pointer-events-auto">
-              <Link href="/cockpit" onClick={startJourney} className="scope-btn scope-frame scope-frame-sm scope-glow font-scope text-[11px] font-semibold tracking-wide uppercase bg-cyan-600 text-slate-100 px-5 py-2.5 hover:brightness-110 transition">
+              <Button as={Link} href="/cockpit" onClick={startJourney} variant="primary" className="scope-glow">
                 Launch Jump Sequence
-              </Link>
+              </Button>
               <div className="text-[9px] text-slate-500 font-bold uppercase flex items-center gap-1 animate-pulse">
                 <span>Scroll down to travel</span> <ArrowDown className="w-3 h-3 text-cyan-400" />
               </div>

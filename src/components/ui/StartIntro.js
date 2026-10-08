@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { usePilot } from "../../context/PilotContext";
 import TypedLines from "./TypedText";
+import Button from "./Button";
 
 const LINES = [
   "Welcome to edoc.",
@@ -53,14 +54,14 @@ export default function StartIntro({ onDone }) {
         className="max-w-2xl text-center font-display text-lg sm:text-2xl leading-relaxed tracking-[0.08em] text-slate-100 space-y-3"
       />
 
-      <button
+      <Button
+        iconOnly
         onClick={toggleSound}
+        icon={soundEnabled ? Volume2 : VolumeX}
         aria-label={soundEnabled ? "Mute sound" : "Turn sound on"}
-        aria-pressed={soundEnabled}
-        className="absolute bottom-6 right-6 w-10 h-10 rounded-md flex items-center justify-center border border-cyan-400/40 bg-slate-900/70 text-cyan-300 hover:bg-cyan-400/20 transition cursor-pointer"
-      >
-        {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-      </button>
+        pressed={soundEnabled}
+        className="absolute bottom-6 right-6"
+      />
     </div>
   );
 }
