@@ -1,12 +1,16 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { usePilot } from "../context/PilotContext";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 import { findSector, LESSON_XP } from "../lib/planetarySystem";
 import { evaluateSubmission } from "../lib/submissionValidator";
 import CombatViewport from "./ui/CombatViewport";
+import HullDisplay from "./ui/HullDisplay";
+import CompanionPanel from "./ui/CompanionPanel";
+import CodeEditor from "./ui/CodeEditor";
 import {
-  ShieldCheck, Cpu, Sliders, Play, AlertCircle, RefreshCw, Layers, Trophy,
-  ChevronLeft, ChevronRight, List, X, Lock, CheckCircle2, HelpCircle, Sparkles, SendHorizontal,
+  ShieldCheck, ShieldAlert, Cpu, Sliders, Play, AlertCircle, RefreshCw, Layers, Trophy,
+  ChevronLeft, ChevronRight, List, X, Lock, CheckCircle2, Sparkles, SendHorizontal,
   Radar, Swords, GraduationCap, Radio
 } from "lucide-react";
 
@@ -60,6 +64,46 @@ export default function CodeTerminal() {
     return () => window.clearTimeout(t);
   }, [shaking]);
 
+  // 🛡️ HULL INTEGRITY — Day-1 sketch of an explicit damage readout
+  // alongside the existing canopy combat viewport. Local and visual only:
+  // it moves strictly inside the same PASSED/FAILED branches below, after
+  // evaluateSubmission has already decided the outcome, same as
+  // fireSignal/hitSignal above.
+  const [hullPct, setHullPct] = useState(100);
+  // 🤖 COMPANION MOOD — drives COG's panel color; reverts to idle on its
+  // own shortly after a reaction, same self-resetting pattern as `shaking`.
+  const [companionMood, setCompanionMood] = useState("idle");
+  useEffect(() => {
+    if (companionMood === "idle") return undefined;
+    const t = window.setTimeout(() => setCompanionMood("idle"), 1600);
+    return () => window.clearTimeout(t);
+  }, [companionMood]);
+
+  // 💀 DEFEAT — Non-Negotiables Pass: "when you lose, teach the concept
+  // that beat you, then offer a rematch." Hull hitting zero (see
+  // handleSubmit's fail branches) is the loss condition; this overlay is
+  // the only thing that can clear it, via Rematch, which repairs the hull
+  // and clears the buffer but leaves the pilot on the exact same exercise.
+  const [defeat, setDefeat] = useState(null); // null | { concept, reason }
+  const defeatDialogRef = useRef(null);
+  const rematchButtonRef = useRef(null);
+  // No onEscape — the whole point of this rule is that losing has one way
+  // out (Rematch), not a quiet dismiss.
+  useFocusTrap(defeatDialogRef, !!defeat, null);
+  useEffect(() => {
+    if (defeat) rematchButtonRef.current?.focus();
+  }, [defeat]);
+  const triggerDefeat = (concept, reason) => {
+    setDefeat({ concept: concept || "this exercise", reason });
+    playSystemSound("ERROR");
+  };
+  const handleRematch = () => {
+    setDefeat(null);
+    setHullPct(100);
+    setInputBuffer("");
+    playSystemSound("CLICK");
+  };
+
   // Which exercise is on screen right now — defaults to the live frontier
   // (or, in Practice mode, whichever exercise the pilot picked from
   // SectorDetail — see practiceTargetIndex). Back/Next can walk it across
@@ -101,6 +145,8 @@ export default function CodeTerminal() {
     setHintsRevealed(0);
     setProctoredArmed(false);
     setSecondsLeft(PROCTORED_SECONDS);
+    setHullPct(100);
+    setDefeat(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sector.id]);
 
@@ -181,7 +227,7 @@ export default function CodeTerminal() {
   };
 
   const handleSubmit = async () => {
-    if (!canAttempt || isCompiling || !inputBuffer.trim() || proctoredTimeUp || (isProctored && !proctoredArmed)) return;
+    if (defeat || !canAttempt || isCompiling || !inputBuffer.trim() || proctoredTimeUp || (isProctored && !proctoredArmed)) return;
     setIsCompiling(true);
     setTerminalLogs((prev) => [...prev, "EXEC_SUBMIT // Running verification pass..."]);
 
@@ -210,6 +256,8 @@ export default function CodeTerminal() {
         // 🛰️ Combat deck: a verified PASS fires the player volley. Read-only —
         // fires off the same `isCorrect` the real grading path already computed.
         setFireSignal((n) => n + 1);
+        setHullPct((h) => Math.min(100, h + 15));
+        setCompanionMood("cheering");
         if (viewingLive) {
           // Exact frontier clear — real progress, exactly as before.
           const willMasterSector = currentChapterIndex + 1 >= sector.totalLessons;
@@ -282,12 +330,21 @@ export default function CodeTerminal() {
         // canopy rumble. Read-only reaction to the outcome above.
         setHitSignal((n) => n + 1);
         setShaking(true);
+        setCompanionMood("concerned");
+        const nextHull = Math.max(0, hullPct - 20);
+        setHullPct(nextHull);
         pushToast({
           title: `${failed.length} of ${outcome.results.length} test${outcome.results.length === 1 ? "" : "s"} failed`,
           body: firstFail ? `${firstFail.description}${firstFail.error ? ` — ${firstFail.error}` : ""}` : "Verification failed.",
           tone: "danger",
           voice: null
         });
+        // Non-Negotiable: "when you lose, teach the concept that beat you,
+        // then offer a rematch." Hull hitting zero IS the loss condition —
+        // this is the only place that's allowed to trigger it.
+        if (nextHull <= 0) {
+          triggerDefeat(lessonData.concept, firstFail ? `${firstFail.description}${firstFail.error ? ` — ${firstFail.error}` : ""}` : "Verification failed.");
+        }
       } else {
         setTerminalLogs((prev) => [
           ...prev,
@@ -299,12 +356,18 @@ export default function CodeTerminal() {
         // hostile strike on the canopy — same read-only signal as above.
         setHitSignal((n) => n + 1);
         setShaking(true);
+        setCompanionMood("concerned");
+        const nextHull = Math.max(0, hullPct - 20);
+        setHullPct(nextHull);
         pushToast({
           title: "Compile fault",
           body: `Buffer is missing the required token "${lessonData.requiredKeyword}".`,
           tone: "danger",
           voice: null
         });
+        if (nextHull <= 0) {
+          triggerDefeat(lessonData.concept, `Missing the required token "${lessonData.requiredKeyword}".`);
+        }
       }
     }
   };
@@ -314,10 +377,42 @@ export default function CodeTerminal() {
   // Next at the real frontier, exactly as before.
   const goNext = () => setViewIndex((i) => Math.min(i + 1, isPractice ? sector.totalLessons - 1 : currentChapterIndex, sector.totalLessons - 1));
   const nextDisabled = isPractice ? viewIndex >= sector.totalLessons - 1 : viewIndex >= currentChapterIndex || isSectorMastered;
-  const submitBlocked = isCompiling || !inputBuffer.trim() || (!isPractice && (isSectorMastered || !viewingLive)) || proctoredTimeUp || (isProctored && !proctoredArmed);
+  const submitBlocked = !!defeat || isCompiling || !inputBuffer.trim() || (!isPractice && (isSectorMastered || !viewingLive)) || proctoredTimeUp || (isProctored && !proctoredArmed);
 
   return (
-    <div className="flex flex-col h-full gap-3 text-cyan-400 font-mono animate-fade-in">
+    <div className="relative flex flex-col h-full gap-3 text-cyan-400 font-mono animate-fade-in">
+      {/* 💀 DEFEAT OVERLAY — Non-Negotiables Pass: teach the concept that
+          beat you, then offer a rematch. Blocks Submit (see submitBlocked
+          above) until Rematch is clicked; Run still works underneath if a
+          pilot wants to poke at their code first. */}
+      {defeat && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fade-in" role="alertdialog" aria-modal="true" aria-label="Defeat">
+          <div ref={defeatDialogRef} className="scope-frame scope-frame-lg w-full max-w-md border border-rose-500/40 bg-slate-950/95 p-6 space-y-4 text-center shadow-[0_0_40px_rgba(244,63,94,0.15)]">
+            <div className="flex justify-center">
+              <div className="p-3 rounded-full border border-rose-500/40 bg-rose-950/30 text-rose-400">
+                <ShieldAlert className="w-7 h-7" />
+              </div>
+            </div>
+            <div>
+              <h2 className="font-scope text-sm font-bold uppercase tracking-[0.15em] text-rose-400">Hull Breached</h2>
+              <p className="text-[11px] text-slate-400 font-sans mt-1">Your hull took one hit too many. Here's what got you:</p>
+            </div>
+            <div className="scope-frame scope-frame-sm p-3 bg-slate-900/60 border border-rose-900/50 text-left space-y-1.5">
+              <div className="text-[9px] font-black uppercase tracking-widest text-rose-500/80">Concept that beat you</div>
+              <div className="text-sm font-bold text-slate-100">{defeat.concept}</div>
+              {defeat.reason && <div className="text-[11px] text-slate-400 font-sans pt-1 border-t border-rose-900/40 mt-1.5">{defeat.reason}</div>}
+            </div>
+            <button
+              ref={rematchButtonRef}
+              onClick={handleRematch}
+              className="scope-btn scope-frame scope-frame-sm w-full py-2.5 font-scope text-[11px] font-semibold uppercase tracking-widest border border-rose-500/40 bg-rose-950/30 text-rose-300 hover:bg-rose-400 hover:text-black transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Rematch
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* BREADCRUMB + SECTOR PROGRESS */}
       <div className="flex items-center gap-3 shrink-0">
         <button
@@ -337,6 +432,10 @@ export default function CodeTerminal() {
           <span className="truncate max-w-[220px]">{deckMode.label}</span>
         </div>
       </div>
+
+      {(!isSectorMastered || isPractice) && (
+        <HullDisplay pct={hullPct} />
+      )}
 
       {/* PROCTORED LOCKDOWN STATUS — fullscreen + paste-block + timer, all client-side.
           🛰️ Tactical deck pass: pulsing red hazard border once a session is
@@ -468,44 +567,23 @@ export default function CodeTerminal() {
             </div>
           </div>
 
-          {/* PROGRESSIVE HINT SYSTEM — three tiers, each more direct than the last */}
+          {/* 🤖 COMPANION — COG delivers the same progressive 3-tier hint
+              system CodeTerminal already computes (see `hints` above);
+              this only changes who's asking and who's answering. */}
           {(!isSectorMastered || isPractice) && (
-            <div className="mt-4 pt-3 border-t border-slate-900/60 space-y-2">
-              <div className="flex justify-between items-center text-[8px] font-black tracking-widest text-slate-500 uppercase">
-                <span>Need a nudge?</span>
-                <span>{hintsRevealed}/3 hints used</span>
-              </div>
-              <div className="flex gap-1.5">
-                {[0, 1, 2].map((i) => (
-                  <button
-                    key={i}
-                    onClick={() => setHintsRevealed((h) => Math.max(h, i + 1))}
-                    disabled={hintsRevealed > i}
-                    className={`flex-1 flex items-center justify-center gap-1 py-1.5 border font-scope text-[9px] font-bold uppercase tracking-wide transition-all cursor-pointer disabled:cursor-default ${
-                      hintsRevealed > i ? "border-amber-500/30 bg-amber-950/10 text-amber-500/60" : "border-slate-800 bg-slate-900/40 text-slate-400 hover:border-cyan-500/40 hover:text-cyan-400"
-                    }`}
-                  >
-                    <HelpCircle className="w-3 h-3" /> {i + 1}
-                  </button>
-                ))}
-              </div>
-              {hintsRevealed > 0 && (
-                <div className="space-y-1.5">
-                  {hints.slice(0, hintsRevealed).map((h, i) => (
-                    <div key={i} className="flex items-start gap-1.5 px-2 py-1.5 bg-slate-950 border border-dashed border-slate-800 text-[10px] text-amber-200/80 font-sans leading-relaxed">
-                      <Sparkles className="w-3 h-3 shrink-0 mt-0.5 text-amber-500" />
-                      <span>{h}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <CompanionPanel
+              hints={hints}
+              hintsRevealed={hintsRevealed}
+              onReveal={(i) => setHintsRevealed((h) => Math.max(h, i + 1))}
+              mood={companionMood}
+              reactionTick={fireSignal + hitSignal}
+            />
           )}
         </div>
 
         {/* 💻 CENTER & RIGHT PANEL: SCREEN VISOR & LOGS */}
         <div className="flex-1 flex flex-col gap-4 min-h-[300px] lg:min-h-0">
-          <div className="scope-frame scope-frame-lg bg-slate-950/80 backdrop-blur-md border border-slate-800 relative flex flex-col overflow-hidden shadow-2xl group focus-within:border-amber-500/60 transition-colors">
+          <div className="scope-frame scope-frame-lg flex-1 min-h-0 bg-slate-950/80 backdrop-blur-md border border-slate-800 relative flex flex-col overflow-hidden shadow-2xl group focus-within:border-amber-500/60 transition-colors">
             <div className="absolute inset-0 bg-scanlines pointer-events-none opacity-[0.015]"></div>
 
             <div className="relative px-3 py-1.5 bg-slate-900/50 border-b border-slate-800 font-mono text-[10px] text-amber-500 font-semibold tracking-widest uppercase flex justify-between items-center">
@@ -514,10 +592,11 @@ export default function CodeTerminal() {
               <span className="pointer-events-none absolute -bottom-px left-0 right-0 h-px bg-[length:200%_100%] bg-gradient-to-r from-transparent via-amber-400/70 to-transparent animate-tac-scan" />
             </div>
 
-            <textarea
+            <CodeEditor
+              sectorId={sector.id}
               value={inputBuffer}
-              onChange={(e) => setInputBuffer(e.target.value)}
-              onPaste={(e) => { if (isProctored) e.preventDefault(); }}
+              onChange={setInputBuffer}
+              blockPaste={isProctored}
               disabled={(isSectorMastered && !isPractice) || (isProctored && (!proctoredArmed || proctoredTimeUp))}
               placeholder={
                 isProctored && !proctoredArmed
@@ -528,7 +607,6 @@ export default function CodeTerminal() {
                   ? "// Sector fully calibrated — no further validation runs required."
                   : "// Input your tracking alignment script formulas directly into this buffer console matrix..."
               }
-              className="flex-1 w-full bg-transparent p-4 outline-hidden resize-none font-mono text-xs text-slate-200 placeholder-slate-700 leading-relaxed disabled:opacity-40"
             />
 
             <div className="px-3 py-2 bg-slate-950/90 border-t border-slate-900 flex justify-between items-center gap-2">

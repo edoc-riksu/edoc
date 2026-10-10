@@ -148,6 +148,25 @@ export function PilotProvider({ children }) {
       setIsPilotLoggedIn(true);
     }
 
+    // The real signed session cookie (see src/app/api/auth/) is the actual
+    // authority on whether this browser is linked — the localStorage read
+    // above is just a same-device display cache. A valid server session
+    // confirms/restores login even if that cache was cleared; an absent
+    // or expired one quietly leaves whatever the cache above decided
+    // alone, rather than forcing a logged-out pilot back to guest.
+    fetch("/api/auth/session")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.callsign) {
+          setPilotCallsign(data.callsign);
+          setIsPilotLoggedIn(true);
+          localStorage.setItem("HUD_PILOT_CALLSIGN", data.callsign);
+        }
+      })
+      .catch(() => {
+        /* Offline or the route isn't reachable — local cache above still stands. */
+      });
+
     // Relay streak: one tick per calendar day, consecutive days extend it,
     // a gap resets it — the same shape as any daily-challenge counter.
     try {
@@ -490,6 +509,10 @@ export function PilotProvider({ children }) {
     setIsPilotLoggedIn(false);
     setPilotCallsign(null);
     localStorage.removeItem("HUD_PILOT_CALLSIGN");
+    // Fire-and-forget — the real session cookie (src/app/api/auth/logout)
+    // should go too, but a network hiccup here shouldn't block the pilot
+    // from disconnecting locally.
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     playSystemSound("CLOSE");
     pushToast({
       title: "Biometric link severed",

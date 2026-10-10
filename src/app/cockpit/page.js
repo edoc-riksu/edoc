@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import SpaceWindshield from "../../components/SpaceWindshield";
 import HudScreens from "../../components/HudScreens";
 import BiometricLinkModal from "../../components/ui/BiometricLinkModal";
+import PilotProfilePanel from "../../components/ui/PilotProfilePanel";
 import TravelSequence from "../../components/ui/TravelSequence";
 import CockpitDial from "../../components/ui/CockpitDial";
 import { usePilot } from "../../context/PilotContext";
@@ -21,6 +22,7 @@ export default function HyperGamingCockpitBridge() {
   // top of the already-busy WebGL frame was real, avoidable jank).
   const canopyRef = useRef(null);
   const [glowLive, setGlowLive] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const pointerRef = useRef({ x: 0, y: 0 });
   const rectRef = useRef(null);
   useEffect(() => {
@@ -155,10 +157,14 @@ export default function HyperGamingCockpitBridge() {
 
           <div className="hidden md:flex items-center gap-2.5">
             {isPilotLoggedIn && pilotCallsign && (
-              <div className="cockpit-pill hidden lg:inline-flex" title="Pilot callsign">
+              <button
+                onClick={() => setProfileOpen(true)}
+                className="cockpit-pill hidden lg:inline-flex cursor-pointer hover:border-cyan-400/60 transition-colors"
+                title="Open pilot profile"
+              >
                 <UserRound className="w-3 h-3 text-cyan-400" />
                 <span className="font-scope text-[10px] font-bold tracking-wide text-cyan-300">{pilotCallsign}</span>
-              </div>
+              </button>
             )}
             <div className="cockpit-pill" title="Reaction Cells — spend these on academy upgrades">
               <Gauge className="w-3 h-3 text-amber-400" />
@@ -258,6 +264,7 @@ export default function HyperGamingCockpitBridge() {
       </div>
 
       <BiometricLinkModal />
+      <PilotProfilePanel open={profileOpen} onClose={() => setProfileOpen(false)} />
       <TravelSequence />
     </div>
   );
