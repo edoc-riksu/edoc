@@ -6,6 +6,7 @@
     "dev": "next dev -p 8000",
     "build": "next build",
     "start": "next start -p 8000",
+    "test": "vitest run",
     "postinstall": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy"
@@ -28,7 +29,8 @@
     "@types/react-dom": "^19",
     "postcss": "^8",
     "prisma": "^6.19.3",
-    "tailwindcss": "^4.0.0"
+    "tailwindcss": "^4.0.0",
+    "vitest": "^2.1.9"
   },
   "peerDependencies": {
     "@tailwindcss/postcss": "^4.3.3"
