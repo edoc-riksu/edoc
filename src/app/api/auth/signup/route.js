@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { db } from "../../../../lib/db";
 import { hashPassword } from "../../../../lib/auth";
 import { createSessionToken, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "../../../../lib/session";
+import { logger, withErrorLogging } from "../../../../lib/logger";
 
-export async function POST(request) {
+export const POST = withErrorLogging(async function POST(request) {
   let body;
   try {
     body = await request.json();
@@ -30,6 +31,7 @@ export async function POST(request) {
   const user = await db.user.create({
     data: { email, pilotCallsign, passwordHash: hashPassword(password) }
   });
+  logger.info("pilot account created", { userId: user.id });
 
   const token = createSessionToken(user.id);
   const response = NextResponse.json({
@@ -45,4 +47,4 @@ export async function POST(request) {
     path: "/"
   });
   return response;
-}
+}, "POST /api/auth/signup");
