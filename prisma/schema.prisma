@@ -1,0 +1,43 @@
+// Day 2 scope: accounts and saved progress only. Encounter, module and
+// attempt tables land later per the plan (week 2, once the execution
+// service and encounter API are in place).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  // Mirrors the client-side "Biometric Link" callsign (PilotContext.js) so
+  // real accounts can take over that identity once sign-in is wired up.
+  pilotCallsign String     @unique
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  progress      Progress[]
+
+  @@map("users")
+}
+
+// One row per sector a pilot has made progress in. `sectorId` is the
+// sector's display name as used throughout the client (see
+// PLANETARY_SYSTEM in src/lib/planetarySystem.js, e.g. "Python Engine
+// Core") — kept as a plain string here rather than a foreign key so the
+// client's existing `pilotProgress` shape (sectorId -> level) maps
+// directly onto this table without an extra sectors table this week.
+model Progress {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sectorId  String
+  level     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, sectorId])
+  @@map("progress")
+}
