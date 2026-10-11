@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { db } from "../../../../lib/db";
 import { verifySessionToken, SESSION_COOKIE_NAME } from "../../../../lib/session";
+import { withErrorLogging } from "../../../../lib/logger";
 
-export async function GET() {
+export const GET = withErrorLogging(async function GET() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   const userId = verifySessionToken(token);
@@ -15,4 +16,4 @@ export async function GET() {
   return NextResponse.json({
     user: { id: user.id, email: user.email, pilotCallsign: user.pilotCallsign }
   });
-}
+}, "GET /api/auth/me");
