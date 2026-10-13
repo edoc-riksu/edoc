@@ -1,0 +1,72 @@
+{
+  "id": "py-003",
+  "version": 1,
+  "language": "python",
+  "title": "Even or Odd",
+  "difficulty": "easy",
+  "module": "python-basics",
+  "concepts": ["conditionals", "input-output"],
+  "problem": "Given an integer on a single line of input, print \"Even\" if it is even, or \"Odd\" if it is odd.",
+  "starter_code": "# Read an integer.\n# Print \"Even\" if it is even, or \"Odd\" if it is odd.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "4",
+        "expected_output": "Even",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "7",
+        "expected_output": "Odd",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "0",
+        "expected_output": "Even",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "-3",
+        "expected_output": "Odd",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "-8",
+        "expected_output": "Even",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "999999",
+        "expected_output": "Odd",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "2",
+        "expected_output": "Even",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Think about how to tell whether a number divides evenly by 2.",
+    "2": "The modulo operator % gives you the remainder of a division - n % 2 tells you if n is even or odd.",
+    "3": "n = int(input()); print('Even' if n % 2 == 0 else 'Odd')"
+  },
+
+  "failure_explanation": "Negative numbers can be even too (e.g. -8 is Even) - check n % 2 == 0 rather than assuming only positive numbers matter, and make sure the output text matches exactly: 'Even' or 'Odd' with that exact capitalization."
+}

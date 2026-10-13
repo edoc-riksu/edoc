@@ -1,0 +1,72 @@
+{
+  "id": "py-002",
+  "version": 1,
+  "language": "python",
+  "title": "Print Numbers 1 to N",
+  "difficulty": "easy",
+  "module": "python-basics",
+  "concepts": ["loops", "input-output"],
+  "problem": "Given a positive integer N on a single line of input, print the integers from 1 to N, each on its own line.",
+  "starter_code": "# Read a positive integer N.\n# Print 1, 2, 3, ... up to and including N, one per line.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "3",
+        "expected_output": "1\n2\n3",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "1",
+        "expected_output": "1",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "5",
+        "expected_output": "1\n2\n3\n4\n5",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "10",
+        "expected_output": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "2",
+        "expected_output": "1\n2",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "7",
+        "expected_output": "1\n2\n3\n4\n5\n6\n7",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "20",
+        "expected_output": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Think about using a loop that counts from 1 up to N.",
+    "2": "A for loop with range(1, N+1) will give you each number from 1 to N in order.",
+    "3": "for i in range(1, int(input()) + 1): print(i)"
+  },
+
+  "failure_explanation": "Make sure your loop includes N itself - range(1, N+1), not range(1, N) - and that you print each number on its own line rather than all on one line."
+}
