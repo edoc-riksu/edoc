@@ -25,11 +25,8 @@ export default function CourseScreen({ planetId, captions, next }) {
   const go = useCallback(() => {
     if (left.current) return;
     left.current = true;
-    try {
-      sessionStorage.setItem(`edoc-course-seen-${planetId}`, "1");
-    } catch {}
     router.replace(next);
-  }, [router, next, planetId]);
+  }, [router, next]);
 
   // sound follows the galaxy settings; on by default
   useEffect(() => {
@@ -41,20 +38,13 @@ export default function CourseScreen({ planetId, captions, next }) {
     } catch {}
     const calm = motion === "reduced" || !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     setReduced(calm);
-    // seen it already this visit? go straight on, unless asked to replay
-    try {
-      if (!new URLSearchParams(location.search).has("replay") && sessionStorage.getItem(`edoc-course-seen-${planetId}`)) {
-        go();
-        return undefined;
-      }
-    } catch {}
     sfx.launch();
     if (calm) return undefined;
     const per = (DURATION * 1000) / captions.length;
     const timers = captions.map((_, i) => (i === 0 ? null : setTimeout(() => { sfx.tick(); setStep(i); }, per * i))).filter(Boolean);
     timers.push(setTimeout(go, DURATION * 1000));
     return () => timers.forEach(clearTimeout);
-  }, [captions, go, planetId]);
+  }, [captions, go]);
 
   const advance = useCallback(() => {
     if (step >= captions.length - 1) go();
