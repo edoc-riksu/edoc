@@ -229,3 +229,55 @@
     animation: none;
   }
 }
+
+/* ---------- HullBar ---------- */
+.ui-hull {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.ui-hull b {
+  font-weight: 600;
+  color: #4ade80;
+}
+.ui-hull--warn b {
+  color: #fbbf24;
+}
+.ui-hull--low b {
+  color: #fb7185;
+}
+.ui-hull-bar {
+  display: inline-flex;
+  gap: 3px;
+}
+.ui-hull-bar i {
+  display: block;
+  width: 8px;
+  height: 18px;
+  border-radius: 2px;
+  background: rgba(150, 170, 210, 0.18);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.ui-hull-bar i.is-on {
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.45);
+}
+.ui-hull--warn .ui-hull-bar i.is-on {
+  background: #fbbf24;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.45);
+}
+.ui-hull--low .ui-hull-bar i.is-on {
+  background: #fb7185;
+  box-shadow: 0 0 8px rgba(251, 113, 133, 0.45);
+}
+@media (max-width: 720px) {
+  .ui-hull-bar i {
+    width: 5px;
+    height: 14px;
+  }
+  .ui-hull {
+    gap: 7px;
+  }
+}
