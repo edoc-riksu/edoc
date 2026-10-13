@@ -1,0 +1,377 @@
+/* Approach screen: the cockpit fills the screen; the HUD and the obstacle card sit on top of it. */
+
+.ap {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: #04070d;
+  isolation: isolate;
+}
+.ap-scene {
+  position: absolute;
+  inset: 0;
+}
+.ap-scene canvas {
+  display: block;
+}
+
+/* ---------- top bar ---------- */
+.ap-top {
+  position: absolute;
+  z-index: 60;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: clamp(8px, 1.6vh, 14px) clamp(8px, 1.6vw, 20px) 0;
+  padding: 10px clamp(10px, 1.4vw, 18px);
+  border-radius: 14px;
+  background: rgba(9, 15, 34, 0.82);
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.ap-crumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.ap-step {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  color: var(--ink-soft);
+  background: rgba(120, 150, 210, 0.14);
+  transition: background 0.18s ease, color 0.18s ease, opacity 0.18s ease;
+}
+.ap-step:hover:not(:disabled) {
+  color: var(--teal);
+  background: rgba(94, 234, 212, 0.16);
+}
+.ap-step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.ap-crumb-link {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 17px;
+  transition: color 0.18s ease;
+}
+.ap-crumb-link:hover {
+  color: var(--ink);
+}
+.ap-slash {
+  color: var(--ink-dim);
+}
+.ap-crumb-now {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ap-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+.ap-tools .ui-hull {
+  margin-right: 6px;
+}
+.ap-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(300px, calc(100vw - 28px));
+  display: grid;
+  gap: 10px;
+  background: rgba(9, 15, 38, 0.92);
+}
+.ap-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* ---------- the obstacle card ---------- */
+.ap-card {
+  position: absolute;
+  z-index: 50;
+  left: 50%;
+  bottom: clamp(10px, 2.4vh, 26px);
+  width: min(468px, calc(100% - 24px));
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 20px 26px 16px;
+  text-align: center;
+  border-radius: 14px;
+  background: rgba(10, 17, 38, 0.94);
+  border: 1px solid rgba(190, 210, 255, 0.2);
+  box-shadow: 0 -6px 40px rgba(0, 0, 0, 0.5), 0 18px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  transform: translateX(-50%);
+  animation: ap-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.ap-card.is-lit {
+  border-color: rgba(94, 234, 212, 0.55);
+  box-shadow: 0 -6px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(94, 234, 212, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.ap-card.is-pulse {
+  animation: ap-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both, ap-ping 0.7s ease-out;
+}
+@keyframes ap-rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 18px);
+  }
+}
+@keyframes ap-ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(94, 234, 212, 0.6), 0 18px 50px rgba(0, 0, 0, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 22px rgba(94, 234, 212, 0), 0 18px 50px rgba(0, 0, 0, 0.45);
+  }
+}
+.ap-eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #f3b25c;
+}
+.ap-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(24px, 3.1vw, 34px);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+.ap-blurb {
+  margin: 0;
+  max-width: 40ch;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.ap-meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.ap-concept {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--teal);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.ap-concept:hover {
+  color: #99f6e4;
+}
+.ap-concept-pop {
+  position: relative;
+  max-width: 34ch;
+  padding: 10px 30px 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: left;
+  color: var(--ink);
+  background: rgba(94, 234, 212, 0.1);
+  border: 1px solid rgba(94, 234, 212, 0.3);
+  animation: ap-fade 0.2s ease;
+}
+.ap-x {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-soft);
+}
+.ap-x:hover {
+  color: var(--ink);
+}
+@keyframes ap-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.ap-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+.ap-actions .ui-btn {
+  min-width: 132px;
+}
+.ap-back.ui-btn {
+  color: var(--ink);
+  background: transparent;
+  border-color: rgba(232, 238, 252, 0.7);
+  box-shadow: none;
+}
+.ap-back.ui-btn:hover:not(:disabled) {
+  background: rgba(232, 238, 252, 0.1);
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.ap-keys {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-dim);
+}
+.ap-keys kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(120, 150, 210, 0.1);
+  font: inherit;
+  font-size: 11px;
+}
+
+/* ---------- toast ---------- */
+.ap-toast {
+  position: absolute;
+  z-index: 80;
+  left: 50%;
+  top: 78px;
+  max-width: calc(100% - 28px);
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: rgba(9, 15, 38, 0.92);
+  border: 1px solid var(--glass-edge);
+  opacity: 0;
+  transform: translate(-50%, -8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+}
+.ap-toast.is-on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- phones and short screens ---------- */
+@media (max-width: 720px) {
+  .ap-crumb-link,
+  .ap-slash {
+    display: none;
+  }
+  .ap-crumb-now {
+    font-size: 15px;
+  }
+  .ap-tools {
+    gap: 6px;
+  }
+  .ap-tools .ui-btn--icon {
+    width: 36px;
+    height: 36px;
+  }
+  .ap-tools .ui-btn--icon:nth-of-type(2) {
+    display: none;
+  }
+  .ui-hull-label {
+    font-size: 12px;
+  }
+  .ap-card {
+    padding: 16px 16px 14px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  .ap-actions {
+    width: 100%;
+  }
+  .ap-actions .ui-btn {
+    flex: 1;
+    min-width: 0;
+  }
+  .ap-keys {
+    display: none;
+  }
+}
+@media (max-width: 520px) {
+  .ap-tools .ui-hull-label {
+    display: none;
+  }
+  .ap-tools .ui-btn--icon:nth-of-type(1) {
+    display: none;
+  }
+  .ap-crumb-now {
+    font-size: 14px;
+  }
+}
+@media (max-height: 520px) and (min-aspect-ratio: 3/2) {
+  .ap-card {
+    left: 12px;
+    transform: none;
+    animation-name: ap-rise-left;
+  }
+  .ap-card.is-pulse {
+    animation-name: ap-rise-left, ap-ping;
+  }
+}
+@keyframes ap-rise-left {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+@media (max-height: 520px) {
+  .ap-card {
+    width: min(420px, calc(100% - 24px));
+    padding: 12px 18px 10px;
+    gap: 5px;
+  }
+  .ap-blurb {
+    font-size: 13px;
+  }
+  .ap-keys {
+    display: none;
+  }
+  .ap-toast {
+    top: 64px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ap-card,
+  .ap-card.is-pulse,
+  .ap-concept-pop {
+    animation: none;
+  }
+  .ap-toast {
+    transition-duration: 0.01s;
+  }
+}

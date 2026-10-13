@@ -3,6 +3,7 @@ import AppShell from "../../../shell/AppShell";
 import Panel from "../../../ui/Panel";
 import Button from "../../../ui/Button";
 import { PLANETS } from "../../../galaxy/layout";
+import { APPROACH } from "../../../data/approach";
 
 const named = PLANETS.filter((p) => p.name);
 
@@ -32,7 +33,8 @@ export default async function PlanetPage({ params }) {
             : `${p.lessons} modules, still uncharted. The surface map opens here once landing is built.`}
         </p>
         <div className="shell-actions">
-          <Button href="/">Back to the galaxy</Button>
+          {APPROACH[id] && <Button href={`/planet/${id}/approach`}>Begin approach</Button>}
+          <Button variant="secondary" href="/">Back to the galaxy</Button>
         </div>
       </Panel>
     </AppShell>
