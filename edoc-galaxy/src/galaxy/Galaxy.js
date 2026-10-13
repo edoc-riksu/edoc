@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Rocket, Settings, User, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowRight, ChevronRight, Rocket, Settings, User, Volume2, VolumeX, X } from "lucide-react";
 import { PLANETS, UNCHARTED, makeFrame, sampleRoute, ROUTE_D_MIN, ROUTE_D_MAX } from "./layout";
 import { Sky } from "./sky";
 import { ShipSystem } from "./ships";
@@ -11,6 +11,11 @@ import { makeSkins, drawPlanet } from "./planet";
 import { setSoundEnabled, sfx } from "./audio";
 import { useAuth } from "../context/AuthContext";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import Button from "../ui/Button";
+import Panel from "../ui/Panel";
+import Segmented from "../ui/Segmented";
+import TopBar from "../shell/TopBar";
+import "./galaxy.css";
 
 const N = PLANETS.length;
 const BOX = 250; // css size of a planet's box; the planet itself is 80% of it (radius 100 at scale 1)
@@ -669,69 +674,82 @@ export default function Galaxy() {
 
       <canvas ref={fxRef} className="gx-fx" aria-hidden="true" />
 
-      {/* top bar */}
-      <header className="gx-top" data-nodrag>
-        <div className="gx-brand">
-          <span className="gx-wordmark">edoc</span>
-          <ChevronRight size={16} strokeWidth={2.4} aria-hidden="true" className="gx-crumb" />
-          <h1 className="gx-title">GALAXY</h1>
-        </div>
-        <div className="gx-tools">
-          <button
-            type="button"
-            className="gx-icon gx-account-btn"
-            aria-label="Pilot profile"
-            aria-expanded={accountMenuOpen}
-            onClick={() => setAccountMenuOpen((v) => !v)}
-          >
-            <User size={18} />
-          </button>
-          <button type="button" className="gx-icon" aria-label={`Fly to ${p.name || "selected world"}`} onClick={() => startFly(sel)}>
-            <Rocket size={18} />
-          </button>
-          <button type="button" className={`gx-icon gx-settings-btn ${menuOpen ? "is-on" : ""}`} aria-label="Settings" aria-expanded={menuOpen} onClick={() => setMenuOpen((v) => !v)}>
-            <Settings size={18} />
-          </button>
-          <button type="button" className="gx-icon" aria-label={settings.sound ? "Mute sound" : "Turn sound on"} aria-pressed={settings.sound} onClick={() => update({ sound: !settings.sound })}>
-            {settings.sound ? <Volume2 size={18} /> : <VolumeX size={18} />}
-          </button>
-        </div>
-
-        {menuOpen && (
-          <div className="gx-menu" role="group" aria-label="Galaxy settings" data-nowheel>
-            <div className="gx-menu-row">
-              <span>Motion</span>
-              <div className="gx-seg">
-                {["full", "reduced"].map((m) => (
-                  <button key={m} type="button" aria-pressed={settings.motion === m} onClick={() => update({ motion: m })}>
-                    {m === "full" ? "Full" : "Reduced"}
-                  </button>
-                ))}
+      {/* top bar (shared with every screen) */}
+      <TopBar
+        section="GALAXY"
+        data-nodrag
+        overlay={
+          menuOpen && (
+            <Panel size="sm" className="gx-menu" role="group" aria-label="Galaxy settings" data-nowheel>
+              <div className="gx-menu-row">
+                <span>Motion</span>
+                <Segmented
+                  label="Motion"
+                  value={settings.motion}
+                  onChange={(v) => update({ motion: v })}
+                  options={[
+                    { value: "full", label: "Full" },
+                    { value: "reduced", label: "Reduced" }
+                  ]}
+                />
               </div>
-            </div>
-            <div className="gx-menu-row">
-              <span>Stars</span>
-              <div className="gx-seg">
-                {["low", "normal", "high"].map((m) => (
-                  <button key={m} type="button" aria-pressed={settings.stars === m} onClick={() => update({ stars: m })}>
-                    {m[0].toUpperCase() + m.slice(1)}
-                  </button>
-                ))}
+              <div className="gx-menu-row">
+                <span>Stars</span>
+                <Segmented
+                  label="Stars"
+                  value={settings.stars}
+                  onChange={(v) => update({ stars: v })}
+                  options={[
+                    { value: "low", label: "Low" },
+                    { value: "normal", label: "Normal" },
+                    { value: "high", label: "High" }
+                  ]}
+                />
               </div>
-            </div>
-            <div className="gx-menu-row">
-              <span>Passing ships</span>
-              <div className="gx-seg">
-                {[true, false].map((m) => (
-                  <button key={String(m)} type="button" aria-pressed={settings.ships === m} onClick={() => update({ ships: m })}>
-                    {m ? "On" : "Off"}
-                  </button>
-                ))}
+              <div className="gx-menu-row">
+                <span>Passing ships</span>
+                <Segmented
+                  label="Passing ships"
+                  value={settings.ships}
+                  onChange={(v) => update({ ships: v })}
+                  options={[
+                    { value: true, label: "On" },
+                    { value: false, label: "Off" }
+                  ]}
+                />
               </div>
-            </div>
-          </div>
-        )}
-      </header>
+            </Panel>
+          )
+        }
+      >
+        <Button
+          variant="secondary"
+          iconOnly
+          icon={User}
+          className="gx-account-btn"
+          aria-label="Pilot profile"
+          aria-expanded={accountMenuOpen}
+          onClick={() => setAccountMenuOpen((v) => !v)}
+        />
+        <Button variant="secondary" iconOnly icon={Rocket} aria-label={`Fly to ${p.name || "selected world"}`} onClick={() => startFly(sel)} />
+        <Button
+          variant="secondary"
+          iconOnly
+          icon={Settings}
+          className="gx-settings-btn"
+          aria-label="Settings"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((v) => !v)}
+        />
+        <Button
+          variant="secondary"
+          iconOnly
+          icon={settings.sound ? Volume2 : VolumeX}
+          aria-label={settings.sound ? "Mute sound" : "Turn sound on"}
+          pressed={settings.sound}
+          onClick={() => update({ sound: !settings.sound })}
+        />
+      </TopBar>
 
       {accountMenuOpen && (
         <div className="gx-account-menu" role="group" aria-label="Pilot account" data-nodrag data-nowheel>
@@ -745,21 +763,20 @@ export default function Galaxy() {
       )}
 
       {/* chosen planet's card */}
-      <section ref={cardRef} className="gx-card" aria-label="Selected planet" data-nodrag data-nowheel>
+      <Panel as="section" ref={cardRef} className="gx-card" aria-label="Selected planet" data-nodrag data-nowheel>
         <div className="gx-card-body" key={sel}>
-          <h2 className="gx-card-title">{cardTitle}</h2>
-          <p className="gx-card-sub">{cardSub}</p>
+          <h2 className="t-title">{cardTitle}</h2>
+          <p className="t-small">{cardSub}</p>
           {p.charted && (
             <div className="gx-meter" role="img" aria-label={`${pct}% charted`}>
               <span style={{ width: `${Math.max(pct, 3)}%` }} />
             </div>
           )}
-          <button type="button" className="gx-fly" disabled={!p.name || flying} onClick={() => startFly(sel)}>
-            <Rocket size={16} aria-hidden="true" />
-            <span>{p.name ? `Fly to ${p.name}` : "Out of range"}</span>
-          </button>
+          <Button icon={Rocket} disabled={!p.name || flying} onClick={() => startFly(sel)}>
+            {p.name ? `Fly to ${p.name}` : "Out of range"}
+          </Button>
         </div>
-      </section>
+      </Panel>
 
       {/* continue pill */}
       <button type="button" className="gx-continue" data-nodrag onClick={() => startFly(0)}>
@@ -790,15 +807,19 @@ export default function Galaxy() {
 
       {arrived && (
         <div className="gx-arrive" role="dialog" aria-modal="true" aria-label={`Arrived at ${p.name}`} data-nodrag data-nowheel>
-          <div className="gx-arrive-card">
-            <p className="gx-arrive-k">Arrived</p>
-            <h2>{p.name?.toUpperCase()}</h2>
-            <p className="gx-arrive-sub">Landing sequence locked in. The surface map opens here.</p>
-            <button type="button" className="gx-fly" onClick={landBack} autoFocus>
-              <X size={16} aria-hidden="true" />
-              <span>Back to the galaxy</span>
-            </button>
-          </div>
+          <Panel size="lg" tone="teal" className="gx-arrive-card">
+            <p className="t-label">Arrived</p>
+            <h2 className="t-title gx-arrive-title">{p.name?.toUpperCase()}</h2>
+            <p className="t-body">Landing sequence locked in. The surface map opens here.</p>
+            <div className="gx-arrive-actions">
+              <Button href={`/planet/${p.id}`} icon={ArrowRight} autoFocus>
+                {`Open ${p.name}`}
+              </Button>
+              <Button variant="secondary" icon={X} onClick={landBack}>
+                Back to the galaxy
+              </Button>
+            </div>
+          </Panel>
         </div>
       )}
 
