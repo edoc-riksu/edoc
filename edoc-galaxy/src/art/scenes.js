@@ -624,6 +624,10 @@ export function makeFlight(seed = 11) {
 /** S = {t, calm, px, py}. */
 export function drawFlight(g, W, h, F, S) {
   const { t, calm, px, py } = S;
+  // S.duration (seconds) turns the scene into a journey: the planet grows and the ship pushes forward as it runs
+  const prog = !S.duration ? 0.35 : calm ? 0.5 : Math.min(1, t / S.duration);
+  const e = prog * prog * (3 - 2 * prog);
+  const speed = 1 + e * 1.6;
   const w = Math.max(W, h * 1.25);
   g.clearRect(0, 0, W, h);
   g.save();
@@ -634,8 +638,8 @@ export function drawFlight(g, W, h, F, S) {
   g.fillStyle = bg;
   g.fillRect(0, 0, w, h);
   g.drawImage(F.nebula, -w * 0.04 + px * w * 0.01 - (calm ? 0 : (t * 4) % (w * 0.04)), -h * 0.04 + py * h * 0.01, w * 1.12, h * 1.1);
-  drawStars(g, w, h, F.stars, calm ? 0 : t, calm ? 0 : t * 14, px, py);
-  drawPlanet(g, F.planet, 0.79 * w + px * w * 0.012, 0.42 * h + py * h * 0.012, 0.115 * w);
+  drawStars(g, w, h, F.stars, calm ? 0 : t, calm ? 0 : t * 14 * speed, px, py);
+  drawPlanet(g, F.planet, lerp(0.82, 0.72, e) * w + px * w * 0.012, lerp(0.42, 0.46, e) * h + py * h * 0.012, lerp(0.085, 0.2, e) * w);
 
   for (const k of F.rocks) {
     const sz = k.size * w * (1 + k.z);
@@ -645,11 +649,11 @@ export function drawFlight(g, W, h, F, S) {
     g.restore();
   }
 
-  const sx = 0.27 * w + px * w * 0.012;
+  const sx = lerp(0.2, 0.36, e) * w + px * w * 0.012;
   const sy = 0.48 * h + (calm ? 0 : Math.sin(t * 1.2) * 0.009 * h) + py * h * 0.015;
   const sc = (w / 1000) * 1.2;
   for (const k of F.streaks) {
-    const p = calm ? k.ph : (k.ph + t * k.sp * 0.5) % 1;
+    const p = calm ? k.ph : (k.ph + t * k.sp * 0.5 * speed) % 1;
     const x = sx - 55 * sc - p * 0.36 * w;
     const y = k.y * h + (sy - 0.5 * h) * 0.5;
     const len = k.len * w * (0.4 + p);
@@ -664,7 +668,7 @@ export function drawFlight(g, W, h, F, S) {
     g.stroke();
   }
   for (const d of F.dust) {
-    const p = calm ? d.ph : (d.ph + t * d.sp) % 1;
+    const p = calm ? d.ph : (d.ph + t * d.sp * speed) % 1;
     const x = sx - 60 * sc - p * 0.4 * w;
     const y = d.y * h + (d.j - 0.5) * 10 + (sy - 0.5 * h) * 0.5;
     g.fillStyle = `rgba(170,180,170,${0.55 * (1 - p)})`;
@@ -678,5 +682,9 @@ export function drawFlight(g, W, h, F, S) {
   v.addColorStop(1, "rgba(0,0,0,0.45)");
   g.fillStyle = v;
   g.fillRect(0, 0, W, h);
+  if (S.duration && !calm && prog > 0.9) {
+    g.fillStyle = `rgba(190,255,235,${(prog - 0.9) * 4})`;
+    g.fillRect(0, 0, W, h);
+  }
   grain(g, W, h, calm ? 0 : t, 0.09);
 }
