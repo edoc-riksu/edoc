@@ -38,6 +38,7 @@ function SignupForm() {
   const [submitting, setSubmitting] = useState(false);
   const [retryAfter, setRetryAfter] = useState(0);
   const [networkError, setNetworkError] = useState(false);
+  const [serverError, setServerError] = useState(false);
   const callsignCheckTimer = useRef(null);
 
   const setField = (field, value) => {
@@ -105,6 +106,7 @@ function SignupForm() {
 
     setSubmitting(true);
     setNetworkError(false);
+    setServerError(false);
     setRetryAfter(0);
 
     const result = await authService.signup({ callsign: values.callsign, email: values.email, password: values.password });
@@ -132,7 +134,13 @@ function SignupForm() {
       setErrors((e) => ({ ...e, ...result.data.fields }));
       return;
     }
-    if (result.status === 429) setRetryAfter(result.data?.retryAfter || 30);
+    if (result.status === 429) {
+      setRetryAfter(result.data?.retryAfter || 30);
+      return;
+    }
+    // Any other status (500s, etc.) — surface it instead of silently
+    // doing nothing, which is what used to happen here.
+    setServerError(true);
   };
 
   const retry = () => handleSubmit({ preventDefault() {} });
@@ -144,6 +152,14 @@ function SignupForm() {
       <p className="gx-auth-sub">Create an account to start your journey.</p>
 
       {networkError && <NetworkBanner onRetry={retry} />}
+      {serverError && (
+        <div role="alert" className="gx-auth-banner">
+          <span>Something went wrong creating your account. Please try again.</span>
+          <button type="button" onClick={retry}>
+            Retry
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} noValidate className="gx-auth-form">
         {submitted && <ErrorSummary errors={errors} onFocusField={focusField} completionText="create your pilot" />}

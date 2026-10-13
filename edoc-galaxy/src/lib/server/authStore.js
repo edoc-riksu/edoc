@@ -1,4 +1,5 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { hashPassword, verifyPassword } from "./passwordHash";
 import { normalizeCallsign, normalizeEmail } from "../authValidation";
@@ -6,7 +7,14 @@ import { normalizeCallsign, normalizeEmail } from "../authValidation";
 // JSON-file-backed mock store. Synchronous fs calls are deliberate: this is
 // a dev-only, low-concurrency store, and sync I/O makes createUser's
 // read-check-write sequence race-proof with no extra locking machinery.
-const DATA_DIR = path.join(process.cwd(), ".data");
+//
+// Vercel's serverless functions have a read-only filesystem everywhere
+// except /tmp, so `process.cwd()/.data` (fine for `next dev` locally)
+// throws there. This falls back to the OS temp dir on Vercel instead.
+// Note this is still not real persistence: /tmp isn't guaranteed to
+// survive between invocations on a cold instance. Good enough for this
+// mock to function in a preview/demo; a real backend needs a real database.
+const DATA_DIR = process.env.VERCEL ? path.join(tmpdir(), "edoc-galaxy-auth") : path.join(process.cwd(), ".data");
 const DATA_FILE = path.join(DATA_DIR, "auth-users.json");
 
 function readUsers() {

@@ -28,6 +28,7 @@ function SigninForm() {
   const [submitting, setSubmitting] = useState(false);
   const [retryAfter, setRetryAfter] = useState(0);
   const [networkError, setNetworkError] = useState(false);
+  const [serverError, setServerError] = useState(false);
   const passwordRef = useRef(null);
 
   const setField = (field, value) => {
@@ -45,6 +46,7 @@ function SigninForm() {
 
     setSubmitting(true);
     setNetworkError(false);
+    setServerError(false);
     setRetryAfter(0);
     setCredentialsError("");
 
@@ -66,7 +68,11 @@ function SigninForm() {
       passwordRef.current?.focus();
       return;
     }
-    if (result.status === 429) setRetryAfter(result.data?.retryAfter || 30);
+    if (result.status === 429) {
+      setRetryAfter(result.data?.retryAfter || 30);
+      return;
+    }
+    setServerError(true);
   };
 
   const retry = () => handleSubmit({ preventDefault() {} });
@@ -78,6 +84,14 @@ function SigninForm() {
       <p className="gx-auth-sub">Your progress is right where you left it.</p>
 
       {networkError && <NetworkBanner onRetry={retry} />}
+      {serverError && (
+        <div role="alert" className="gx-auth-banner">
+          <span>Something went wrong signing you in. Please try again.</span>
+          <button type="button" onClick={retry}>
+            Retry
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} noValidate className="gx-auth-form">
         <TextField
