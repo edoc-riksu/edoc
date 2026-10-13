@@ -679,3 +679,369 @@ button {
     transition-duration: 0.01s !important;
   }
 }
+
+/* =========================================================
+   AUTH — sign up / sign in / sign out. Plain CSS against the
+   same tokens and .gx-* glass-panel language as the rest of
+   this app (no Tailwind, per the app's own design choice).
+   ========================================================= */
+:root {
+  --warn: #fbbf24;
+}
+
+.gx-auth {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow-y: auto;
+  background: radial-gradient(ellipse 80% 60% at 70% 20%, rgba(94, 234, 212, 0.06), transparent 60%), var(--night);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.gx-auth-panel {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px 26px;
+  border-radius: 20px;
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 16px 48px rgba(2, 6, 22, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  display: grid;
+  gap: 16px;
+}
+
+.gx-auth-brand {
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin: 0;
+}
+
+.gx-auth-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(22px, 4vw, 28px);
+  letter-spacing: 0.04em;
+}
+
+.gx-auth-sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.gx-auth-form {
+  display: grid;
+  gap: 14px;
+}
+
+.gx-auth-field {
+  display: grid;
+  gap: 6px;
+}
+
+.gx-auth-field label {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.gx-auth-input-row {
+  position: relative;
+}
+
+.gx-auth-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(10, 18, 44, 0.6);
+  color: var(--ink);
+  font-size: 14px;
+  font-family: var(--sans);
+}
+.gx-auth-input::placeholder {
+  color: var(--ink-dim);
+}
+.gx-auth-input[aria-invalid="true"] {
+  border-color: var(--warn);
+}
+
+.gx-auth-eye {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+}
+.gx-auth-eye:hover {
+  color: var(--ink);
+}
+
+.gx-auth-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--warn);
+}
+
+.gx-auth-helper {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.gx-auth-summary {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--warn);
+  background: rgba(251, 191, 36, 0.1);
+}
+.gx-auth-summary p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.gx-auth-summary button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--teal);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-size: 13px;
+}
+
+.gx-auth-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gx-auth-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(10, 18, 44, 0.6);
+  color: var(--ink);
+  font-size: 12.5px;
+}
+.gx-auth-chip:hover {
+  border-color: var(--teal);
+}
+
+.gx-auth-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.gx-auth-checkbox input {
+  margin-top: 3px;
+}
+.gx-auth-checkbox a {
+  color: var(--teal);
+}
+
+.gx-auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.gx-auth-row a {
+  color: var(--teal);
+}
+
+.gx-auth-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  height: 46px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #04201c;
+  background: linear-gradient(180deg, #7ff3de, #2dd4bf);
+  box-shadow: 0 8px 22px rgba(45, 212, 191, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.gx-auth-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.gx-auth-btn:disabled {
+  cursor: not-allowed;
+  color: var(--ink-dim);
+  background: rgba(120, 140, 200, 0.16);
+  box-shadow: none;
+}
+
+.gx-auth-foot {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.gx-auth-foot a {
+  color: var(--teal);
+}
+
+.gx-auth-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--warn);
+  background: rgba(251, 191, 36, 0.1);
+  font-size: 13px;
+}
+.gx-auth-banner button {
+  background: transparent;
+  border: 0;
+  color: var(--teal);
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+/* ---------- sign-out dialog + account panel ---------- */
+.gx-auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  background: rgba(5, 9, 24, 0.7);
+  border: 0;
+}
+
+.gx-auth-dialog {
+  position: fixed;
+  z-index: 141;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 420px);
+  padding: 26px;
+  border-radius: 18px;
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 16px 48px rgba(2, 6, 22, 0.5);
+  display: grid;
+  gap: 14px;
+}
+.gx-auth-dialog h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 20px;
+  letter-spacing: 0.03em;
+}
+.gx-auth-dialog p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.gx-auth-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.gx-auth-btn-ghost {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-edge);
+  background: transparent;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.gx-auth-btn-ghost:hover {
+  border-color: var(--teal);
+}
+.gx-auth-dialog .gx-auth-btn {
+  width: auto;
+  height: 40px;
+  padding: 0 18px;
+}
+
+.gx-account-menu {
+  position: absolute;
+  z-index: 60;
+  top: 58px;
+  right: 16px;
+  min-width: 220px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 16px 48px rgba(2, 6, 22, 0.45);
+  display: grid;
+  gap: 10px;
+}
+.gx-account-menu p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+.gx-account-menu strong {
+  color: var(--ink);
+}
+.gx-account-menu button {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(10, 18, 44, 0.6);
+  color: var(--ink);
+  font-size: 13px;
+}
+.gx-account-menu button:hover {
+  border-color: var(--teal);
+}
+
+@keyframes gx-auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.gx-auth-spin {
+  animation: gx-auth-spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-auth-btn,
+  .gx-account-menu button {
+    transition: none !important;
+  }
+  .gx-auth-spin {
+    animation-duration: 1.6s;
+  }
+}
