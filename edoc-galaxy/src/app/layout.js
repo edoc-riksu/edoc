@@ -1,4 +1,6 @@
 import "./globals.css";
+import "../ui/ui.css";
+import "../shell/shell.css";
 
 export const metadata = {
   title: "edoc · Galaxy",

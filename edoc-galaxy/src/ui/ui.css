@@ -1,0 +1,231 @@
+/*
+ * Shared UI: text styles, Button, Panel, Segmented.
+ * Colours come from the tokens in globals.css (--ink, --teal, --glass ...).
+ * Change a token there, not a colour here.
+ */
+
+/* ---------- text styles ---------- */
+.t-display {
+  font-family: var(--display);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.t-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(22px, 2.1vw, 28px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+.t-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+.t-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.t-small {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+.t-muted {
+  color: var(--ink-dim);
+}
+
+/* ---------- Button ---------- */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease,
+    opacity 0.18s ease;
+}
+.ui-btn--sm {
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+.ui-btn--md {
+  padding: 12px 18px;
+  font-size: 14px;
+}
+.ui-btn--lg {
+  padding: 15px 24px;
+  font-size: 15px;
+}
+.ui-btn--full {
+  width: 100%;
+}
+.ui-btn--icon {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 50%;
+}
+.ui-btn--icon.ui-btn--sm {
+  width: 34px;
+  height: 34px;
+}
+
+.ui-btn--primary {
+  color: #04201c;
+  background: linear-gradient(180deg, #7ff3de, var(--teal-deep));
+  box-shadow: 0 8px 22px rgba(45, 212, 191, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.ui-btn--primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(45, 212, 191, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.ui-btn--secondary {
+  color: var(--ink-soft);
+  background: var(--glass);
+  border-color: var(--glass-edge);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.ui-btn--secondary:hover:not(:disabled),
+.ui-btn--secondary[aria-pressed="true"],
+.ui-btn--secondary[aria-expanded="true"] {
+  color: var(--teal);
+  border-color: rgba(94, 234, 212, 0.5);
+  background: rgba(20, 40, 60, 0.55);
+  transform: translateY(-1px);
+}
+
+.ui-btn--ghost {
+  color: var(--ink-soft);
+  background: transparent;
+}
+.ui-btn--ghost:hover:not(:disabled) {
+  color: var(--ink);
+  background: rgba(150, 170, 220, 0.12);
+}
+
+.ui-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+}
+.ui-btn:disabled {
+  cursor: not-allowed;
+  color: var(--ink-dim);
+  background: rgba(120, 140, 200, 0.16);
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+.ui-btn.is-loading {
+  cursor: progress;
+  opacity: 0.75;
+}
+.ui-btn.is-loading::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ui-spin 0.7s linear infinite;
+}
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Panel ---------- */
+.ui-panel {
+  position: relative;
+  border-radius: 18px;
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 16px 48px rgba(2, 6, 22, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.ui-panel--sm {
+  padding: 14px 16px;
+  border-radius: 14px;
+}
+.ui-panel--md {
+  padding: 18px 20px;
+}
+.ui-panel--lg {
+  padding: 28px 30px;
+  border-radius: 22px;
+}
+.ui-panel--teal {
+  border-color: rgba(94, 234, 212, 0.3);
+}
+.ui-panel--danger {
+  border-color: rgba(251, 113, 133, 0.4);
+}
+.ui-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.ui-panel-titles {
+  display: grid;
+  gap: 6px;
+}
+.ui-panel-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---------- Segmented ---------- */
+.ui-seg {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 999px;
+  background: rgba(120, 140, 200, 0.12);
+}
+.ui-seg button {
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 11px;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.ui-seg button[aria-pressed="true"] {
+  background: rgba(94, 234, 212, 0.18);
+  color: var(--teal);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-btn,
+  .ui-btn.is-loading::after {
+    transition-duration: 0.01s;
+  }
+  .ui-btn.is-loading::after {
+    animation: none;
+  }
+}
