@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronRight, Rocket, Settings, User, Volume2, VolumeX, X } from "lucide-react";
 import { PLANETS, UNCHARTED, makeFrame, sampleRoute, ROUTE_D_MIN, ROUTE_D_MAX } from "./layout";
 import { Sky } from "./sky";
@@ -8,6 +9,8 @@ import { ShipSystem } from "./ships";
 import { Hero } from "./hero";
 import { makeSkins, drawPlanet } from "./planet";
 import { setSoundEnabled, sfx } from "./audio";
+import { useAuth } from "../context/AuthContext";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 const N = PLANETS.length;
 const BOX = 250; // css size of a planet's box; the planet itself is 80% of it (radius 100 at scale 1)
@@ -107,6 +110,44 @@ export default function Galaxy() {
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(""), 2400);
   }, []);
+
+  /* ---------- pilot account: profile menu + sign-out dialog ---------- */
+  const router = useRouter();
+  const { user, signOut } = useAuth();
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [signOutOpen, setSignOutOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const signOutTriggerRef = useRef(null);
+  const signOutDialogRef = useRef(null);
+  const signOutCancelRef = useRef(null);
+
+  useFocusTrap(signOutDialogRef, signOutOpen, () => closeSignOutDialog());
+
+  useEffect(() => {
+    if (!signOutOpen) return undefined;
+    const t = setTimeout(() => signOutCancelRef.current?.focus(), 30);
+    return () => clearTimeout(t);
+  }, [signOutOpen]);
+
+  function closeSignOutDialog() {
+    setSignOutOpen(false);
+    signOutTriggerRef.current?.focus?.();
+  }
+
+  function openSignOutDialog() {
+    signOutTriggerRef.current = typeof document !== "undefined" ? document.activeElement : null;
+    setAccountMenuOpen(false);
+    setSignOutOpen(true);
+  }
+
+  async function confirmSignOut() {
+    setSigningOut(true);
+    await signOut();
+    setSigningOut(false);
+    setSignOutOpen(false);
+    showToast("You've signed out. See you soon, pilot.");
+    setTimeout(() => router.push("/signin"), 900);
+  }
 
   /* ---------- selection ---------- */
   const select = useCallback((i, quiet) => {
@@ -393,6 +434,7 @@ export default function Galaxy() {
 
     const onDocDown = (e) => {
       if (!e.target.closest?.(".gx-menu, .gx-settings-btn")) setMenuOpen(false);
+      if (!e.target.closest?.(".gx-account-menu, .gx-account-btn")) setAccountMenuOpen(false);
     };
     window.addEventListener("pointerdown", onDocDown);
 
@@ -635,7 +677,13 @@ export default function Galaxy() {
           <h1 className="gx-title">GALAXY</h1>
         </div>
         <div className="gx-tools">
-          <button type="button" className="gx-icon" aria-label="Pilot profile" onClick={() => showToast("Pilot profile is not part of this build yet.")}>
+          <button
+            type="button"
+            className="gx-icon gx-account-btn"
+            aria-label="Pilot profile"
+            aria-expanded={accountMenuOpen}
+            onClick={() => setAccountMenuOpen((v) => !v)}
+          >
             <User size={18} />
           </button>
           <button type="button" className="gx-icon" aria-label={`Fly to ${p.name || "selected world"}`} onClick={() => startFly(sel)}>
@@ -684,6 +732,17 @@ export default function Galaxy() {
           </div>
         )}
       </header>
+
+      {accountMenuOpen && (
+        <div className="gx-account-menu" role="group" aria-label="Pilot account" data-nodrag data-nowheel>
+          <p>
+            Signed in as <strong>{user?.callsign}</strong>
+          </p>
+          <button type="button" onClick={openSignOutDialog}>
+            Sign out
+          </button>
+        </div>
+      )}
 
       {/* chosen planet's card */}
       <section ref={cardRef} className="gx-card" aria-label="Selected planet" data-nodrag data-nowheel>
@@ -741,6 +800,40 @@ export default function Galaxy() {
             </button>
           </div>
         </div>
+      )}
+
+      {signOutOpen && (
+        <>
+          <button
+            type="button"
+            className="gx-auth-overlay"
+            aria-label="Dismiss sign-out dialog"
+            onClick={closeSignOutDialog}
+            data-nodrag
+            data-nowheel
+          />
+          <div
+            ref={signOutDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="gx-signout-title"
+            aria-describedby="gx-signout-body"
+            className="gx-auth-dialog"
+            data-nodrag
+            data-nowheel
+          >
+            <h2 id="gx-signout-title">Sign out of edoc?</h2>
+            <p id="gx-signout-body">Your progress is saved to your account. You&apos;ll pick up exactly where you left off next time.</p>
+            <div className="gx-auth-dialog-actions">
+              <button ref={signOutCancelRef} type="button" className="gx-auth-btn-ghost" onClick={closeSignOutDialog}>
+                Stay signed in
+              </button>
+              <button type="button" className="gx-auth-btn" disabled={signingOut} onClick={confirmSignOut}>
+                {signingOut ? "Signing out…" : "Sign out"}
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </main>
   );
