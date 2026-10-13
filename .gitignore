@@ -3,10 +3,16 @@ node_modules/
 .next/
 out/
 
+# generated at install time by scripts/copy-monaco.js — see src/components/ui/CodeEditor.js
+public/monaco-editor/
+
 # secrets: only .env.example is committed
 .env
 .env.*
 !.env.example
+
+# local dev-only user store (stands in for Postgres until that lands — see src/lib/server/userStore.js)
+.data/
 
 # local and tool leftovers
 Claude outputs/
