@@ -36,6 +36,7 @@ class JudgeService:
                 language=encounter.language,
                 version=_language_version(encounter),
                 timeout_ms=encounter.limits.timeout_ms,
+                memory_limit_bytes=get_settings().run_memory_limit_bytes,
             )
         except PistonUnavailableError:
             logger.error(

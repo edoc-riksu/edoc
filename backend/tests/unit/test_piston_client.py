@@ -85,3 +85,49 @@ async def test_non_200_raises_piston_unavailable():
 
     with pytest.raises(PistonUnavailableError):
         await client.execute(language="python", version="3.10.0", code="print(1)")
+
+
+async def test_memory_limit_is_sent_when_provided():
+    captured = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        import json
+
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(
+            200,
+            json={
+                "language": "python",
+                "version": "3.10.0",
+                "run": {"stdout": "", "stderr": "", "code": 0, "signal": None},
+            },
+        )
+
+    client = _client_with_handler(handler)
+    await client.execute(
+        language="python", version="3.10.0", code="print(1)", memory_limit_bytes=256_000_000
+    )
+
+    assert captured["body"]["run_memory_limit"] == 256_000_000
+
+
+async def test_memory_limit_omitted_when_not_provided():
+    captured = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        import json
+
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(
+            200,
+            json={
+                "language": "python",
+                "version": "3.10.0",
+                "run": {"stdout": "", "stderr": "", "code": 0, "signal": None},
+            },
+        )
+
+    client = _client_with_handler(handler)
+    await client.execute(language="python", version="3.10.0", code="print(1)")
+
+    assert "run_memory_limit" not in captured["body"]

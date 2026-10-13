@@ -12,6 +12,12 @@ class ExecutionError(Exception):
     """Raised when the execution backend itself is unavailable for a RUN."""
 
 
+def _truncate(text: str, limit: int) -> str:
+    if len(text) <= limit:
+        return text
+    return text[:limit] + f"\n...(truncated, {len(text) - limit} more characters)"
+
+
 class ExecutionService:
     """Handles RUN: a player testing their code against sample tests only.
 
@@ -36,14 +42,18 @@ class ExecutionService:
                     code=code,
                     stdin=test.input,
                     timeout_ms=encounter.limits.timeout_ms,
+                    memory_limit_bytes=settings.run_memory_limit_bytes,
                 )
                 max_runtime_ms = max(max_runtime_ms, result.runtime_ms)
                 results.append(
                     RunTestResult(
                         test_id=test.id,
+                        # Compared against the full, untruncated output -
+                        # truncation below is for response size only and
+                        # must never affect correctness.
                         passed=compare_output(result.stdout, test.expected_output),
-                        stdout=result.stdout,
-                        stderr=result.stderr,
+                        stdout=_truncate(result.stdout, settings.run_output_char_limit),
+                        stderr=_truncate(result.stderr, settings.run_output_char_limit),
                     )
                 )
         except PistonUnavailableError as exc:

@@ -34,6 +34,7 @@ class TestHarness:
         language: str,
         version: str,
         timeout_ms: int,
+        memory_limit_bytes: int,
     ) -> HarnessRun:
         outcomes: list[JudgeOutcome] = []
         max_runtime_ms = 0
@@ -45,6 +46,7 @@ class TestHarness:
                 code=code,
                 stdin=test.input,
                 timeout_ms=timeout_ms,
+                memory_limit_bytes=memory_limit_bytes,
             )
             max_runtime_ms = max(max_runtime_ms, result.runtime_ms)
 

@@ -17,6 +17,12 @@ services:
     privileged: true
     ports:
       - "2000:2000"
+    environment:
+      # Default is 1024 bytes - well under our own run_output_char_limit
+      # (app/core/config.py), so Piston would kill verbose-but-legitimate
+      # output before our truncation ever ran. Raised so our truncation
+      # layer, not Piston's hard kill, is what governs response size.
+      PISTON_OUTPUT_MAX_SIZE: "65536"
     volumes:
       - piston_data:/piston/packages
 

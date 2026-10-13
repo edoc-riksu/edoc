@@ -70,8 +70,14 @@ language is added.
 **Documented assumption:** Piston doesn't return an explicit "timed out"
 flag. We treat "no exit code + a kill signal present" as a timeout
 (`app/execution/piston_client.py::_normalize`). This is indistinguishable
-from an OOM kill in the raw response — worth revisiting once we see real
-signal behaviour from our own instance under load.
+from an OOM kill in the raw response, **and also from Piston's own output-size
+kill** (`PISTON_OUTPUT_MAX_SIZE`, raised to 64 KB in `docker-compose.yml` -
+see below) - all three currently surface as `TIME_LIMIT_EXCEEDED`. Confirmed
+by testing: printing 10,000 characters triggered Piston's own
+`"stdout length exceeded"` / status `OL` *before our run_memory_limit or
+truncation logic ever ran*. Not a correctness risk for our own ~40 short
+encounters, but worth a real `OUTPUT_LIMIT_EXCEEDED` verdict if any future
+encounter produces genuinely large output.
 
 ## Security
 
@@ -80,8 +86,16 @@ codebase:
 - No `exec()`/`eval()` anywhere in the application process.
 - Player code only ever runs inside Piston's sandbox, never in the FastAPI
   process itself.
-- `run_timeout` is always passed to Piston per the encounter's configured
-  limit.
+- `run_timeout` and `run_memory_limit` (256 MB by default, `run_memory_limit_bytes`
+  in `app/core/config.py`) are always passed to Piston per request.
+- `encounter_id` is validated against `^[a-z]+-\d{3}$` everywhere it's
+  accepted (request bodies and the path parameter) - `EncounterService`
+  builds a filesystem `glob()` from this value, so this pattern rules out
+  path traversal and glob metacharacters, not just malformed IDs.
+- `code` is capped at 20,000 characters in request models.
+- `RunResponse` stdout/stderr are truncated to `run_output_char_limit`
+  (4,000 chars) before being returned - truncation happens only on the
+  response, never before scoring, so it can't affect correctness.
 - Hidden test inputs/outputs and the failure explanation are never
   serialized into any API response (see `EncounterPublic`,
   `SubmissionResult`, `RunResponse`).
@@ -93,6 +107,14 @@ been audited here. Network egress from the Piston container, resource
 limits under concurrent load, and abuse/rate-limiting are explicitly out of
 scope for Day 1 (rate limiting is Backend 2's "costs and rate limits"
 responsibility).
+
+**Local development only:** the Piston container in `docker-compose.yml`
+runs `privileged: true` (required for its sandboxing) with port 2000
+exposed and no authentication in front of it. This is fine on a laptop but
+must not be exposed as-is on any shared/staging/production host - it needs
+to sit behind a network boundary (not publicly routable) before that
+happens, which is a deploy/infra decision for whoever owns that
+environment.
 
 ## Logging
 

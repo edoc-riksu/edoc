@@ -47,6 +47,7 @@ class PistonClient:
         code: str,
         stdin: str = "",
         timeout_ms: int = 2000,
+        memory_limit_bytes: int | None = None,
     ) -> ExecutionResult:
         payload = {
             "language": language,
@@ -55,6 +56,8 @@ class PistonClient:
             "stdin": stdin,
             "run_timeout": timeout_ms,
         }
+        if memory_limit_bytes is not None:
+            payload["run_memory_limit"] = memory_limit_bytes
 
         started = time.monotonic()
         try:

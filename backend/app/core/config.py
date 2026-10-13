@@ -15,8 +15,13 @@ class Settings(BaseSettings):
 
     python_runtime_version: str = "3.10.0"
     default_timeout_ms: int = 2000
+    run_memory_limit_bytes: int = 256 * 1024 * 1024  # 256 MB
 
     encounters_dir: Path = Path(__file__).resolve().parents[2] / "encounters"
+
+    # RunResponse includes raw stdout/stderr for player debugging - cap it so
+    # a submission can't balloon the response size.
+    run_output_char_limit: int = 4_000
 
 
 @lru_cache

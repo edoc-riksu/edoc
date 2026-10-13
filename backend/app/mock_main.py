@@ -11,8 +11,9 @@ Run it on a different port so it can sit alongside the real backend:
 
 import uuid
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Path
 
+from app.api.encounters import ENCOUNTER_ID_PATTERN
 from app.core.config import get_settings
 from app.schemas.encounter import EncounterPublic
 from app.schemas.submission import (
@@ -42,7 +43,7 @@ def health() -> dict[str, str]:
 
 
 @app.get("/api/v1/encounters/{encounter_id}", response_model=EncounterPublic)
-def get_encounter(encounter_id: str) -> EncounterPublic:
+def get_encounter(encounter_id: str = Path(pattern=ENCOUNTER_ID_PATTERN)) -> EncounterPublic:
     try:
         encounter = _encounter_service.get(encounter_id)
     except EncounterNotFoundError:
