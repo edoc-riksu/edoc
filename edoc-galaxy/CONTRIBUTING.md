@@ -18,4 +18,12 @@
 Keep changes to these small, and pull `main` before editing them.
 
 ## Branches and PRs
-Branch from the latest `main` (`frontend/<thing>`), open a PR, wait for "CI / checks" and one approving review.
+Branch from the latest `main` (`frontend/<thing>`), open a PR and wait for "CI / checks" to pass. Approval is not required, but say in the PR what you changed so the others can look.
+
+## Images and art (every asset is original)
+Every image, icon, sprite, texture, sound and font in edoc must be made by us or be properly licensed. Nothing is copied from a mockup, a game, another site or an AI image of a known character or brand.
+- Mockups are layout guides only. Do not crop, trace or export art from them. A watermark or stock mark in a mockup means it cannot ship.
+- Put new art in `public/art/<area>/` and add one line to `public/art/ORIGIN.md`: file name, who made it, how (drawn in code, drawn by hand, generated, licensed), and the source or licence link if there is one.
+- No line in `ORIGIN.md`, no merge. A reviewer or the author of the PR checks this before merging.
+- Prefer drawing in code (canvas or SVG), as the galaxy planets are. It is original by construction and stays sharp at any size.
+- If you are unsure where something came from, leave it out and ask Coordination.
