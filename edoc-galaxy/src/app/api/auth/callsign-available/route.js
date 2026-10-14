@@ -10,9 +10,9 @@ export async function GET(request) {
     return NextResponse.json({ available: false });
   }
 
-  const taken = Boolean(findByCallsign(callsign));
+  const taken = Boolean(await findByCallsign(callsign));
   if (!taken) {
     return NextResponse.json({ available: true });
   }
-  return NextResponse.json({ available: false, suggestions: suggestCallsigns(callsign) });
+  return NextResponse.json({ available: false, suggestions: await suggestCallsigns(callsign) });
 }

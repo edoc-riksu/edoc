@@ -10,7 +10,7 @@ export async function GET() {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
-  const user = findByEmail(email);
+  const user = await findByEmail(email);
   if (!user) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }

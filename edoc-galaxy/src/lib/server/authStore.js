@@ -4,20 +4,52 @@ import path from "node:path";
 import { hashPassword, verifyPassword } from "./passwordHash";
 import { normalizeCallsign, normalizeEmail } from "../authValidation";
 
-// JSON-file-backed mock store. Synchronous fs calls are deliberate: this is
-// a dev-only, low-concurrency store, and sync I/O makes createUser's
-// read-check-write sequence race-proof with no extra locking machinery.
+// Two storage backends, picked at import time:
 //
-// Vercel's serverless functions have a read-only filesystem everywhere
-// except /tmp, so `process.cwd()/.data` (fine for `next dev` locally)
-// throws there. This falls back to the OS temp dir on Vercel instead.
-// Note this is still not real persistence: /tmp isn't guaranteed to
-// survive between invocations on a cold instance. Good enough for this
-// mock to function in a preview/demo; a real backend needs a real database.
+// 1. Upstash Redis over its REST API (no SDK needed, just fetch), when
+//    KV_REST_API_URL/TOKEN or UPSTASH_REDIS_REST_URL/TOKEN are set — these
+//    are the env vars Vercel injects automatically once a Redis/KV storage
+//    resource is created and connected to the project. This is real,
+//    shared, persistent storage: every invocation (any instance, any
+//    region) reads and writes the same key.
+// 2. A JSON-file mock store, used only when those env vars are absent
+//    (plain `next dev` locally). Vercel's serverless functions have a
+//    read-only filesystem everywhere except /tmp, and /tmp is NOT shared
+//    or guaranteed to persist across invocations — so without a Redis
+//    resource connected, accounts created in production can silently
+//    disappear before the next sign-in. If you're seeing "password
+//    doesn't match" for a real, correctly-typed password right after
+//    signing up, this is almost always why: connect a KV/Redis storage
+//    resource to the Vercel project and redeploy.
+const UPSTASH_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+const HAS_REMOTE_STORE = Boolean(UPSTASH_URL && UPSTASH_TOKEN);
+const USERS_KEY = "edoc-galaxy:auth-users";
+
+if (process.env.VERCEL && !HAS_REMOTE_STORE) {
+  console.warn(
+    "[authStore] No KV_REST_API_URL/TOKEN (or UPSTASH_REDIS_REST_URL/TOKEN) found — " +
+      "falling back to a /tmp file store that Vercel does not share or persist across " +
+      "invocations. Connect a Redis/KV storage resource to this project to fix sign-in " +
+      "reliability in production."
+  );
+}
+
 const DATA_DIR = process.env.VERCEL ? path.join(tmpdir(), "edoc-galaxy-auth") : path.join(process.cwd(), ".data");
 const DATA_FILE = path.join(DATA_DIR, "auth-users.json");
 
-function readUsers() {
+async function upstashCommand(command) {
+  const res = await fetch(UPSTASH_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${UPSTASH_TOKEN}`, "Content-Type": "application/json" },
+    body: JSON.stringify(command)
+  });
+  if (!res.ok) throw new Error(`Upstash command failed with status ${res.status}`);
+  const data = await res.json();
+  return data.result;
+}
+
+function readUsersFromFile() {
   if (!existsSync(DATA_FILE)) return [];
   try {
     return JSON.parse(readFileSync(DATA_FILE, "utf8"));
@@ -26,23 +58,41 @@ function readUsers() {
   }
 }
 
-function writeUsers(users) {
+function writeUsersToFile(users) {
   if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
   writeFileSync(DATA_FILE, JSON.stringify(users, null, 2), "utf8");
 }
 
-export function findByCallsign(callsign) {
+async function readUsers() {
+  if (!HAS_REMOTE_STORE) return readUsersFromFile();
+  const raw = await upstashCommand(["GET", USERS_KEY]);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+async function writeUsers(users) {
+  if (!HAS_REMOTE_STORE) return writeUsersToFile(users);
+  await upstashCommand(["SET", USERS_KEY, JSON.stringify(users)]);
+}
+
+export async function findByCallsign(callsign) {
   const target = normalizeCallsign(callsign).toLowerCase();
-  return readUsers().find((u) => u.callsign.toLowerCase() === target) || null;
+  const users = await readUsers();
+  return users.find((u) => u.callsign.toLowerCase() === target) || null;
 }
 
-export function findByEmail(email) {
+export async function findByEmail(email) {
   const target = normalizeEmail(email);
-  return readUsers().find((u) => u.email === target) || null;
+  const users = await readUsers();
+  return users.find((u) => u.email === target) || null;
 }
 
-export function createUser({ callsign, email, password }) {
-  const users = readUsers();
+export async function createUser({ callsign, email, password }) {
+  const users = await readUsers();
   const cleanCallsign = normalizeCallsign(callsign);
   const cleanEmail = normalizeEmail(email);
 
@@ -64,12 +114,12 @@ export function createUser({ callsign, email, password }) {
     createdAt: new Date().toISOString()
   };
   users.push(user);
-  writeUsers(users);
+  await writeUsers(users);
   return toPublicUser(user);
 }
 
-export function verifyCredentials(email, password) {
-  const user = findByEmail(email);
+export async function verifyCredentials(email, password) {
+  const user = await findByEmail(email);
   if (!user || !verifyPassword(password, user.passwordHash)) return null;
   return toPublicUser(user);
 }
@@ -80,8 +130,8 @@ export function toPublicUser(user) {
 
 /** Up to `count` unused variants of a taken callsign, for the signup form's
  *  suggestion chips. */
-export function suggestCallsigns(base, count = 2) {
-  const users = readUsers();
+export async function suggestCallsigns(base, count = 2) {
+  const users = await readUsers();
   const taken = new Set(users.map((u) => u.callsign.toLowerCase()));
   const clean = normalizeCallsign(base).replace(/[^a-zA-Z0-9_]/g, "") || "pilot";
   const suggestions = [];
