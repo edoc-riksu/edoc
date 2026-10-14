@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "encounter.schema.json",
+  "title": "Encounter (public)",
+  "description": "Response of GET /api/v1/encounters/{id}. Never includes hidden tests, hints or the failure explanation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "language", "title", "difficulty", "module", "concepts", "problem", "starter_code", "sample_tests", "limits"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z]+-\\d{3}$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "language": { "type": "string", "examples": ["python"] },
+    "title": { "type": "string" },
+    "difficulty": { "type": "string", "examples": ["easy"] },
+    "module": { "type": "string", "examples": ["python-basics"] },
+    "concepts": { "type": "array", "items": { "type": "string" } },
+    "problem": { "type": "string" },
+    "starter_code": { "type": "string" },
+    "sample_tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "input", "expected_output"],
+        "properties": {
+          "id": { "type": "string" },
+          "input": { "type": "string" },
+          "expected_output": { "type": "string" }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeout_ms"],
+      "properties": { "timeout_ms": { "type": "integer", "minimum": 1 } }
+    }
+  }
+}

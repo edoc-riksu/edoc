@@ -1,0 +1,7 @@
+{
+  "encounter_id": "py-001",
+  "level": 2,
+  "levels_total": 3,
+  "text": "You can use input().split() to get the two numbers as strings, then convert each to int.",
+  "cost": { "fuel": 0 }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "py-001",
+  "version": 1,
+  "language": "python",
+  "title": "Sum of Two Integers",
+  "difficulty": "easy",
+  "module": "python-basics",
+  "concepts": ["input-output", "arithmetic"],
+  "problem": "Given two integers on a single line of standard input, separated by a space, print their sum.",
+  "starter_code": "# Read two integers from a single line of input, separated by a space.\n# Print their sum.\n\n# Write your code here\n",
+  "sample_tests": [
+    { "id": "sample-1", "input": "2 3", "expected_output": "5" },
+    { "id": "sample-2", "input": "10 -4", "expected_output": "6" }
+  ],
+  "limits": { "timeout_ms": 2000 }
+}

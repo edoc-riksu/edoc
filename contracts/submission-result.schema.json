@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "submission-result.schema.json",
+  "title": "Submission result",
+  "description": "Response of POST /api/v1/submissions. Request body: { encounter_id, code }. Runs sample and hidden tests and returns the authoritative verdict and score. Hidden test inputs and outputs are never returned.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["submission_id", "encounter_id", "verdict", "score", "tests", "execution"],
+  "properties": {
+    "submission_id": { "type": "string", "format": "uuid" },
+    "encounter_id": { "type": "string", "pattern": "^[a-z]+-\\d{3}$" },
+    "verdict": {
+      "type": "string",
+      "enum": ["ACCEPTED", "WRONG_ANSWER", "RUNTIME_ERROR", "TIME_LIMIT_EXCEEDED", "COMPILATION_ERROR", "SYSTEM_ERROR"]
+    },
+    "score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["earned", "total"],
+      "properties": {
+        "earned": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "tests": {
+      "type": "array",
+      "description": "Empty when verdict is SYSTEM_ERROR because the sandbox was unavailable.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["test_id", "passed"],
+        "properties": {
+          "test_id": { "type": "string" },
+          "passed": { "type": "boolean" }
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime_ms"],
+      "properties": { "runtime_ms": { "type": "integer", "minimum": 0, "description": "Slowest single test." } }
+    }
+  }
+}

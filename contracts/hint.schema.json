@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hint.schema.json",
+  "title": "Hint response (PROPOSED, not built yet)",
+  "description": "Response of POST /api/v1/encounters/{id}/hints. Request body: { level } where level is 1, 2 or 3. 1 is a nudge, 2 points at the approach, 3 is the walkthrough. 404 if the encounter or level does not exist; 422 if level is not 1 to 3.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["encounter_id", "level", "levels_total", "text", "cost"],
+  "properties": {
+    "encounter_id": { "type": "string", "pattern": "^[a-z]+-\\d{3}$" },
+    "level": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "levels_total": { "type": "integer", "const": 3 },
+    "text": { "type": "string" },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fuel"],
+      "properties": { "fuel": { "type": "integer", "minimum": 0, "description": "Placeholder: 0 until the cost rules are decided (plan Day 37)." } }
+    }
+  }
+}

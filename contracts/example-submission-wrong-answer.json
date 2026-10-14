@@ -1,0 +1,16 @@
+{
+  "submission_id": "b7d2e0f1-5a63-4c8e-8f0a-2d9c4e1a7b22",
+  "encounter_id": "py-001",
+  "verdict": "WRONG_ANSWER",
+  "score": { "earned": 60, "total": 100 },
+  "tests": [
+    { "test_id": "sample-1", "passed": true },
+    { "test_id": "sample-2", "passed": true },
+    { "test_id": "hidden-1", "passed": true },
+    { "test_id": "hidden-2", "passed": true },
+    { "test_id": "hidden-3", "passed": true },
+    { "test_id": "hidden-4", "passed": false },
+    { "test_id": "hidden-5", "passed": false }
+  ],
+  "execution": { "runtime_ms": 44 }
+}
