@@ -14,6 +14,8 @@ export const APPROACH = {
         rock: 0,
         starterCode:
           "# The pod's transponder gives up its label when you call read_label().\n# Store what it returns in a variable named cargo_id.\n\ncargo_id = None\n",
+        example: "read_label() -> \"CARGO-7742-ALPHA\"",
+        constraints: ["cargo_id must be a string", "Call read_label() — don't hardcode the label"],
         tests: [
           {
             description: "cargo_id holds the pod's label",
@@ -40,6 +42,8 @@ export const APPROACH = {
         rock: 1,
         starterCode:
           "# Mission control has already loaded gaps (a list of gap widths) and\n# SHIP_WIDTH into memory. Build safe_path: True where a gap is wide\n# enough to fly through, False otherwise.\n\nsafe_path = []\nfor gap in gaps:\n    pass\n",
+        example: "gaps=[4, 1, 6, 2, 8], SHIP_WIDTH=3 -> safe_path=[True, False, True, False, True]",
+        constraints: ["gaps: list of integers", "SHIP_WIDTH: integer > 0"],
         tests: [
           {
             description: "safe_path marks each wide-enough gap as safe",

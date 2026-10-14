@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, HelpCircle, XCircle } from "lucide-react";
+import { Bot, CheckCircle2, ChevronLeft, Clock, Lock, X, XCircle } from "lucide-react";
 import Button from "../../ui/Button";
+import HullBar from "../../ui/HullBar";
 import CodeEditor from "../../ui/CodeEditor";
 import { runPyTests } from "../../lib/pySandbox";
 import { sfx } from "../../galaxy/audio";
@@ -11,6 +12,11 @@ import "./console.css";
 
 const HULL_DAMAGE = 20;
 const HULL_REPAIR = 15;
+const HINT_TIERS = ["Nudge", "Clue", "Walkthrough"];
+
+function titleCase(s) {
+  return (s || "").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 /**
  * The code console: type Python, hit Run, get real pass/fail from a real
@@ -18,22 +24,37 @@ const HULL_REPAIR = 15;
  * repairs it and clears the obstacle. Hull hitting zero is the loss
  * condition — the only way out is Rematch, on this same encounter.
  */
-export default function CodeConsole({ encounter, hull, onHullChange, onPass, onExit, say }) {
+export default function CodeConsole({ encounter, hull, onHullChange, onPass, onExit, say, index = 0, total = 1, language = "Python" }) {
   const [code, setCode] = useState(encounter.starterCode || "");
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState(null);
+  const [attempts, setAttempts] = useState(1);
   const [hintsRevealed, setHintsRevealed] = useState(0);
+  const [bolt, setBolt] = useState(false);
   const [defeat, setDefeat] = useState(null); // null | { concept, reason }
 
   // A fresh encounter (after clearing this one) always starts clean.
   useEffect(() => {
     setCode(encounter.starterCode || "");
     setResult(null);
+    setAttempts(1);
     setHintsRevealed(0);
+    setBolt(false);
     setDefeat(null);
   }, [encounter.id, encounter.starterCode]);
 
-  const revealHint = (i) => setHintsRevealed((n) => Math.max(n, i + 1));
+  // Hints unlock one at a time — asking for a later tier before an
+  // earlier one isn't allowed.
+  const revealHint = (i) => {
+    if (defeat || hintsRevealed !== i) return;
+    setHintsRevealed(i + 1);
+  };
+
+  const handleReset = () => {
+    if (defeat) return;
+    setCode(encounter.starterCode || "");
+    setResult(null);
+  };
 
   const handleRematch = () => {
     setDefeat(null);
@@ -53,6 +74,8 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
       say?.("The Python sandbox couldn't load — check your connection and try again.");
       return;
     }
+
+    setAttempts((a) => a + 1);
 
     if (outcome.allPassed) {
       setResult({ status: "pass", results: outcome.results });
@@ -76,70 +99,141 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     }
   };
 
-  return (
-    <section className="cs" aria-label={`Code console — ${encounter.title}`} aria-live="polite">
-      <div className="cs-head">
-        <div>
-          <p className="cs-eyebrow">Encounter</p>
-          <h2 className="cs-title">{encounter.title}</h2>
-        </div>
-        <Button variant="secondary" size="sm" onClick={onExit} disabled={!!defeat}>
-          Back to obstacle
-        </Button>
-      </div>
-      <p className="cs-blurb">{encounter.blurb}</p>
+  const conceptLabel = titleCase(encounter.concept?.name);
 
-      <div className="cs-body">
-        <CodeEditor className="cs-editor" language="python" value={code} onChange={setCode} disabled={!!defeat} />
-        <div className="cs-side">
-          <div className="cs-hints">
-            <p className="cs-hints-label">Hints ({hintsRevealed}/3)</p>
-            <div className="cs-hint-buttons">
-              {[0, 1, 2].map((i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className="cs-hint-btn"
-                  disabled={hintsRevealed > i || !!defeat}
-                  onClick={() => revealHint(i)}
-                  aria-label={`Reveal hint ${i + 1}`}
-                >
-                  <HelpCircle size={13} aria-hidden="true" /> {i + 1}
-                </button>
-              ))}
+  return (
+    <section className="cs" aria-label={`Code console — ${encounter.title}`}>
+      <header className="cs-bar">
+        <div className="cs-bar-left">
+          <button type="button" className="cs-back" onClick={onExit} disabled={!!defeat} aria-label="Back to obstacle">
+            <ChevronLeft size={16} aria-hidden="true" />
+          </button>
+          <span className="cs-logo">edoc</span>
+          <nav className="cs-crumb" aria-label="Where you are">
+            <span>{language}</span>
+            <span className="cs-crumb-sep">/</span>
+            <span>{conceptLabel}</span>
+            <span className="cs-crumb-sep">/</span>
+            <span className="cs-crumb-now">{encounter.title}</span>
+          </nav>
+        </div>
+        <div className="cs-bar-right">
+          <span className="cs-scored-badge">Scored · runs in your browser</span>
+          <HullBar value={hull} />
+          <span className="cs-attempt">Attempt {attempts}</span>
+        </div>
+      </header>
+
+      <div className="cs-main">
+        <div className="cs-problem">
+          <p className="cs-eyebrow">Encounter {index + 1} of {total}</p>
+          <h2 className="cs-title">{encounter.title}</h2>
+          <span className="cs-tag">{conceptLabel}</span>
+          <p className="cs-desc">{encounter.blurb}</p>
+          {encounter.example && (
+            <div className="cs-example">
+              <code>{encounter.example}</code>
             </div>
-            {hintsRevealed > 0 && (
-              <ul className="cs-hint-list">
-                {(encounter.hints || []).slice(0, hintsRevealed).map((h, i) => (
-                  <li key={i}>{h}</li>
+          )}
+          {encounter.constraints?.length > 0 && (
+            <div className="cs-constraints">
+              <p className="cs-constraints-label">Constraints</p>
+              <ul>
+                {encounter.constraints.map((c, i) => (
+                  <li key={i}>{c}</li>
                 ))}
               </ul>
-            )}
-          </div>
-
-          {result && (
-            <div className={`cs-result cs-result--${result.status}`} role="status">
-              {result.status === "unavailable" && <p>Python sandbox unavailable right now — try again in a moment.</p>}
-              {result.status !== "unavailable" &&
-                result.results.map((r, i) => (
-                  <p key={i} className={r.pass ? "is-pass" : "is-fail"}>
-                    {r.pass ? <CheckCircle2 size={13} aria-hidden="true" /> : <XCircle size={13} aria-hidden="true" />}
-                    <span>
-                      {r.description}
-                      {r.error ? ` — ${r.error}` : ""}
-                    </span>
-                  </p>
-                ))}
             </div>
           )}
         </div>
+
+        <div className="cs-workspace">
+          <div className="cs-editor-wrap">
+            <div className="cs-tabs">
+              <span className="cs-tab is-active">solution.py</span>
+            </div>
+            <CodeEditor className="cs-editor" language="python" value={code} onChange={setCode} onRunShortcut={handleRun} disabled={!!defeat} />
+            <div className="cs-editor-actions">
+              <Button variant="secondary" onClick={handleReset} disabled={!!defeat}>
+                Reset code
+              </Button>
+              <div className="cs-run-wrap">
+                <Button size="lg" loading={running} disabled={!!defeat} onClick={handleRun}>
+                  Run tests
+                </Button>
+                <span className="cs-run-hint">Ctrl+Enter</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="cs-tests">
+            <p className="cs-tests-label">Tests</p>
+            <ul className="cs-tests-list">
+              {(encounter.tests || []).map((t, i) => {
+                const r = result?.results?.[i];
+                const state = !result || result.status === "unavailable" ? "pending" : r?.pass ? "pass" : "fail";
+                return (
+                  <li key={i} className={`cs-test cs-test--${state}`}>
+                    {state === "pending" && <Clock size={14} aria-hidden="true" />}
+                    {state === "pass" && <CheckCircle2 size={14} aria-hidden="true" />}
+                    {state === "fail" && <XCircle size={14} aria-hidden="true" />}
+                    <span>
+                      {t.description}
+                      {r && !r.pass && r.error ? ` — ${r.error}` : ""}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            {result?.status === "unavailable" && (
+              <p className="cs-unavailable">Python sandbox unavailable right now — try again in a moment.</p>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="cs-actions">
-        <Button size="lg" loading={running} disabled={!!defeat} onClick={handleRun}>
-          Run
-        </Button>
-      </div>
+      <button type="button" className="cs-bolt-tab" onClick={() => setBolt((v) => !v)} aria-expanded={bolt} aria-label="Ask Bolt for a hint">
+        <Bot size={16} aria-hidden="true" />
+        <span>Ask Bolt</span>
+      </button>
+
+      {bolt && (
+        <div className="cs-bolt-panel" role="complementary" aria-label="Bolt, hint companion">
+          <div className="cs-bolt-head">
+            <Bot size={22} aria-hidden="true" />
+            <div className="cs-bolt-id">
+              <p className="cs-bolt-name">Bolt</p>
+              <p className="cs-bolt-role">Companion AI</p>
+            </div>
+            <button type="button" className="cs-bolt-close" onClick={() => setBolt(false)} aria-label="Close">
+              <X size={16} aria-hidden="true" />
+            </button>
+          </div>
+          {HINT_TIERS.map((tier, i) => {
+            const unlocked = hintsRevealed > i;
+            const canReveal = hintsRevealed === i && !defeat;
+            return (
+              <div key={i} className={`cs-bolt-tier ${unlocked ? "is-unlocked" : ""}`}>
+                <p className="cs-bolt-tier-label">
+                  {i + 1}. {tier}
+                </p>
+                {unlocked ? (
+                  <p className="cs-bolt-tier-text">{encounter.hints?.[i]}</p>
+                ) : canReveal ? (
+                  <button type="button" className="cs-bolt-reveal" onClick={() => revealHint(i)}>
+                    Reveal {tier.toLowerCase()}
+                  </button>
+                ) : (
+                  <p className="cs-bolt-tier-locked">
+                    <Lock size={12} aria-hidden="true" /> Ask for hint {i} first
+                  </p>
+                )}
+              </div>
+            );
+          })}
+          <p className="cs-bolt-footer">Hints used: {hintsRevealed} of 3</p>
+        </div>
+      )}
 
       {defeat && <DefeatDialog defeat={defeat} onRematch={handleRematch} />}
     </section>

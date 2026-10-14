@@ -1,4 +1,5 @@
 "use client";
+import { useRef } from "react";
 import dynamic from "next/dynamic";
 import { loader } from "@monaco-editor/react";
 
@@ -21,7 +22,14 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react").then((mod) => 
  * `onChange` — grading reads that exact string, same as any plain text
  * input would.
  */
-export default function CodeEditor({ language = "python", value, onChange, disabled, className = "" }) {
+export default function CodeEditor({ language = "python", value, onChange, onRunShortcut, disabled, className = "" }) {
+  const onRunShortcutRef = useRef(onRunShortcut);
+  onRunShortcutRef.current = onRunShortcut;
+
+  const handleMount = (editor, monaco) => {
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => onRunShortcutRef.current?.());
+  };
+
   return (
     <div className={`ui-code-editor ${className}`}>
       <MonacoEditor
@@ -31,6 +39,7 @@ export default function CodeEditor({ language = "python", value, onChange, disab
         theme="vs-dark"
         value={value}
         onChange={(v) => onChange(v ?? "")}
+        onMount={handleMount}
         options={{
           readOnly: disabled,
           domReadOnly: disabled,

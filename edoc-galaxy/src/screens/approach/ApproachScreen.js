@@ -213,6 +213,9 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
           }}
           onExit={() => setEngaged(false)}
           say={say}
+          index={idx}
+          total={encounters.length}
+          language={planetName}
         />
       ) : (
         <section key={`${idx}-${pulse}`} className={`ap-card ${rockHover ? "is-lit" : ""} ${pulse ? "is-pulse" : ""}`} aria-labelledby="ap-title" aria-live="polite">
