@@ -6,11 +6,12 @@
     "dev": "next dev -p 4173",
     "build": "next build",
     "start": "next start -p 4173",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && node scripts/copy-monaco.js",
     "db:migrate:deploy": "prisma migrate deploy",
     "test": "vitest run"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "@prisma/client": "^6.19.3",
     "lucide-react": "^0.468.0",
     "next": "^15.5.9",

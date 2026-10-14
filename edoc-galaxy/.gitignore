@@ -2,3 +2,6 @@ node_modules
 .next
 .env
 .env.local
+
+# generated at install time by scripts/copy-monaco.js — see src/ui/CodeEditor.js
+public/monaco-editor/

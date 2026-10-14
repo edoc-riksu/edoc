@@ -281,3 +281,22 @@
     gap: 7px;
   }
 }
+
+/* ---------- CodeEditor (Monaco) ---------- */
+.ui-code-editor {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--glass-edge);
+}
+.ui-code-editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: #1e1e1e;
+  color: var(--ink-dim);
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, HelpCircle, XCircle } from "lucide-react";
 import Button from "../../ui/Button";
+import CodeEditor from "../../ui/CodeEditor";
 import { runPyTests } from "../../lib/pySandbox";
 import { sfx } from "../../galaxy/audio";
 import DefeatDialog from "./DefeatDialog";
@@ -89,14 +90,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
       <p className="cs-blurb">{encounter.blurb}</p>
 
       <div className="cs-body">
-        <textarea
-          className="cs-editor"
-          value={code}
-          onChange={(ev) => setCode(ev.target.value)}
-          disabled={!!defeat}
-          spellCheck={false}
-          aria-label="Python code"
-        />
+        <CodeEditor className="cs-editor" language="python" value={code} onChange={setCode} disabled={!!defeat} />
         <div className="cs-side">
           <div className="cs-hints">
             <p className="cs-hints-label">Hints ({hintsRevealed}/3)</p>
