@@ -37,19 +37,25 @@ export async function POST(request) {
     return NextResponse.json({ fields }, { status: 422 });
   }
 
-  if (findByCallsign(callsign)) {
-    return NextResponse.json({ code: "callsign_taken", suggestions: suggestCallsigns(callsign) }, { status: 409 });
+  if (await findByCallsign(callsign)) {
+    return NextResponse.json(
+      { code: "callsign_taken", suggestions: await suggestCallsigns(callsign) },
+      { status: 409 }
+    );
   }
-  if (findByEmail(email)) {
+  if (await findByEmail(email)) {
     return NextResponse.json({ code: "email_taken" }, { status: 409 });
   }
 
   let user;
   try {
-    user = createUser({ callsign, email, password });
+    user = await createUser({ callsign, email, password });
   } catch (err) {
     if (err.code === "CALLSIGN_TAKEN") {
-      return NextResponse.json({ code: "callsign_taken", suggestions: suggestCallsigns(callsign) }, { status: 409 });
+      return NextResponse.json(
+        { code: "callsign_taken", suggestions: await suggestCallsigns(callsign) },
+        { status: 409 }
+      );
     }
     if (err.code === "EMAIL_TAKEN") {
       return NextResponse.json({ code: "email_taken" }, { status: 409 });

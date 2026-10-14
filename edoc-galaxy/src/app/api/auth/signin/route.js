@@ -22,7 +22,7 @@ export async function POST(request) {
     return NextResponse.json({ retryAfter: Math.ceil(limited.retryAfterMs / 1000) }, { status: 429 });
   }
 
-  const user = verifyCredentials(email, password);
+  const user = await verifyCredentials(email, password);
   if (!user) {
     return NextResponse.json({ code: "invalid_credentials" }, { status: 401 });
   }
