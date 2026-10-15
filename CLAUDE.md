@@ -1,6 +1,6 @@
 # edoc: rules for Claude sessions
 
-Read README.md and CONTRIBUTING.md first. Every teammate runs their own session on their own clone and branch; these rules keep those sessions consistent.
+Read README.md, CONTRIBUTING.md and edoc-galaxy/CONTRIBUTING.md first. The web app lives in `edoc-galaxy/`; `backend/` is the Python judging service. Every teammate runs their own session on their own clone and branch; these rules keep those sessions consistent.
 
 ## Product names that never change
 
@@ -24,9 +24,8 @@ Comm-Link tabs (5):
 
 These are shared by everyone. If a task seems to need a change here, stop and ask the user to check with the team first, then keep the change minimal.
 
-- The `pilotProgress` state model and the public API of `src/context/PilotContext.js` (`setPracticeTargetIndex`, `beginPlanetTravel`, `routeToScreen`, `travelSequence`).
-- The lesson code compilers, sandboxes and grading (`src/lib/jsSandbox.js`, `pySandbox.js`, `tsSandbox.js`, `lessonTests.js`, `submissionValidator.js`).
-- Top-level route and layout structure (`src/app/layout.js`, `src/app/cockpit/page.js`).
+- The backend's judging and scoring (`backend/app/judge`, `backend/app/services`). The frontend never computes a verdict or a score.
+- The shared files of the app: `edoc-galaxy/package.json`, `edoc-galaxy/package-lock.json`, `edoc-galaxy/src/app/globals.css`, `edoc-galaxy/src/app/layout.js`.
 - Lesson lock order: lessons unlock strictly in sequence. Practice is never locked.
 
 ## Product rules (from the v1 spec)
@@ -39,9 +38,9 @@ These are shared by everyone. If a task seems to need a change here, stop and as
 
 ## Code conventions
 
-- Plain JavaScript (`.js`), Next.js App Router, Tailwind v4. There is no `tsconfig.json`; do not add TypeScript files without agreement.
-- Match the existing style: `"use client"` where needed, Tailwind classes, lucide-react icons, framer-motion for animation.
-- The HUD is glass-over-galaxy: `CinematicGalaxyBackground` sits behind everything, so panels use translucent classes such as `bg-slate-950/25 backdrop-blur-md`. Do not add opaque full-screen backgrounds (for example `bg-black` on wrappers) that hide it.
+- Plain JavaScript (`.js`), Next.js App Router. There is no `tsconfig.json`; do not add TypeScript files without agreement.
+- Match the existing style: `"use client"` where needed, lucide-react icons, plain CSS. Colours and fonts come from the tokens in `edoc-galaxy/src/app/globals.css`; use the shared Button and Panel from `edoc-galaxy/src/ui` instead of writing new ones.
+- Keep to your own folder (see `edoc-galaxy/CONTRIBUTING.md`). Do not edit another person's files from your branch.
 - Prefer small, focused changes. Do not reformat or reorganise files you were not asked to touch.
 
 ## Working rules
@@ -50,7 +49,7 @@ These are shared by everyone. If a task seems to need a change here, stop and as
 - Keep pull requests small and start the title with the plan day and area, for example `D12 frontend: cockpit frame`.
 - Never commit secrets or a real `.env` file. Use `.env.example` for variable names only.
 - Changing an API or database shape: say so in the team channel before merging.
-- Before finishing, run `npm run build` and fix anything it reports.
+- Before finishing, run `npm run build` inside `edoc-galaxy/` and fix anything it reports.
 
 ## Who owns what
 
