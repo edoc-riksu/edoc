@@ -6,7 +6,7 @@ Anything inside `contracts/` changes by pull request, with the owner's review (s
 
 | File | What it describes | Status |
 | --- | --- | --- |
-| `encounter.schema.json` + `example-encounter.json` | `GET /api/v1/encounters/{id}` | Live in `backend/` |
+| `encounter.schema.json` + `example-encounter.json` | `GET /api/v1/encounters/{id}` | Live in `backend/`, except `hint_levels`, which the contract adds and the backend and mock still need to return |
 | `run-result.schema.json` + `example-run-result.json` | `POST /api/v1/executions/run` | Live in `backend/` |
 | `submission-result.schema.json` + `example-submission-*.json` | `POST /api/v1/submissions` | Live in `backend/` |
 | `hint.schema.json` + `example-hint.json` | `POST /api/v1/encounters/{id}/hints` | **Proposed.** Not built yet (plan Days 22 and 37). The hint text already exists in each encounter file. |
@@ -31,6 +31,7 @@ All errors use the FastAPI shape, with the HTTP status carrying the meaning.
 | 404 | `{"detail": "Encounter not found"}` | Unknown encounter id |
 | 422 | `{"detail": [{"loc": ["body","code"], "msg": "...", "type": "..."}]}` | Bad id pattern, code too long, missing field |
 | 503 | `{"detail": "Execution backend is unavailable"}` | Run only: the sandbox is down |
+| 409 | `{"detail": "Ask hint level 1 first"}` | Hints only: an earlier hint level has not been asked yet |
 
 A submission can't be judged when the sandbox is down; it comes back as a normal 200 with `verdict: "SYSTEM_ERROR"`, `score.earned: 0` and an empty `tests` list. Treat that as "try again", not as a loss.
 
@@ -40,11 +41,20 @@ Three levels per encounter: 1 is a nudge, 2 points at the approach, 3 is the wal
 
 Request: `{"level": 1}`. Response: see `example-hint.json`. `cost.fuel` is a placeholder (always 0 until the cost rules are decided on Day 37).
 
-Open questions for the team, to settle before building:
+The public encounter carries `hint_levels` (always 3 today), so the console can draw the right number of hint buttons without a separate call.
 
-1. Must levels be asked in order (1 before 2 before 3), or can a player jump to 3?
-2. Where does the player's fuel balance live (Backend 2's database), and does this service check it or only report the cost?
-3. Does the public encounter need a `hint_levels` field, or is "always 3" fine?
+### Decisions
+
+Agreed in the review of PR #22 (Frontend 2). Backend 2 still to confirm decision 2:
+
+1. **Hints are asked in order.** A player can ask for level N only after asking levels 1 to N-1. Asking for a later level too early returns `409` with `{"detail": "Ask hint level 1 first"}`. Asking for a level already asked again is fine and returns the same text. Otherwise a player could buy the walkthrough for the price of a nudge.
+2. **The fuel balance lives in Backend 2's database.** Backend 2's service checks and deducts the fuel. This service only reports the cost (`cost.fuel`) and never looks at the balance.
+3. **The encounter has a `hint_levels` field**, always 3 for now. It mirrors `levels_total` in the hint response.
+
+### Still open
+
+- How the hints service knows which player is asking, so it can enforce the order. It needs the player identity from Backend 2's session (hint usage per player is plan Day 36).
+- Whether sample tests need a plain-English description for the console to show why a test failed. Not added yet; `id`, `input` and `expected_output` only.
 
 ## Not covered yet
 
