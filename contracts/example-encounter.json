@@ -12,5 +12,6 @@
     { "id": "sample-1", "input": "2 3", "expected_output": "5" },
     { "id": "sample-2", "input": "10 -4", "expected_output": "6" }
   ],
+  "hint_levels": 3,
   "limits": { "timeout_ms": 2000 }
 }
