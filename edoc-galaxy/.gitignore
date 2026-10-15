@@ -2,6 +2,3 @@ node_modules
 .next
 .env
 .env.local
-
-# mock auth store (dev-only JSON file, see src/lib/server/authStore.js)
-.data/

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { createUser, findByCallsign, findByEmail, suggestCallsigns } from "../../../../lib/server/authStore";
+import { createUser, findByCallsign, findByEmail, suggestCallsigns } from "../../../../lib/server/pilotStore";
 import { createSessionToken, SESSION_COOKIE_NAME, maxAgeForRemember } from "../../../../lib/server/sessionToken";
 import { rateLimit, getClientIp } from "../../../../lib/server/rateLimit";
+import { logger, withErrorLogging } from "../../../../lib/logger";
 import {
   normalizeCallsign,
   normalizeEmail,
@@ -11,7 +12,7 @@ import {
   AUTH_MESSAGES
 } from "../../../../lib/authValidation";
 
-export async function POST(request) {
+export const POST = withErrorLogging(async function POST(request) {
   const ip = getClientIp(request);
   const limited = rateLimit(`signup:${ip}`, { limit: 10, windowMs: 60 * 60 * 1000 });
   if (!limited.allowed) {
@@ -63,8 +64,10 @@ export async function POST(request) {
     throw err;
   }
 
+  logger.info("pilot account created", { userId: user.id });
+
   const response = NextResponse.json({ user }, { status: 201 });
-  response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(email, { remember: true }), {
+  response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(user.id, { remember: true }), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -72,4 +75,4 @@ export async function POST(request) {
     maxAge: maxAgeForRemember(true)
   });
   return response;
-}
+}, "POST /api/auth/signup");
