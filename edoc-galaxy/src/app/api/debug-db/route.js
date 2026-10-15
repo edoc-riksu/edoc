@@ -5,6 +5,16 @@ import { db } from "../../../lib/db";
 // mystery on live deploys is resolved. Reports exactly which database/host
 // the live Lambda is actually connected to, and whether it can see the
 // users table, bypassing all guesswork about which env var value is live.
+function maskedConnectionTarget() {
+  const raw = process.env.DATABASE_URL || "";
+  try {
+    const url = new URL(raw);
+    return { host: url.hostname, database: url.pathname.replace("/", ""), hasValue: Boolean(raw) };
+  } catch {
+    return { host: null, database: null, hasValue: Boolean(raw) };
+  }
+}
+
 export async function GET() {
   try {
     const info = await db.$queryRaw`
@@ -16,8 +26,8 @@ export async function GET() {
       SELECT table_name FROM information_schema.tables
       WHERE table_schema = 'public'
     `;
-    return NextResponse.json({ info: info[0], tables });
+    return NextResponse.json({ info: info[0], tables, envTarget: maskedConnectionTarget() });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, envTarget: maskedConnectionTarget() }, { status: 500 });
   }
 }
