@@ -1,0 +1,13 @@
+{
+  "encounter_id": "py-001",
+  "tests": [
+    { "test_id": "sample-1", "passed": true, "stdout": "5\n", "stderr": "" },
+    {
+      "test_id": "sample-2",
+      "passed": false,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"main.py\", line 2, in <module>\n    print(a + b)\nNameError: name 'a' is not defined\n"
+    }
+  ],
+  "execution": { "runtime_ms": 41 }
+}

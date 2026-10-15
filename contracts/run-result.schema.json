@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "run-result.schema.json",
+  "title": "Run result",
+  "description": "Response of POST /api/v1/executions/run. Request body: { encounter_id, code }. Runs the player's code against the sample tests only. Informational: never use it to award progress or damage.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["encounter_id", "tests", "execution"],
+  "properties": {
+    "encounter_id": { "type": "string", "pattern": "^[a-z]+-\\d{3}$" },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["test_id", "passed", "stdout", "stderr"],
+        "properties": {
+          "test_id": { "type": "string" },
+          "passed": { "type": "boolean" },
+          "stdout": { "type": "string", "description": "Cut to 4,000 characters." },
+          "stderr": { "type": "string", "description": "Cut to 4,000 characters." }
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime_ms"],
+      "properties": { "runtime_ms": { "type": "integer", "minimum": 0 } }
+    }
+  }
+}
