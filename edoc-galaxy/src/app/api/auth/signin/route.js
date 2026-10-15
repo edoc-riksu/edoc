@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { verifyCredentials } from "../../../../lib/server/authStore";
+import { verifyCredentials } from "../../../../lib/server/pilotStore";
 import { createSessionToken, SESSION_COOKIE_NAME, maxAgeForRemember } from "../../../../lib/server/sessionToken";
 import { rateLimit, getClientIp } from "../../../../lib/server/rateLimit";
+import { logger, withErrorLogging } from "../../../../lib/logger";
 import { normalizeEmail } from "../../../../lib/authValidation";
 
-export async function POST(request) {
+export const POST = withErrorLogging(async function POST(request) {
   let body;
   try {
     body = await request.json();
@@ -24,11 +25,12 @@ export async function POST(request) {
 
   const user = await verifyCredentials(email, password);
   if (!user) {
+    logger.warn("failed sign-in attempt", { email });
     return NextResponse.json({ code: "invalid_credentials" }, { status: 401 });
   }
 
   const response = NextResponse.json({ user }, { status: 200 });
-  response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(email, { remember }), {
+  response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(user.id, { remember }), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -36,4 +38,4 @@ export async function POST(request) {
     maxAge: maxAgeForRemember(remember)
   });
   return response;
-}
+}, "POST /api/auth/signin");

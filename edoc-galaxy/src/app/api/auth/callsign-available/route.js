@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { findByCallsign, suggestCallsigns } from "../../../../lib/server/authStore";
+import { findByCallsign, suggestCallsigns } from "../../../../lib/server/pilotStore";
 import { isValidCallsign, normalizeCallsign } from "../../../../lib/authValidation";
 
 export async function GET(request) {
