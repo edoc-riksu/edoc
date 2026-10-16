@@ -22,12 +22,18 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react").then((mod) => 
  * `onChange` — grading reads that exact string, same as any plain text
  * input would.
  */
-export default function CodeEditor({ language = "python", value, onChange, onRunShortcut, disabled, className = "" }) {
+export default function CodeEditor({ language = "python", value, onChange, onRunShortcut, onSubmitShortcut, disabled, className = "" }) {
   const onRunShortcutRef = useRef(onRunShortcut);
   onRunShortcutRef.current = onRunShortcut;
+  const onSubmitShortcutRef = useRef(onSubmitShortcut);
+  onSubmitShortcutRef.current = onSubmitShortcut;
 
   const handleMount = (editor, monaco) => {
+    // Ctrl/Cmd+Enter runs (free, debug); Ctrl/Cmd+Shift+Enter submits (the
+    // graded attempt) — the same split most judges use, so it's muscle
+    // memory a pilot coming from LeetCode or HackerRank already has.
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => onRunShortcutRef.current?.());
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => onSubmitShortcutRef.current?.());
   };
 
   return (

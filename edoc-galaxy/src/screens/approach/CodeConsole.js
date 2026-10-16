@@ -251,7 +251,15 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
             <div className="cs-tabs">
               <span className="cs-tab is-active">solution.py</span>
             </div>
-            <CodeEditor className="cs-editor" language="python" value={code} onChange={setCode} onRunShortcut={handleRunDebug} disabled={!!defeat} />
+            <CodeEditor
+              className="cs-editor"
+              language="python"
+              value={code}
+              onChange={setCode}
+              onRunShortcut={handleRunDebug}
+              onSubmitShortcut={handleSubmit}
+              disabled={!!defeat}
+            />
             <div className="cs-editor-actions">
               <Button variant="secondary" onClick={handleReset} disabled={!!defeat}>
                 Reset code
@@ -263,9 +271,12 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
                   </Button>
                   <span className="cs-run-hint">Ctrl+Enter</span>
                 </div>
-                <Button size="lg" loading={busy === "submit"} disabled={!!busy || !!defeat} onClick={handleSubmit}>
-                  Submit
-                </Button>
+                <div className="cs-run-btn-group">
+                  <Button size="lg" loading={busy === "submit"} disabled={!!busy || !!defeat} onClick={handleSubmit}>
+                    Submit
+                  </Button>
+                  <span className="cs-run-hint">Ctrl+Shift+Enter</span>
+                </div>
               </div>
             </div>
           </div>
@@ -300,9 +311,10 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
               <div className="cs-accepted-banner">
                 <CheckCircle2 size={16} aria-hidden="true" />
                 <span>Accepted — hull repaired.</span>
-                <Button size="sm" onClick={onPass}>
+                <Button size="sm" onClick={onPass} autoFocus>
                   Continue
                 </Button>
+                <span className="cs-run-hint">Enter</span>
               </div>
             )}
 
