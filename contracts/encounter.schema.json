@@ -5,7 +5,7 @@
   "description": "Response of GET /api/v1/encounters/{id}. Never includes hidden tests, hints or the failure explanation.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "version", "language", "title", "difficulty", "module", "concepts", "problem", "starter_code", "sample_tests", "limits"],
+  "required": ["id", "version", "language", "title", "difficulty", "module", "concepts", "problem", "starter_code", "sample_tests", "hint_levels", "limits"],
   "properties": {
     "id": { "type": "string", "pattern": "^[a-z]+-\\d{3}$" },
     "version": { "type": "integer", "minimum": 1 },
@@ -29,6 +29,7 @@
         }
       }
     },
+    "hint_levels": { "type": "integer", "const": 3, "description": "How many hint levels this encounter has. Always 3 today; mirrors levels_total in the hint response so the console can draw the right number of hint buttons." },
     "limits": {
       "type": "object",
       "additionalProperties": false,

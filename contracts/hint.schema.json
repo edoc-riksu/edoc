@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "hint.schema.json",
   "title": "Hint response (PROPOSED, not built yet)",
-  "description": "Response of POST /api/v1/encounters/{id}/hints. Request body: { level } where level is 1, 2 or 3. 1 is a nudge, 2 points at the approach, 3 is the walkthrough. 404 if the encounter or level does not exist; 422 if level is not 1 to 3.",
+  "description": "Response of POST /api/v1/encounters/{id}/hints. Request body: { level } where level is 1, 2 or 3. 1 is a nudge, 2 points at the approach, 3 is the walkthrough. Levels must be asked in order: a player can only ask for level N after asking levels 1 to N-1 (asking an already-asked level again is allowed and returns the same text). Errors: 404 if the encounter does not exist; 409 if an earlier level has not been asked yet (body {\"detail\": \"Ask hint level 1 first\"}); 422 if level is not 1 to 3.",
   "type": "object",
   "additionalProperties": false,
   "required": ["encounter_id", "level", "levels_total", "text", "cost"],
