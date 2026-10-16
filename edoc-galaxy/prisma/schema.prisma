@@ -17,6 +17,7 @@ model User {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   progress      Progress[]
+  attempts      Attempt[]
 
   @@map("users")
 }
@@ -74,4 +75,27 @@ model Encounter {
 
   @@index([moduleId])
   @@map("encounters")
+}
+
+// One row per submission judged by Backend 1's execution service
+// (POST /api/v1/submissions). `id` is that submission's own submission_id
+// (a uuid), so saving an attempt is just "store the result you were
+// already given" - no id translation needed. `encounterId` is kept as a
+// plain string (like Progress.sectorId) rather than a hard foreign key,
+// so an attempt is never lost if its Encounter index row hasn't been
+// seeded yet. Only a submission's verdict/score count toward progress or
+// damage, never a run - see contracts/README.md.
+model Attempt {
+  id         String   @id
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  encounterId String
+  verdict    String
+  scoreEarned Int
+  scoreTotal  Int
+  runtimeMs   Int
+  createdAt   DateTime @default(now())
+
+  @@index([userId, encounterId])
+  @@map("attempts")
 }
