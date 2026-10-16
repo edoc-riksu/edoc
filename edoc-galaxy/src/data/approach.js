@@ -32,7 +32,10 @@ export const APPROACH = {
           "Call read_label() and keep what it gives back — that's the 'keep it in a variable' part.",
           "A variable is just a name on the left of an equals sign: name = value.",
           "cargo_id = read_label()"
-        ]
+        ],
+        explanation:
+          "read_label() returns the pod's label each time you call it. Assigning its result to cargo_id keeps that value around under a name you can reuse later, instead of losing it the moment the call finishes.",
+        solution: "cargo_id = read_label()"
       },
       {
         id: "asteroid-field",
@@ -60,7 +63,10 @@ export const APPROACH = {
           "A for loop looks at one gap at a time: for gap in gaps:",
           "Inside the loop, append True or False to safe_path depending on whether gap is wide enough for SHIP_WIDTH.",
           "safe_path.append(gap >= SHIP_WIDTH)"
-        ]
+        ],
+        explanation:
+          "A for loop visits each item in gaps one at a time, binding it to gap for the body of the loop. Comparing gap to SHIP_WIDTH gives a plain True/False, and appending that straight onto safe_path builds up the result list in the same order the gaps came in.",
+        solution: "safe_path = []\nfor gap in gaps:\n    safe_path.append(gap >= SHIP_WIDTH)"
       }
     ]
   }

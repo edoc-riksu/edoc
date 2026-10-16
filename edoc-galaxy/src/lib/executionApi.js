@@ -1,9 +1,9 @@
 /**
  * Client for Backend 1's real judging service (see contracts/README.md).
- * Submit is the graded action — its verdict/score is what the console
- * acts on. Run (POST .../executions/run) is informational only per the
- * contract ("a run result must never be used to award anything") and
- * isn't wired to anything yet.
+ * Run is sample tests only, with real stdout/stderr, for debugging — it
+ * must never affect hull or progress. Submit is the graded action, run
+ * against sample and hidden tests, and its verdict/score is what the
+ * console acts on.
  */
 const BASE_URL = process.env.NEXT_PUBLIC_EXECUTION_API_URL || "http://localhost:8001";
 
@@ -26,6 +26,11 @@ async function postJson(path, body) {
     data = null;
   }
   return { ok: res.ok, status: res.status, data };
+}
+
+/** `{encounter_id, tests:[{test_id,passed,stdout,stderr}], execution}` on success. Sample tests only. */
+export function runCode({ encounterId, code }) {
+  return postJson("/api/v1/executions/run", { encounter_id: encounterId, code });
 }
 
 /** `{submission_id, encounter_id, verdict, score, tests:[{test_id,passed}], execution}` on success. */
