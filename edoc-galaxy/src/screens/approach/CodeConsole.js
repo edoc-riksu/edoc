@@ -5,7 +5,7 @@ import { Bot, CheckCircle2, ChevronLeft, Clock, Lock, X, XCircle } from "lucide-
 import Button from "../../ui/Button";
 import HullBar from "../../ui/HullBar";
 import CodeEditor from "../../ui/CodeEditor";
-import { runPyTests } from "../../lib/pySandbox";
+import { submitCode } from "../../lib/executionApi";
 import { sfx } from "../../galaxy/audio";
 import DefeatDialog from "./DefeatDialog";
 import "./console.css";
@@ -19,10 +19,10 @@ function titleCase(s) {
 }
 
 /**
- * The code console: type Python, hit Run, get real pass/fail from a real
- * interpreter (see pySandbox.js). A failing test costs hull; a clean pass
- * repairs it and clears the obstacle. Hull hitting zero is the loss
- * condition — the only way out is Rematch, on this same encounter.
+ * The code console: type Python, hit Run, get a real verdict from Backend
+ * 1's judging service (see executionApi.js). A failing test costs hull; a
+ * clean pass repairs it and clears the obstacle. Hull hitting zero is the
+ * loss condition — the only way out is Rematch, on this same encounter.
  */
 export default function CodeConsole({ encounter, hull, onHullChange, onPass, onExit, say, index = 0, total = 1, language = "Python" }) {
   const [code, setCode] = useState(encounter.starterCode || "");
@@ -66,35 +66,55 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   const handleRun = async () => {
     if (running || defeat) return;
     setRunning(true);
-    const outcome = await runPyTests({ code, tests: encounter.tests || [] });
+    const res = await submitCode({ encounterId: encounter.id, code });
     setRunning(false);
 
-    if (outcome.unavailable) {
+    if (!res.ok) {
       setResult({ status: "unavailable" });
-      say?.("The Python sandbox couldn't load — check your connection and try again.");
+      say?.(
+        res.status === 404 || res.status === 422
+          ? "This encounter isn't wired up on the judging backend yet."
+          : "Couldn't reach the judging backend — check your connection and try again."
+      );
+      return;
+    }
+
+    const { verdict, tests: testResults } = res.data || {};
+
+    // SYSTEM_ERROR means the sandbox itself is down — try again, not a loss.
+    if (!verdict || verdict === "SYSTEM_ERROR") {
+      setResult({ status: "unavailable" });
+      say?.("The judging sandbox is down right now — try again in a moment.");
       return;
     }
 
     setAttempts((a) => a + 1);
 
-    if (outcome.allPassed) {
-      setResult({ status: "pass", results: outcome.results });
+    // The backend's tests are keyed by test_id, with no description of
+    // their own — pair them with the encounter's own test list by
+    // position so the console still has something readable to show.
+    const results = (encounter.tests || []).map((t, i) => ({
+      description: t.description,
+      pass: !!testResults?.[i]?.passed
+    }));
+
+    if (verdict === "ACCEPTED") {
+      setResult({ status: "pass", results });
       sfx.select();
       onHullChange(Math.min(100, hull + HULL_REPAIR));
       onPass();
       return;
     }
 
-    setResult({ status: "fail", results: outcome.results });
+    setResult({ status: "fail", results });
     sfx.denied();
-    const failed = outcome.results.filter((r) => !r.pass);
-    const firstFail = failed[0];
+    const firstFail = results.find((r) => !r.pass);
     const nextHull = Math.max(0, hull - HULL_DAMAGE);
     onHullChange(nextHull);
     if (nextHull <= 0) {
       setDefeat({
         concept: encounter.concept?.name || "this exercise",
-        reason: firstFail ? `${firstFail.description}${firstFail.error ? ` — ${firstFail.error}` : ""}` : "Verification failed."
+        reason: firstFail ? firstFail.description : `Verdict: ${verdict}`
       });
     }
   };
@@ -118,7 +138,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
           </nav>
         </div>
         <div className="cs-bar-right">
-          <span className="cs-scored-badge">Scored · runs in your browser</span>
+          <span className="cs-scored-badge">Scored · judged on the server</span>
           <HullBar value={hull} />
           <span className="cs-attempt">Attempt {attempts}</span>
         </div>
@@ -186,7 +206,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
               })}
             </ul>
             {result?.status === "unavailable" && (
-              <p className="cs-unavailable">Python sandbox unavailable right now — try again in a moment.</p>
+              <p className="cs-unavailable">Judging backend unavailable right now — try again in a moment.</p>
             )}
           </div>
         </div>
