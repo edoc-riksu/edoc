@@ -41,3 +41,9 @@ Per `CONTRIBUTING.md`: production deploys from a tagged release (`v0.3.0`-style)
 ## 5. Confirming it worked
 
 Once connected, `GET /api/health` (in `edoc-galaxy/src/app/api/health/`) on both the staging and production URLs should return `{"status":"ok", ...}`. If it returns a 500 with a missing-env-var message, an environment variable from step 2 is missing for that environment.
+
+## 6. Gotcha: a leftover Neon marketplace integration silently overrides `DATABASE_URL`
+
+If sign-up/sign-in fail live with `P2021: table does not exist`, even though `DATABASE_URL` in **Settings -> Environment Variables** is set correctly and the target database's tables genuinely exist, check **Settings -> Storage** for a connected Neon integration (it can be connected even if its own page shows a "Connect to Project" button — that button offers connecting *another* project, it doesn't mean this one is disconnected).
+
+A connected Neon/Postgres marketplace integration injects its own `DATABASE_URL` (plus a dozen `DATABASE_PG*`/`DATABASE_POSTGRES_*` variables) into every build, and this takes priority over the project's own manually-set `DATABASE_URL` — even over a value forced via `vercel deploy --env`. The symptom is identical no matter how many times you edit or redeploy. Confirm by hitting a route that prints `process.env.DATABASE_URL`'s hostname at runtime; if it doesn't match what you set, look for a connected Storage integration and remove it (Settings -> Storage -> the integration -> Settings -> Delete).
