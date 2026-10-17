@@ -22,7 +22,18 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react").then((mod) => 
  * `onChange` — grading reads that exact string, same as any plain text
  * input would.
  */
-export default function CodeEditor({ language = "python", value, onChange, onRunShortcut, onSubmitShortcut, disabled, className = "" }) {
+export default function CodeEditor({
+  language = "python",
+  value,
+  onChange,
+  onRunShortcut,
+  onSubmitShortcut,
+  onWritingChange,
+  disabled,
+  className = ""
+}) {
+  const onWritingChangeRef = useRef(onWritingChange);
+  onWritingChangeRef.current = onWritingChange;
   const onRunShortcutRef = useRef(onRunShortcut);
   onRunShortcutRef.current = onRunShortcut;
   const onSubmitShortcutRef = useRef(onSubmitShortcut);
@@ -34,6 +45,10 @@ export default function CodeEditor({ language = "python", value, onChange, onRun
     // memory a pilot coming from LeetCode or HackerRank already has.
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => onRunShortcutRef.current?.());
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => onSubmitShortcutRef.current?.());
+
+    // Silent-while-coding: notify when editor receives or loses user focus
+    editor.onDidFocusEditorText(() => onWritingChangeRef.current?.(true));
+    editor.onDidBlurEditorText(() => onWritingChangeRef.current?.(false));
   };
 
   return (
@@ -44,7 +59,10 @@ export default function CodeEditor({ language = "python", value, onChange, onRun
         language={language}
         theme="vs-dark"
         value={value}
-        onChange={(v) => onChange(v ?? "")}
+        onChange={(v) => {
+          onWritingChangeRef.current?.(true);
+          onChange(v ?? "");
+        }}
         onMount={handleMount}
         options={{
           readOnly: disabled,

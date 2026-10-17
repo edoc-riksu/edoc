@@ -1,20 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bot, CheckCircle2, ChevronLeft, GraduationCap, Lock, Terminal, X, XCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bot, CheckCircle2, ChevronLeft, GraduationCap, Lock, Terminal, VolumeX, X, XCircle } from "lucide-react";
 import Button from "../../ui/Button";
 import HullBar from "../../ui/HullBar";
 import CodeEditor from "../../ui/CodeEditor";
 import useResizable from "../../ui/useResizable";
 import { runCode, submitCode } from "../../lib/executionApi";
 import { runWithInput } from "../../lib/pyDebugRunner";
-import { sfx } from "../../galaxy/audio";
+import { setSoundEnabled, sfx } from "../../galaxy/audio";
 import DefeatDialog from "./DefeatDialog";
 import "./console.css";
 
 const HULL_DAMAGE = 20;
 const HULL_REPAIR = 15;
 const HINT_TIERS = ["Nudge", "Clue", "Walkthrough"];
+
+function getSoundPreference() {
+  if (typeof window === "undefined") return true;
+  try {
+    const raw = localStorage.getItem("edoc_galaxy_settings");
+    if (raw) return JSON.parse(raw).sound !== false;
+  } catch {}
+  return true;
+}
 
 // Submit doesn't return stdout/stderr (only Run does, per the contract),
 // so a verdict needs its own readable message — pass/fail dots alone
@@ -80,6 +89,31 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   const [debugInput, setDebugInput] = useState("");
   const [debugBusy, setDebugBusy] = useState(false);
   const [debugResult, setDebugResult] = useState(null);
+  const [isWriting, setIsWriting] = useState(false);
+  const writingTimerRef = useRef(null);
+
+  const handleWritingChange = (active) => {
+    clearTimeout(writingTimerRef.current);
+    if (active) {
+      setIsWriting(true);
+      setSoundEnabled(false);
+      // Auto-clear silent state after 3s of idle typing if unfocused
+      writingTimerRef.current = setTimeout(() => {
+        setIsWriting(false);
+        setSoundEnabled(getSoundPreference());
+      }, 3000);
+    } else {
+      setIsWriting(false);
+      setSoundEnabled(getSoundPreference());
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(writingTimerRef.current);
+      setSoundEnabled(getSoundPreference());
+    };
+  }, []);
 
   const mainSplit = useResizable({ axis: "x", initial: 38, min: 25, max: 55 });
   const workspaceSplit = useResizable({ axis: "y", initial: 60, min: 30, max: 80 });
@@ -123,6 +157,9 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   // must never be used to award anything).
   const handleRunDebug = async () => {
     if (busy || defeat) return;
+    clearTimeout(writingTimerRef.current);
+    setIsWriting(false);
+    setSoundEnabled(getSoundPreference());
     setActiveTab("tests");
     setBusy("run");
     const res = await runCode({ encounterId: encounter.id, code });
@@ -140,6 +177,9 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   // and the thing that actually moves hull and progress.
   const handleSubmit = async () => {
     if (busy || defeat) return;
+    clearTimeout(writingTimerRef.current);
+    setIsWriting(false);
+    setSoundEnabled(getSoundPreference());
     setActiveTab("tests");
     setBusy("submit");
     const res = await submitCode({ encounterId: encounter.id, code });
@@ -195,7 +235,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   const conceptLabel = titleCase(encounter.concept?.name);
 
   return (
-    <section className="cs" aria-label={`Code console — ${encounter.title}`}>
+    <section className={`cs ${isWriting ? "is-writing" : ""}`} aria-label={`Code console — ${encounter.title}`}>
       <header className="cs-bar">
         <div className="cs-bar-left">
           <button type="button" className="cs-back" onClick={onExit} disabled={!!defeat} aria-label="Back to obstacle">
@@ -209,6 +249,12 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
             <span className="cs-crumb-sep">/</span>
             <span className="cs-crumb-now">{encounter.title}</span>
           </nav>
+          {isWriting && (
+            <span className="cs-quiet-indicator" title="While someone is writing code, the ship goes quiet, visually and audibly">
+              <VolumeX size={13} aria-hidden="true" />
+              <span>Ship quiet</span>
+            </span>
+          )}
         </div>
         <div className="cs-bar-right">
           <span className="cs-scored-badge">Scored · judged on the server</span>
@@ -258,6 +304,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
               onChange={setCode}
               onRunShortcut={handleRunDebug}
               onSubmitShortcut={handleSubmit}
+              onWritingChange={handleWritingChange}
               disabled={!!defeat}
             />
             <div className="cs-editor-actions">
