@@ -223,7 +223,7 @@ export default function Galaxy() {
     let saved = null;
     try {
       saved = JSON.parse(localStorage.getItem("edoc-galaxy-settings") || "null");
-    } catch {}
+    } catch { }
     const reduce = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
     setSettings({ ...DEFAULTS, ...(reduce ? { motion: "reduced" } : {}), ...(saved || {}) });
   }, []);
@@ -236,7 +236,7 @@ export default function Galaxy() {
     if (prevStars !== settings.stars) s.layout?.();
     try {
       localStorage.setItem("edoc-galaxy-settings", JSON.stringify(settings));
-    } catch {}
+    } catch { }
   }, [settings]);
 
   const update = (patch) => setSettings((v) => ({ ...v, ...patch }));
@@ -727,9 +727,8 @@ export default function Galaxy() {
           iconOnly
           icon={User}
           className="gx-account-btn"
-          aria-label="Pilot profile"
-          aria-expanded={accountMenuOpen}
-          onClick={() => setAccountMenuOpen((v) => !v)}
+          aria-label="Open profile"
+          onClick={() => router.push("/profile")}
         />
         <Button variant="secondary" iconOnly icon={Rocket} aria-label={`Fly to ${p.name || "selected world"}`} onClick={() => startFly(sel)} />
         <Button
