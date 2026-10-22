@@ -10,7 +10,7 @@ Run it on a different port so it can sit alongside the real backend:
 """
 
 import uuid
-
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Path
 
 from app.api.encounters import ENCOUNTER_ID_PATTERN
@@ -32,6 +32,16 @@ app = FastAPI(
     title="edoc backend (MOCK - no Piston required)",
     description="Canned responses for frontend development. Do not use for scoring correctness.",
     version="0.1.0-mock",
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:4173",
+        "http://127.0.0.1:4173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 _encounter_service = EncounterService(get_settings().encounters_dir)

@@ -1,72 +1,127 @@
-/**
- * Approach encounters per planet. Mock data with the same shape the encounter API will serve,
- * so the screen can swap to real data without changing.
- */
+
 export const APPROACH = {
   python: {
     name: "Python",
     encounters: [
       {
-        id: "drifting-pod",
-        title: "Drifting cargo pod",
-        blurb: "Read the label on the pod and keep it in a variable so you can call it back.",
-        concept: { id: "variables", name: "variables", note: "A name that holds a value you can use again." },
+        id: "py-001",
+        title: "Sum of Two Integers",
+        blurb:
+          "Read two integers from standard input and print their sum.",
+        concept: {
+          id: "input-output",
+          name: "input/output",
+          note: "Read input, process values, and print the result."
+        },
         rock: 0,
         starterCode:
-          "# The pod's transponder gives up its label when you call read_label().\n# Store what it returns in a variable named cargo_id.\n\ncargo_id = None\n",
-        example: "read_label() -> \"CARGO-7742-ALPHA\"",
-        constraints: ["cargo_id must be a string", "Call read_label() — don't hardcode the label"],
+          "# Read two integers separated by a space.\n# Print their sum.\n\n# Write your code here\n",
+        example: "Input: 2 3 → Output: 5",
+        constraints: [
+          "Read both integers from one line",
+          "Print the sum, not just calculate it"
+        ],
         tests: [
           {
-            description: "cargo_id holds the pod's label",
-            setup: "def read_label():\n    return 'CARGO-7742-ALPHA'",
-            check: "'cargo_id' in globals() and cargo_id == read_label()"
+            description: "Input 2 3 should produce 5",
+            input: "2 3",
+            expectedOutput: "5"
           },
           {
-            description: "cargo_id is a string, not a call left unresolved",
-            setup: "def read_label():\n    return 'CARGO-7742-ALPHA'",
-            check: "isinstance(cargo_id, str)"
+            description: "Input 10 -4 should produce 6",
+            input: "10 -4",
+            expectedOutput: "6"
           }
         ],
         hints: [
-          "Call read_label() and keep what it gives back — that's the 'keep it in a variable' part.",
-          "A variable is just a name on the left of an equals sign: name = value.",
-          "cargo_id = read_label()"
+          "Read a line using input().",
+          "Use map(int, input().split()) to parse both numbers.",
+          "a, b = map(int, input().split()); print(a + b)"
         ],
         explanation:
-          "read_label() returns the pod's label each time you call it. Assigning its result to cargo_id keeps that value around under a name you can reuse later, instead of losing it the moment the call finishes.",
-        solution: "cargo_id = read_label()"
+          "Read the two values as integers, add them, and print the result.",
+        solution:
+          "a, b = map(int, input().split())\nprint(a + b)"
       },
       {
-        id: "asteroid-field",
-        title: "Asteroid field",
-        blurb: "Plot a safe path by writing a loop that checks each gap.",
-        concept: { id: "for-loops", name: "for loops", note: "Repeat one action for every item in a list." },
+        id: "py-002",
+        title: "Print Numbers 1 to N",
+        blurb:
+          "Read a positive integer N and print every integer from 1 through N on its own line.",
+        concept: {
+          id: "loops",
+          name: "loops",
+          note: "Repeat an action for a sequence of values."
+        },
         rock: 1,
         starterCode:
-          "# Mission control has already loaded gaps (a list of gap widths) and\n# SHIP_WIDTH into memory. Build safe_path: True where a gap is wide\n# enough to fly through, False otherwise.\n\nsafe_path = []\nfor gap in gaps:\n    pass\n",
-        example: "gaps=[4, 1, 6, 2, 8], SHIP_WIDTH=3 -> safe_path=[True, False, True, False, True]",
-        constraints: ["gaps: list of integers", "SHIP_WIDTH: integer > 0"],
+          "# Read a positive integer N.\n# Print numbers from 1 through N.\n\n# Write your code here\n",
+        example: "Input: 3 → Output: 1, 2, 3 (each on a new line)",
+        constraints: [
+          "Include N itself",
+          "Print each number on a separate line"
+        ],
         tests: [
           {
-            description: "safe_path marks each wide-enough gap as safe",
-            setup: "gaps = [4, 1, 6, 2, 8]\nSHIP_WIDTH = 3",
-            check: "'safe_path' in globals() and safe_path == [True, False, True, False, True]"
+            description: "Input 3 should print 1 through 3",
+            input: "3",
+            expectedOutput: "1\n2\n3"
           },
           {
-            description: "safe_path holds up against a tighter field",
-            setup: "gaps = [2, 2, 2]\nSHIP_WIDTH = 3",
-            check: "'safe_path' in globals() and safe_path == [False, False, False]"
+            description: "Input 1 should print 1",
+            input: "1",
+            expectedOutput: "1"
           }
         ],
         hints: [
-          "A for loop looks at one gap at a time: for gap in gaps:",
-          "Inside the loop, append True or False to safe_path depending on whether gap is wide enough for SHIP_WIDTH.",
-          "safe_path.append(gap >= SHIP_WIDTH)"
+          "Use a loop to count from 1 to N.",
+          "Python's range excludes its ending value.",
+          "for i in range(1, int(input()) + 1): print(i)"
         ],
         explanation:
-          "A for loop visits each item in gaps one at a time, binding it to gap for the body of the loop. Comparing gap to SHIP_WIDTH gives a plain True/False, and appending that straight onto safe_path builds up the result list in the same order the gaps came in.",
-        solution: "safe_path = []\nfor gap in gaps:\n    safe_path.append(gap >= SHIP_WIDTH)"
+          "Use range(1, N + 1) to include N. Print each number inside the loop.",
+        solution:
+          "for i in range(1, int(input()) + 1):\n    print(i)"
+      },
+      {
+        id: "py-003",
+        title: "Even or Odd",
+        blurb:
+          "Read an integer and print Even if it is even, or Odd if it is odd.",
+        concept: {
+          id: "conditionals",
+          name: "conditionals",
+          note: "Choose an action based on a condition."
+        },
+        rock: 2,
+        starterCode:
+          "# Read an integer.\n# Print Even or Odd.\n\n# Write your code here\n",
+        example: "Input: 4 → Output: Even",
+        constraints: [
+          "Handle positive, negative, and zero values",
+          "Print exactly Even or Odd"
+        ],
+        tests: [
+          {
+            description: "Input 4 should produce Even",
+            input: "4",
+            expectedOutput: "Even"
+          },
+          {
+            description: "Input 7 should produce Odd",
+            input: "7",
+            expectedOutput: "Odd"
+          }
+        ],
+        hints: [
+          "Check whether the number is divisible by 2.",
+          "The modulo operator % gives the remainder.",
+          "n = int(input()); print('Even' if n % 2 == 0 else 'Odd')"
+        ],
+        explanation:
+          "An integer is even when n % 2 equals zero; otherwise, it is odd.",
+        solution:
+          "n = int(input())\nprint('Even' if n % 2 == 0 else 'Odd')"
       }
     ]
   }

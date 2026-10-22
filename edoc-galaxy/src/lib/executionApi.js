@@ -5,7 +5,7 @@
  * against sample and hidden tests, and its verdict/score is what the
  * console acts on.
  */
-const BASE_URL = process.env.NEXT_PUBLIC_EXECUTION_API_URL || "http://localhost:8001";
+const BASE_URL = process.env.NEXT_PUBLIC_EXECUTION_API_URL || "http://localhost:8000";
 
 async function postJson(path, body) {
   let res;

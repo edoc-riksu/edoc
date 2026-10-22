@@ -21,7 +21,7 @@ function getSoundPreference() {
   try {
     const raw = localStorage.getItem("edoc_galaxy_settings");
     if (raw) return JSON.parse(raw).sound !== false;
-  } catch {}
+  } catch { }
   return true;
 }
 
@@ -192,7 +192,11 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     }
 
     const { verdict, tests: testResults, score, execution } = res.data || {};
-
+    console.log("SUBMIT DEBUG:", {
+      verdict,
+      hullBefore: hull,
+      response: res.data
+    });
     // SYSTEM_ERROR means the sandbox itself is down — try again, not a loss.
     if (!verdict || verdict === "SYSTEM_ERROR") {
       setResult({ kind: "unavailable" });
@@ -215,6 +219,8 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setResult({ kind: "submit", status: "fail", tests: testResults || [], score, runtimeMs, verdictMessage });
     sfx.denied();
     const nextHull = Math.max(0, hull - HULL_DAMAGE);
+    console.log("HULL DAMAGE:", { hullBefore: hull, nextHull });
+    onHullChange(nextHull);
     onHullChange(nextHull);
     if (nextHull <= 0) {
       setDefeat({ concept: encounter.concept?.name || "this exercise", reason: verdictMessage });
@@ -375,7 +381,26 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
                     </p>
                   )}
 
-                  {!result && <p className="cs-tests-empty">Run or Submit to see results here.</p>}
+                  {(!result || result.kind === "unavailable") && (
+                    <>
+                      <p className="cs-tests-group-label">Sample tests</p>
+                      <ul className="cs-tests-list">
+                        {(encounter.tests || []).map((test, i) => (
+                          <li key={i} className="cs-test">
+                            <div>
+                              <span>Sample test {i + 1}</span>
+                              <p>{test.description}</p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                      {(!encounter.tests || encounter.tests.length === 0) && (
+                        <p className="cs-tests-empty">
+                          No sample tests are defined for this encounter.
+                        </p>
+                      )}
+                    </>
+                  )}
 
                   {result?.kind === "run" && (
                     <ul className="cs-tests-list">
