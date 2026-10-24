@@ -41,6 +41,10 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
   const [hullPct, setHullPct] = useState(hull);
   const [engaged, setEngaged] = useState(false);
   const [done, setDone] = useState(false);
+  const [hit, setHit] = useState({ n: 0, k: 0 }); // the last hit on the hull: how many so far, how hard
+  const [shake, setShake] = useState(false);
+  const shakeTimer = useRef(null);
+  const prevHull = useRef(hull);
   const engageRef = useRef(null);
   const toastTimer = useRef(null);
   const e = encounters[idx];
@@ -68,6 +72,23 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
   useEffect(() => {
     setConceptOpen(false);
   }, [idx]);
+
+  // the hull number dropping is a hit: flash, shake and sparks all hang off this one change
+  useEffect(() => {
+    const drop = prevHull.current - hullPct;
+    prevHull.current = hullPct;
+    if (drop > 0.5) {
+      setHit((h) => ({ n: h.n + 1, k: Math.min(1, Math.max(0.35, drop / 30)) }));
+      if (settings.motion !== "reduced") {
+        clearTimeout(shakeTimer.current);
+        setShake(false); // off, then on a frame later, so a second hit shakes again
+        requestAnimationFrame(() => requestAnimationFrame(() => setShake(true)));
+        shakeTimer.current = setTimeout(() => setShake(false), 560);
+      }
+    }
+  }, [hullPct, settings.motion]);
+
+  useEffect(() => () => clearTimeout(shakeTimer.current), []);
 
   const goTo = useCallback(
     (n) => {
@@ -111,7 +132,7 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
   }, []);
 
   return (
-    <div className="ap">
+    <div className={`ap ${shake ? "is-hit" : ""}`} style={{ "--hit": hit.k }}>
       <div className="ap-scene">
         <ApproachScene
           variant={e.rock}
@@ -259,6 +280,8 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
           </p>
         </section>
       )}
+
+      {hit.n > 0 && engaged && <div key={hit.n} className={`ap-hit ${settings.motion === "reduced" ? "is-soft" : ""}`} style={{ "--hit": hit.k }} aria-hidden="true" />}
 
       <div className={`ap-toast ${toast ? "is-on" : ""}`} role="status">
         {toast}

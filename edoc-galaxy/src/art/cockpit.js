@@ -167,11 +167,39 @@ function paintStatic(g, W, h, I) {
   }
 }
 
+function spawnSparks(C, W, h, I, t, k) {
+  const n = Math.round(10 + 18 * k);
+  for (let i = 0; i < n; i++) {
+    const edge = Math.floor(Math.random() * 4);
+    let x, y, vx, vy;
+    if (edge === 0) { x = I.s + Math.random() * (W - I.s * 2); y = I.t; vx = (Math.random() - 0.5) * 220; vy = 40 + Math.random() * 140; }
+    else if (edge === 1) { x = I.s + Math.random() * (W - I.s * 2); y = h - I.b; vx = (Math.random() - 0.5) * 220; vy = -60 - Math.random() * 120; }
+    else if (edge === 2) { x = I.s; y = I.t + Math.random() * (h - I.t - I.b); vx = 40 + Math.random() * 160; vy = (Math.random() - 0.5) * 160; }
+    else { x = W - I.s; y = I.t + Math.random() * (h - I.t - I.b); vx = -40 - Math.random() * 160; vy = (Math.random() - 0.5) * 160; }
+    C.sparks.push({ x, y, vx: vx * (0.6 + k * 0.7), vy: vy * (0.6 + k * 0.7), born: t, life: 0.45 + Math.random() * 0.6 });
+  }
+  if (C.sparks.length > 120) C.sparks.splice(0, C.sparks.length - 120);
+}
+
 export function drawCockpit(g, W, h, C, S) {
   const { t, calm, px } = S;
   const I = insets(W, h);
   const dpr = S.dpr || 1;
-  const hull = clamp(Number.isFinite(S.hull) ? S.hull : 100, 0, 100);
+  const target = clamp(Number.isFinite(S.hull) ? S.hull : 100, 0, 100);
+  // the one number, and what it just did: a drop is a hit, a rise is a repair. The dial and lamps ease to the new value.
+  const dt = C.lastT == null ? 0 : clamp(t - C.lastT, 0, 0.1);
+  C.lastT = t;
+  if (C.target == null) { C.target = target; C.shown = target; C.sparks = []; }
+  if (target < C.target - 0.5) {
+    C.hitAt = t;
+    C.hitK = clamp((C.target - target) / 30, 0.35, 1);
+    if (!calm) spawnSparks(C, W, h, I, t, C.hitK);
+  } else if (target > C.target + 0.5) C.healAt = t;
+  C.target = target;
+  C.shown = calm ? target : C.shown + (target - C.shown) * (1 - Math.exp(-dt * 5));
+  const hull = C.shown;
+  const hitAge = C.hitAt == null ? 9 : t - C.hitAt;
+  const healAge = C.healAt == null ? 9 : t - C.healAt;
   const tone = toneFor(hull);
   const rgb = TONES[tone];
   const key = `${W}x${h}@${dpr.toFixed(2)}`;
@@ -230,7 +258,8 @@ export function drawCockpit(g, W, h, C, S) {
         if (x < s + 30 || x > W - s - 30) continue;
         const lit = tone === "low" ? (calm ? 1 : Math.sin(t * 7 - i * 0.9) > 0 ? 1 : 0.15) : pulse(i, 1.7, side);
         const on = i < (tone === "ok" ? 5 : tone === "warn" ? 3 : 2);
-        const a = on ? 0.9 * lit : 0.12;
+        const hitFlick = hitAge < 0.45 ? (Math.sin(hitAge * 70 + i) > -0.2 ? 1 : 0.1) : 1;
+        const a = on ? 0.9 * lit * hitFlick : 0.12;
         g.fillStyle = `rgba(${on ? rgb : "120,150,200"},${a})`;
         g.beginPath();
         g.arc(x, cy, 3, 0, TAU);
@@ -284,6 +313,41 @@ export function drawCockpit(g, W, h, C, S) {
       g.fillStyle = lit ? `rgba(${rgb},0.85)` : "rgba(120,150,200,0.16)";
       g.fillRect(lx + i * 9, h - b / 2 - 3, 5, 6);
     }
+  }
+
+  // hit: a red wash over the metal and sparks thrown off the edges; repair: a teal pulse
+  if (!calm && (hitAge < 1 || healAge < 1)) {
+    g.save();
+    g.beginPath();
+    g.rect(0, 0, W, h);
+    g.rect(s, it, W - s * 2, h - it - b);
+    g.clip("evenodd");
+    if (hitAge < 1) {
+      g.fillStyle = `rgba(255,50,40,${(C.hitK || 0.5) * 0.6 * Math.exp(-hitAge * 6)})`;
+      g.fillRect(0, 0, W, h);
+    }
+    if (healAge < 1) {
+      g.globalCompositeOperation = "lighter";
+      g.fillStyle = `rgba(94,234,212,${0.22 * Math.exp(-healAge * 4.5)})`;
+      g.fillRect(0, 0, W, h);
+    }
+    g.restore();
+  }
+  if (!calm && C.sparks.length) {
+    g.save();
+    g.globalCompositeOperation = "lighter";
+    g.lineWidth = 1.6;
+    C.sparks = C.sparks.filter((p) => t - p.born < p.life);
+    for (const p of C.sparks) {
+      const a = t - p.born, q = a / p.life;
+      const x = p.x + p.vx * a, y = p.y + p.vy * a + 320 * a * a;
+      g.strokeStyle = `rgba(255,${Math.round(220 - q * 110)},${Math.round(140 - q * 100)},${1 - q})`;
+      g.beginPath();
+      g.moveTo(x, y);
+      g.lineTo(x - p.vx * 0.035, y - (p.vy + 640 * a) * 0.035);
+      g.stroke();
+    }
+    g.restore();
   }
 
   // red edge round the opening when the hull is nearly gone
