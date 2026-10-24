@@ -1,0 +1,135 @@
+/* "Encounter cleared": the scene fills the screen, the card rests low in the middle. */
+.ec {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: #02060d;
+  isolation: isolate;
+}
+.ec-scene {
+  position: absolute;
+  inset: 0;
+}
+.ec-scene canvas {
+  display: block;
+}
+.ec-card {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(16px, 5vh, 48px);
+  width: min(520px, calc(100% - 32px));
+  transform: translateX(-50%);
+  padding: 22px 26px 18px;
+  display: grid;
+  gap: 10px;
+  text-align: center;
+  border-radius: 18px;
+  background: rgba(8, 14, 32, 0.78);
+  border: 1px solid rgba(94, 234, 212, 0.4);
+  box-shadow: 0 -6px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(94, 234, 212, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(10px);
+  animation: ec-rise 0.6s 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes ec-rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+}
+.ec-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+.ec-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(22px, 3.4vw, 32px);
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.ec-concept {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+.ec-concept b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.ec-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.ec-stat b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.ec-hull {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.ec-gain {
+  font-size: 13px;
+  color: #4ade80;
+  animation: ec-gain 1.2s 1.3s ease-out both;
+}
+@keyframes ec-gain {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.ec-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+}
+.ec-keys {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-dim);
+}
+.ec-keys kbd {
+  padding: 1px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(120, 150, 210, 0.12);
+  font: inherit;
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .ec-card {
+    padding: 18px 18px 14px;
+  }
+  .ec-keys {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ec-card,
+  .ec-gain {
+    animation: none;
+  }
+}
+
+/* review page: the same screen inside a box */
+.ec-lab .ec {
+  height: 100%;
+}

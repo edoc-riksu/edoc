@@ -121,7 +121,7 @@ export default function ArtCanvas({ make, draw, label, className = "", params, h
     };
     const onClick = (e) => {
       const r = canvas.getBoundingClientRect();
-      if (hit && hit(S, e.clientX - r.left, e.clientY - r.top)) live.current.onPick?.();
+      if (hit && hit(S, e.clientX - r.left, e.clientY - r.top)) live.current.onPick?.(S);
     };
     const ro = new ResizeObserver(() => { size(); redraw(); });
     ro.observe(canvas.parentElement);
