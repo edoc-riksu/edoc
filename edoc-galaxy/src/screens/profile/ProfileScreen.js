@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Check, Pencil, Rocket, UserRound, X } from "lucide-react";
 import AppShell from "../../shell/AppShell";
 import Button from "../../ui/Button";
@@ -12,12 +12,23 @@ import { normalizeCallsign, isValidCallsign, AUTH_MESSAGES } from "../../lib/aut
 import { APPROACH } from "../../data/approach";
 import "./profile.css";
 
+// Time coding and hints used aren't tracked anywhere yet (no schema field,
+// no API) — real numbers only for what the backend actually records, rather
+// than a fabricated value for the rest.
 const STATS = [
-  { label: "Encounters solved" },
-  { label: "First-attempt rate" },
-  { label: "Time coding" },
-  { label: "Hints used" }
+  { label: "Encounters solved", key: "encountersSolved" },
+  { label: "First-attempt rate", key: "firstAttemptRate" },
+  { label: "Time coding", key: null },
+  { label: "Hints used", key: null }
 ];
+
+function formatStat(key, stats) {
+  if (!key || !stats) return "—";
+  const value = stats[key];
+  if (value === null || value === undefined) return "—";
+  if (key === "firstAttemptRate") return `${Math.round(value * 100)}%`;
+  return String(value);
+}
 
 function pilotSince(createdAt) {
   const d = new Date(createdAt);
@@ -48,6 +59,45 @@ export default function ProfileScreen() {
   const [callsignDraft, setCallsignDraft] = useState("");
   const [callsignBusy, setCallsignBusy] = useState(false);
   const [callsignError, setCallsignError] = useState("");
+
+  const [stats, setStats] = useState(null);
+  const [moduleProgress, setModuleProgress] = useState(null); // null = loading, [] = none
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    fetch("/api/auth/stats", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.stats) setStats(data.stats);
+      })
+      .catch(() => {});
+
+    async function loadModuleProgress() {
+      try {
+        const modulesRes = await fetch("/api/modules?planet=python", { cache: "no-store" });
+        const modulesData = await modulesRes.json().catch(() => null);
+        const modules = modulesData?.modules || [];
+
+        const results = await Promise.all(
+          modules.map(async (m) => {
+            const res = await fetch(`/api/modules/${m.slug}/progress`, { cache: "no-store" });
+            const data = await res.json().catch(() => null);
+            return data?.progress || null;
+          })
+        );
+        if (!cancelled) setModuleProgress(results.filter(Boolean));
+      } catch {
+        if (!cancelled) setModuleProgress([]);
+      }
+    }
+    loadModuleProgress();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   if (!user) return null;
   const since = pilotSince(user.createdAt);
@@ -173,15 +223,33 @@ export default function ProfileScreen() {
           {STATS.map((s) => (
             <Panel key={s.label} size="sm" className="profile-stat">
               <p className="t-label">{s.label}</p>
-              <p className="profile-stat-value">—</p>
+              <p className="profile-stat-value">{formatStat(s.key, stats)}</p>
             </Panel>
           ))}
         </div>
 
         <Panel as="section" size="lg" title="Python progress" className="profile-progress">
-          <p className="t-body">
-            Module-by-module progress shows here once modules and saved progress exist — tracked from day one, shown once it's real.
-          </p>
+          {moduleProgress === null ? (
+            <p className="t-body">Loading progress…</p>
+          ) : moduleProgress.length === 0 ? (
+            <p className="t-body">
+              Module-by-module progress shows here once modules and saved progress exist — tracked from day one, shown once it's real.
+            </p>
+          ) : (
+            <ul className="profile-module-list">
+              {moduleProgress.map((m) => (
+                <li key={m.slug} className="profile-module-row">
+                  <span className="profile-module-title">
+                    {m.title}
+                    {m.complete && <Check size={13} aria-hidden="true" />}
+                  </span>
+                  <span className="profile-module-count">
+                    {m.solvedCount} / {m.totalCount}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
 
         <Panel as="section" size="lg" title="Concept mastery" className="profile-mastery">

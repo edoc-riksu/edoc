@@ -78,18 +78,30 @@ export async function getModuleProgress(userId, slug) {
 
 /** Real numbers for the pilot profile screen - plan Day 18. */
 export async function getProfileStats(userId) {
-  const [totalAttempts, solvedGroups, progress] = await Promise.all([
+  const [totalAttempts, allAttempts, solvedGroups, progress] = await Promise.all([
     db.attempt.count({ where: { userId } }),
+    // Ordered oldest-first per encounter so the first entry seen for each
+    // encounterId below is that encounter's actual first attempt.
+    db.attempt.findMany({ where: { userId }, select: { encounterId: true, verdict: true }, orderBy: { createdAt: "asc" } }),
     db.attempt.findMany({ where: { userId, verdict: "ACCEPTED" }, select: { encounterId: true }, distinct: ["encounterId"] }),
     db.progress.findMany({ where: { userId }, select: { sectorId: true, level: true } })
   ]);
 
   const encountersSolved = solvedGroups.length;
 
+  // First-attempt rate: of the encounters this pilot has ever attempted,
+  // what fraction were solved on that very first try (not just eventually).
+  const firstAttemptByEncounter = new Map();
+  for (const a of allAttempts) {
+    if (!firstAttemptByEncounter.has(a.encounterId)) firstAttemptByEncounter.set(a.encounterId, a.verdict);
+  }
+  const attemptedCount = firstAttemptByEncounter.size;
+  const firstTryAccepted = Array.from(firstAttemptByEncounter.values()).filter((v) => v === "ACCEPTED").length;
+
   return {
     totalAttempts,
     encountersSolved,
-    accuracy: totalAttempts === 0 ? null : Math.round((encountersSolved / totalAttempts) * 100) / 100,
+    firstAttemptRate: attemptedCount === 0 ? null : Math.round((firstTryAccepted / attemptedCount) * 100) / 100,
     planets: progress.map((p) => ({ planetId: p.sectorId, level: p.level }))
   };
 }
