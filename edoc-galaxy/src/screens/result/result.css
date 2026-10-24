@@ -133,3 +133,26 @@
 .ec-lab .ec {
   height: 100%;
 }
+
+/* arriving: a soft teal-white wash that clears */
+.ec-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(circle at 62% 40%, rgba(235, 255, 250, 0.75), rgba(94, 234, 212, 0.25) 60%, rgba(94, 234, 212, 0) 100%);
+  animation: ec-veil 0.9s ease-out both;
+}
+@keyframes ec-veil {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ec-veil {
+    display: none;
+  }
+}

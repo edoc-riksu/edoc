@@ -49,6 +49,7 @@ export default function EncounterCleared({
 
   return (
     <div className="ec">
+      <div className="ec-veil" aria-hidden="true" />
       <div className="ec-scene">
         <VictoryScene calm={calm} onReplay={() => { if (!muted && !calm) sfx.arrive(); onReplay?.(); }} />
       </div>

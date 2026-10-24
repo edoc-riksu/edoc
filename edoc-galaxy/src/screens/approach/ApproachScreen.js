@@ -40,6 +40,11 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
   const [pulse, setPulse] = useState(0);
   const [hullPct, setHullPct] = useState(hull);
   const [engaged, setEngaged] = useState(false);
+  const [diving, setDiving] = useState(false); // Engage pressed: the view pushes in toward the rock before the console opens
+  const [leaving, setLeaving] = useState(false); // the console is fading out
+  const [warp, setWarp] = useState(0); // counts switches between obstacles, for the flash
+  const firstIdx = useRef(true);
+  const stepTimer = useRef(null);
   const [done, setDone] = useState(false);
   const [hit, setHit] = useState({ n: 0, k: 0 }); // the last hit on the hull: how many so far, how hard
   const [shake, setShake] = useState(false);
@@ -90,6 +95,11 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
 
   useEffect(() => () => clearTimeout(shakeTimer.current), []);
 
+  useEffect(() => {
+    if (firstIdx.current) { firstIdx.current = false; return; }
+    setWarp((n) => n + 1);
+  }, [idx]);
+
   const goTo = useCallback(
     (n) => {
       if (n < 0 || n >= encounters.length || n === idx) return;
@@ -99,18 +109,39 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
     [encounters.length, idx]
   );
   const back = useCallback(() => router.push("/"), [router]);
+  const calmMotion = settings.motion === "reduced";
   const engage = useCallback(() => {
-    if (engaged || done) return;
+    if (engaged || done || diving) return;
     sfx.select();
-    setEngaged(true);
-  }, [engaged, done]);
+    setDiving(true);
+    clearTimeout(stepTimer.current);
+    stepTimer.current = setTimeout(() => {
+      setDiving(false);
+      setEngaged(true);
+    }, calmMotion ? 160 : 650);
+  }, [engaged, done, diving, calmMotion]);
+  // leave the console: fade it out first, then do whatever comes next (next obstacle, the approach card, the docking card)
+  const leave = useCallback(
+    (after) => {
+      if (leaving) return;
+      setLeaving(true);
+      clearTimeout(stepTimer.current);
+      stepTimer.current = setTimeout(() => {
+        setEngaged(false);
+        setLeaving(false);
+        after?.();
+      }, calmMotion ? 120 : 280);
+    },
+    [leaving, calmMotion]
+  );
+  useEffect(() => () => clearTimeout(stepTimer.current), []);
 
   useEffect(() => {
     const onKey = (ev) => {
       if (ev.target.closest?.("input, textarea, select, [role=dialog]")) return;
       // While the console is open, only its own controls (Back to obstacle,
       // Rematch) can leave it — no shortcut can skip past a defeat dialog.
-      if (engaged) return;
+      if (engaged || diving || leaving) return;
       if (ev.key === "ArrowLeft") goTo(idx - 1);
       else if (ev.key === "ArrowRight") goTo(idx + 1);
       else if (ev.key === "Escape") {
@@ -120,7 +151,7 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [goTo, idx, back, engage, menu, conceptOpen, engaged]);
+  }, [goTo, idx, back, engage, menu, conceptOpen, engaged, diving, leaving]);
 
   useEffect(() => {
     const close = (ev) => {
@@ -132,7 +163,7 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
   }, []);
 
   return (
-    <div className={`ap ${shake ? "is-hit" : ""}`} style={{ "--hit": hit.k }}>
+    <div className={`ap ${shake ? "is-hit" : ""} ${diving ? "is-diving" : ""} ${calmMotion ? "is-calm" : ""}`} style={{ "--hit": hit.k }}>
       <div className="ap-scene">
         <ApproachScene
           variant={e.rock}
@@ -226,25 +257,24 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
           </div>
         </section>
       ) : engaged ? (
-        <>
+        <div className={leaving ? "ap-leave" : undefined}>
         <CockpitFrame hull={hullPct} calm={settings.motion === "reduced"} />
         <CodeConsole
           key={e.id}
           encounter={e}
           hull={hullPct}
           onHullChange={setHullPct}
-          onPass={() => {
-            setEngaged(false);
+          onPass={() => leave(() => {
             if (idx === encounters.length - 1) setDone(true);
             else goTo(idx + 1);
-          }}
-          onExit={() => setEngaged(false)}
+          })}
+          onExit={() => leave()}
           say={say}
           index={idx}
           total={encounters.length}
           language={planetName}
         />
-        </>
+        </div>
       ) : (
         <section key={`${idx}-${pulse}`} className={`ap-card ${rockHover ? "is-lit" : ""} ${pulse ? "is-pulse" : ""}`} aria-labelledby="ap-title" aria-live="polite">
           <p className="ap-eyebrow">Obstacle ahead</p>
@@ -282,6 +312,9 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
       )}
 
       {hit.n > 0 && engaged && <div key={hit.n} className={`ap-hit ${settings.motion === "reduced" ? "is-soft" : ""}`} style={{ "--hit": hit.k }} aria-hidden="true" />}
+
+      {diving && <div className="ap-dive" aria-hidden="true" />}
+      {warp > 0 && !engaged && !diving && <div key={warp} className="ap-warp" aria-hidden="true" />}
 
       <div className={`ap-toast ${toast ? "is-on" : ""}`} role="status">
         {toast}
