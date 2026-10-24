@@ -31,7 +31,7 @@ export function drawStars(g, w, h, stars, t, drift = 0, ox = 0, oy = 0) {
 }
 
 let grainTile;
-function grain(g, w, h, t, amount = 0.07) {
+export function grain(g, w, h, t, amount = 0.07) {
   if (typeof document === "undefined") return;
   if (!grainTile) {
     grainTile = document.createElement("canvas");
@@ -56,7 +56,39 @@ function grain(g, w, h, t, amount = 0.07) {
   g.restore();
 }
 
-function glow(g, x, y, rad, rgb, a, mode = "lighter") {
+/**
+ * Film grain that is cheap to lay down: noise baked as black and white specks with their own opacity, drawn with the
+ * ordinary blend instead of "overlay" (which makes the browser read back every pixel under it). Looks the same at a glance.
+ */
+let fastTile;
+export function grainFast(g, w, h, t, amount = 0.07) {
+  if (typeof document === "undefined") return;
+  if (!fastTile) {
+    const n = 256;
+    fastTile = document.createElement("canvas");
+    fastTile.width = fastTile.height = n;
+    const gg = fastTile.getContext("2d");
+    const im = gg.createImageData(n, n);
+    const r = rng(77);
+    for (let i = 0; i < im.data.length; i += 4) {
+      const v = r() * 2 - 1;
+      const c = v > 0 ? 255 : 0;
+      im.data[i] = im.data[i + 1] = im.data[i + 2] = c;
+      im.data[i + 3] = Math.round(Math.abs(v) * 255);
+    }
+    gg.putImageData(im, 0, 0);
+  }
+  const pat = g.createPattern(fastTile, "repeat");
+  g.save();
+  g.globalAlpha = Math.min(1, amount * 1.7);
+  const k = Math.floor(t * 24);
+  g.translate((k * 37) % 256, (k * 91) % 256);
+  g.fillStyle = pat;
+  g.fillRect(-256, -256, w + 512, h + 512);
+  g.restore();
+}
+
+export function glow(g, x, y, rad, rgb, a, mode = "lighter") {
   g.save();
   g.globalCompositeOperation = mode;
   const gr = g.createRadialGradient(x, y, 0, x, y, rad);
@@ -482,15 +514,17 @@ export function hitApproach(S, x, y) {
 /* ------------------------------------------------------------------ */
 /* flight scene                                                        */
 /* ------------------------------------------------------------------ */
-function drawShip(g, x, y, s, t, calm, bank) {
+// opts.tilt sets the angle directly (radians, nose down is positive); opts.thrust scales the engine plumes (0 = engines off)
+export function drawShip(g, x, y, s, t, calm, bank, opts = {}) {
   g.save();
   g.translate(x, y);
   g.scale(s, s);
-  g.rotate(-0.1 + bank * 0.06);
-  const f = calm ? 1 : 0.88 + 0.12 * Math.sin(t * 24) + 0.05 * Math.sin(t * 61);
+  g.rotate(opts.tilt != null ? opts.tilt : -0.1 + bank * 0.06);
+  const thrust = opts.thrust != null ? opts.thrust : 1;
+  const f = (calm ? 1 : 0.88 + 0.12 * Math.sin(t * 24) + 0.05 * Math.sin(t * 61)) * thrust;
 
   // engine plumes
-  for (const [ey, el, wd] of [[-16, 110, 7], [0, 160, 9], [16, 110, 7]]) {
+  if (thrust > 0.02) for (const [ey, el, wd] of [[-16, 110, 7], [0, 160, 9], [16, 110, 7]]) {
     glow(g, -52, ey, 46 * f, "120,235,255", 0.55);
     const gr = g.createLinearGradient(-50, ey, -50 - el * f, ey);
     gr.addColorStop(0, "rgba(235,255,255,0.98)");

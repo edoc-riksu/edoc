@@ -4,7 +4,7 @@
 - `src/galaxy/` - Frontend 1: the galaxy map (canvas, planets, ships, audio).
 - `src/console/` - Frontend 2: the console. Do not edit F1 files from here, and vice versa.
 - `src/art/` - Frontend 1: code-made scenes (cockpit, flight) and the sprites they use. `ArtCanvas` paints a scene and handles resize, pointer and reduced motion.
-- `src/screens/` - Frontend 1: whole screens that sit on those scenes (approach so far).
+- `src/screens/` - Frontend 1: whole screens that sit on those scenes (course, approach, landing and surface).
 - `src/data/` - mock data in the shape of the encounter API, until the real one is wired.
 - `src/ui/` - shared Button, Panel, Segmented and text styles. Use these instead of writing new buttons or panels.
 - `src/shell/` - TopBar and AppShell, the frame every page sits in.

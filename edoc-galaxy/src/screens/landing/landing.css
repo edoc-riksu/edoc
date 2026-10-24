@@ -1,0 +1,145 @@
+/* The landing: a full-bleed descent with a caption strip and a Skip button. The surface screen borrows the approach screen's card and top bar. */
+
+.ld {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: #02060d;
+  isolation: isolate;
+}
+.ld-stage {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+.ld-stage canvas {
+  display: block;
+}
+.ld-wait {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 46%;
+  margin: 0;
+  text-align: center;
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--teal);
+  opacity: 0.8;
+  animation: ld-pulse 1.4s ease-in-out infinite;
+}
+@keyframes ld-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+.ld-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  height: clamp(64px, 13%, 104px);
+  background: linear-gradient(180deg, rgba(4, 8, 16, 0), rgba(4, 8, 16, 0.82));
+}
+.ld-caption p {
+  margin: 0 0 6px;
+  padding: 0 16px;
+  text-align: center;
+  font-size: clamp(18px, 2.4vw, 28px);
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7);
+  animation: ld-in 0.5s ease both;
+}
+.ld-caption.is-bad p {
+  color: #ffd9b0;
+}
+@keyframes ld-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.ld-skip.ui-btn {
+  position: absolute;
+  z-index: 5;
+  right: clamp(12px, 2.4vw, 32px);
+  bottom: clamp(16px, 4vh, 40px);
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  background: rgba(14, 22, 48, 0.8);
+}
+.ld-skip kbd {
+  margin-left: 2px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(120, 150, 210, 0.12);
+  font: inherit;
+  font-size: 13px;
+}
+.ld-bar {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(94, 234, 212, 0.2), var(--teal));
+  box-shadow: 0 0 12px rgba(94, 234, 212, 0.6);
+  transform-origin: left;
+  animation: ld-grow linear both;
+}
+@keyframes ld-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* surface screen: reuse the approach card and top bar, tinted for arrival */
+.sf .ap-eyebrow {
+  color: var(--teal);
+}
+.sf .ap-card.is-bad .ap-eyebrow {
+  color: #f3b25c;
+}
+@media (max-width: 720px) {
+  .ld-skip kbd {
+    display: none;
+  }
+  /* on a phone the caption uses the whole bottom strip, so Skip moves to the top */
+  .ld-skip.ui-btn {
+    top: 14px;
+    bottom: auto;
+    right: 12px;
+  }
+}
+@media (max-height: 460px) {
+  /* short landscape: the card goes to the right so it does not sit on the ship */
+  .sf .ap-card {
+    left: auto;
+    right: clamp(8px, 2vw, 24px);
+    transform: none;
+    animation: ld-in 0.5s ease both;
+  }
+  .ld-skip.ui-btn {
+    bottom: 10px;
+    padding: 6px 12px;
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ld-caption p {
+    animation: none;
+  }
+}

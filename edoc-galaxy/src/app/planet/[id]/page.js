@@ -29,8 +29,8 @@ export default async function PlanetPage({ params }) {
       <Panel as="section" tone="teal" size="lg" className="shell-card" eyebrow={`Planet ${index + 1}`} title={p.name}>
         <p className="t-body">
           {p.charted
-            ? `${p.lessons} modules, ${p.mastery}% charted. The surface map opens here once landing is built.`
-            : `${p.lessons} modules, still uncharted. The surface map opens here once landing is built.`}
+            ? `${p.lessons} modules, ${p.mastery}% charted. Clear the obstacles on the way in, then land.`
+            : `${p.lessons} modules, still uncharted. Clear the obstacles on the way in, then land.`}
         </p>
         <div className="shell-actions">
           {APPROACH[id] && <Button href={`/planet/${id}/course`}>Begin approach</Button>}
