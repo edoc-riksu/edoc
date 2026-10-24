@@ -38,6 +38,7 @@ export default function HullDepleted({
 
   return (
     <div className="hd">
+      <div className="hd-veil" aria-hidden="true" />
       <div className="hd-scene">
         <DefeatScene calm={calm} onPoke={() => { if (!muted && !calm) sfx.denied(); }} />
       </div>
