@@ -47,12 +47,27 @@ export default function CodeEditor({
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => onSubmitShortcutRef.current?.());
 
     // Silent-while-coding: notify when editor receives or loses user focus
-    editor.onDidFocusEditorText(() => onWritingChangeRef.current?.(true));
+    editor.onDidFocusEditorText(() => {
+      onWritingChangeRef.current?.(true);
+      // Typing resumes Tab-indents-code behavior each time a pilot focuses
+      // in to write — Escape (below) is what switches it back so Tab can
+      // leave the editor again, keyboard-only navigation would otherwise
+      // get trapped inside Monaco forever (it captures Tab by default).
+      editor.updateOptions({ tabFocusMode: false });
+    });
     editor.onDidBlurEditorText(() => onWritingChangeRef.current?.(false));
+    editor.onKeyDown((e) => {
+      if (e.keyCode === monaco.KeyCode.Escape) {
+        editor.updateOptions({ tabFocusMode: true });
+      }
+    });
   };
 
   return (
     <div className={`ui-code-editor ${className}`}>
+      <span className="ui-code-editor-kbd-hint">
+        Press Escape, then Tab, to move keyboard focus out of the code editor.
+      </span>
       <MonacoEditor
         height="100%"
         width="100%"

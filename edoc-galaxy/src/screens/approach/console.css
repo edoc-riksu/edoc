@@ -247,6 +247,14 @@
   border-bottom: 2px solid var(--teal);
   margin-bottom: -1px;
 }
+.ui-code-editor-kbd-hint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .cs-editor.ui-code-editor {
   flex: 1;
   min-height: 0;

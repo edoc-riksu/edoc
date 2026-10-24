@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { readSessionToken, SESSION_COOKIE_NAME } from "../../../../lib/server/sessionToken";
-import { updateUser } from "../../../../lib/server/authStore";
+import { updateUser } from "../../../../lib/server/pilotStore";
 import { normalizeCallsign, isValidCallsign, AUTH_MESSAGES } from "../../../../lib/authValidation";
 
 // A small, square avatar JPEG/WebP at modest quality comfortably fits well
@@ -11,8 +11,8 @@ const MAX_AVATAR_LENGTH = 300_000;
 
 export async function PATCH(request) {
   const store = await cookies();
-  const email = readSessionToken(store.get(SESSION_COOKIE_NAME)?.value);
-  if (!email) {
+  const userId = readSessionToken(store.get(SESSION_COOKIE_NAME)?.value);
+  if (!userId) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
@@ -48,7 +48,7 @@ export async function PATCH(request) {
   }
 
   try {
-    const user = await updateUser(email, patch);
+    const user = await updateUser(userId, patch);
     if (!user) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
     return NextResponse.json({ user });
   } catch (err) {

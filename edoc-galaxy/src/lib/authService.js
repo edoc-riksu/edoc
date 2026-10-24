@@ -42,3 +42,9 @@ export function getSession() {
 export function checkCallsignAvailable(callsign) {
   return request(`/api/auth/callsign-available?callsign=${encodeURIComponent(callsign)}`, { method: "GET" });
 }
+export function updateProfile(patch) {
+  return request("/api/auth/profile", {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}

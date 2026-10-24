@@ -6,7 +6,7 @@ import Button from "../../ui/Button";
 import HullBar from "../../ui/HullBar";
 import CodeEditor from "../../ui/CodeEditor";
 import useResizable from "../../ui/useResizable";
-import { runCode, submitCode } from "../../lib/executionApi";
+import { runCode, submitCode, getResumeState } from "../../lib/executionApi";
 import { runWithInput } from "../../lib/pyDebugRunner";
 import { setSoundEnabled, sfx } from "../../galaxy/audio";
 import DefeatDialog from "./DefeatDialog";
@@ -81,7 +81,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   const [busy, setBusy] = useState(null); // null | "run" | "submit"
   const [result, setResult] = useState(null);
   const [solved, setSolved] = useState(false);
-  const [attempts, setAttempts] = useState(1);
+  const [attempts, setAttempts] = useState(0);
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [bolt, setBolt] = useState(false);
   const [defeat, setDefeat] = useState(null); // null | { concept, reason }
@@ -91,6 +91,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   const [debugResult, setDebugResult] = useState(null);
   const [isWriting, setIsWriting] = useState(false);
   const writingTimerRef = useRef(null);
+  const boltButtonRef = useRef(null);
 
   const handleWritingChange = (active) => {
     clearTimeout(writingTimerRef.current);
@@ -115,6 +116,21 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     };
   }, []);
 
+  // Keyboard-only pilots can open Bolt with Enter but had no way to close
+  // it again without a mouse — Escape closes the panel and hands focus
+  // back to the toggle button, same as any dismissible popover.
+  useEffect(() => {
+    if (!bolt) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setBolt(false);
+        boltButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [bolt]);
+
   const mainSplit = useResizable({ axis: "x", initial: 38, min: 25, max: 55 });
   const workspaceSplit = useResizable({ axis: "y", initial: 60, min: 30, max: 80 });
 
@@ -131,6 +147,28 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setDebugInput("");
     setDebugResult(null);
   }, [encounter.id, encounter.starterCode]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restoreProgress() {
+      const res = await getResumeState(encounter.id);
+
+      if (cancelled || !res.ok || !res.data) return;
+
+      setAttempts(res.data.attempts);
+
+      if (res.data.solved) {
+        setSolved(true);
+      }
+    }
+
+    restoreProgress();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [encounter.id]);
 
   // Hints unlock one at a time — asking for a later tier before an
   // earlier one isn't allowed.
@@ -149,6 +187,13 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setDefeat(null);
     setCode(encounter.starterCode || "");
     setResult(null);
+    setSolved(false);
+    setAttempts(1);
+    setHintsRevealed(0);
+    setBolt(false);
+    setActiveTab("tests");
+    setDebugInput("");
+    setDebugResult(null);
     onHullChange(100);
   };
 
@@ -220,7 +265,6 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     sfx.denied();
     const nextHull = Math.max(0, hull - HULL_DAMAGE);
     console.log("HULL DAMAGE:", { hullBefore: hull, nextHull });
-    onHullChange(nextHull);
     onHullChange(nextHull);
     if (nextHull <= 0) {
       setDefeat({ concept: encounter.concept?.name || "this exercise", reason: verdictMessage });
@@ -513,7 +557,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
         </div>
       </div>
 
-      <button type="button" className="cs-bolt-tab" onClick={() => setBolt((v) => !v)} aria-expanded={bolt} aria-label="Ask Bolt for a hint">
+      <button type="button" ref={boltButtonRef} className="cs-bolt-tab" onClick={() => setBolt((v) => !v)} aria-expanded={bolt} aria-label="Ask Bolt for a hint">
         <Bot size={16} aria-hidden="true" />
         <span>Ask Bolt</span>
       </button>

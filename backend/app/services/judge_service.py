@@ -25,14 +25,17 @@ class JudgeService:
     def __init__(self, harness: TestHarness) -> None:
         self._harness = harness
 
+    
     async def judge_submission(self, *, encounter: Encounter, code: str) -> SubmissionResult:
         submission_id = str(uuid.uuid4())
-        all_tests = encounter.tests.sample + encounter.tests.hidden
+
+        # Submit checks hidden tests only.
+        hidden_tests = encounter.tests.hidden
 
         try:
             run = await self._harness.run_tests(
                 code=code,
-                tests=all_tests,
+                tests=hidden_tests,
                 language=encounter.language,
                 version=_language_version(encounter),
                 timeout_ms=encounter.limits.timeout_ms,
@@ -49,7 +52,10 @@ class JudgeService:
                 submission_id=submission_id,
                 encounter_id=encounter.id,
                 verdict=Verdict.SYSTEM_ERROR,
-                score=ScoreBreakdown(earned=0, total=sum(t.points for t in all_tests)),
+                score=ScoreBreakdown(
+                    earned=0,
+                    total=sum(test.points for test in hidden_tests),
+                ),
                 tests=[],
                 execution=ExecutionMeta(runtime_ms=0),
             )
@@ -71,9 +77,13 @@ class JudgeService:
             encounter_id=encounter.id,
             verdict=verdict,
             score=score,
-            tests=[TestResult(test_id=o.test_id, passed=o.passed) for o in run.outcomes],
+            tests=[
+                TestResult(test_id=outcome.test_id, passed=outcome.passed)
+                for outcome in run.outcomes
+            ],
             execution=ExecutionMeta(runtime_ms=run.max_runtime_ms),
         )
+
 
 
 def _language_version(encounter: Encounter) -> str:

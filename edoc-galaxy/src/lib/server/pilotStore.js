@@ -58,7 +58,44 @@ export async function verifyCredentials(email, password) {
 }
 
 export function toPublicUser(user) {
-  return { id: user.id, callsign: user.pilotCallsign, email: user.email, createdAt: user.createdAt };
+  return {
+    id: user.id,
+    callsign: user.pilotCallsign,
+    email: user.email,
+    avatar: user.avatar ?? null,
+    createdAt: user.createdAt,
+  };
+}
+export async function updateUser(userId, patch) {
+  if (!userId) return null;
+
+  const data = {};
+
+  if (patch.callsign !== undefined) {
+    data.pilotCallsign = normalizeCallsign(patch.callsign);
+  }
+
+  if (patch.avatar !== undefined) {
+    data.avatar = patch.avatar;
+  }
+
+  try {
+    const user = await db.user.update({
+      where: { id: userId },
+      data,
+    });
+
+    return toPublicUser(user);
+  } catch (error) {
+    if (error.code === "P2002") {
+      const err = new Error("Callsign already taken");
+      err.code = "CALLSIGN_TAKEN";
+      throw err;
+    }
+
+    if (error.code === "P2025") return null;
+    throw error;
+  }
 }
 
 /** Up to `count` unused variants of a taken callsign, for the signup form's
