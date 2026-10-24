@@ -2,6 +2,7 @@
 export const APPROACH = {
   python: {
     name: "Python",
+    course: ["Setting course for Python…", "Sensors show rocks ahead.", "Brace for the approach."],
     encounters: [
       {
         id: "py-001",

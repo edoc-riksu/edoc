@@ -1,0 +1,125 @@
+/* "Setting course": a cinematic band of space between two dark bars, a caption strip, three dots and a Skip button. */
+
+.cs {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: #070d1d;
+  isolation: isolate;
+}
+.cs-stage {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: clamp(40px, 11.5vh, 110px);
+  height: min(64vh, 56.25vw * 1.1);
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+}
+.cs-stage canvas {
+  display: block;
+}
+.cs-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  height: clamp(54px, 12%, 92px);
+  background: linear-gradient(180deg, rgba(7, 13, 29, 0.55), rgba(7, 13, 29, 0.88));
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.cs-caption p {
+  margin: 0;
+  padding: 0 16px;
+  text-align: center;
+  font-size: clamp(18px, 2.4vw, 28px);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  animation: cs-in 0.5s ease both;
+}
+@keyframes cs-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.cs-dots {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(26px, 6vh, 56px);
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateX(-50%);
+}
+.cs-dots li {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: rgba(150, 170, 210, 0.28);
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+.cs-dots li.is-done {
+  background: rgba(94, 234, 212, 0.45);
+}
+.cs-dots li.is-on {
+  background: var(--teal);
+  box-shadow: 0 0 12px rgba(94, 234, 212, 0.7);
+  transform: scale(1.15);
+}
+.cs-skip.ui-btn {
+  position: absolute;
+  right: clamp(12px, 2.4vw, 32px);
+  bottom: clamp(16px, 4vh, 40px);
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  background: rgba(14, 22, 48, 0.8);
+}
+.cs-skip kbd {
+  margin-left: 2px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(120, 150, 210, 0.12);
+  font: inherit;
+  font-size: 13px;
+}
+@media (max-width: 720px) {
+  .cs-stage {
+    top: clamp(24px, 9vh, 80px);
+    height: 62vh;
+  }
+  .cs-skip kbd {
+    display: none;
+  }
+}
+@media (max-height: 460px) {
+  .cs-stage {
+    top: 14px;
+    height: calc(100dvh - 92px);
+  }
+  .cs-dots {
+    bottom: 18px;
+  }
+  .cs-skip.ui-btn {
+    bottom: 10px;
+    padding: 6px 12px;
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-caption p {
+    animation: none;
+  }
+}

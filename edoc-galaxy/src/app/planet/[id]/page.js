@@ -33,7 +33,7 @@ export default async function PlanetPage({ params }) {
             : `${p.lessons} modules, still uncharted. The surface map opens here once landing is built.`}
         </p>
         <div className="shell-actions">
-          {APPROACH[id] && <Button href={`/planet/${id}/approach`}>Begin approach</Button>}
+          {APPROACH[id] && <Button href={`/planet/${id}/course`}>Begin approach</Button>}
           <Button variant="secondary" href="/">Back to the galaxy</Button>
         </div>
       </Panel>
