@@ -55,7 +55,7 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
     if ("sound" in patch) setSoundEnabled(next.sound);
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
-    } catch {}
+    } catch { }
   };
 
   const say = useCallback((m) => {
@@ -151,7 +151,7 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
         </nav>
         <div className="ap-tools">
           <HullBar value={hullPct} />
-          <Button variant="secondary" iconOnly icon={User} aria-label="Pilot profile" onClick={() => say("Pilot profile isn't part of this build yet.")} />
+          <Button variant="secondary" iconOnly icon={User} aria-label="Open profile" onClick={() => router.push("/profile")} />
           <Button variant="secondary" iconOnly icon={Rocket} aria-label="Back to the galaxy" onClick={back} />
           <Button
             variant="secondary"

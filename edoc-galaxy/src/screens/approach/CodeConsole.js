@@ -1,20 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bot, CheckCircle2, ChevronLeft, GraduationCap, Lock, Terminal, X, XCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bot, CheckCircle2, ChevronLeft, GraduationCap, Lock, Terminal, VolumeX, X, XCircle } from "lucide-react";
 import Button from "../../ui/Button";
 import HullBar from "../../ui/HullBar";
 import CodeEditor from "../../ui/CodeEditor";
 import useResizable from "../../ui/useResizable";
-import { runCode, submitCode } from "../../lib/executionApi";
+import { runCode, submitCode, getResumeState } from "../../lib/executionApi";
 import { runWithInput } from "../../lib/pyDebugRunner";
-import { sfx } from "../../galaxy/audio";
+import { setSoundEnabled, sfx } from "../../galaxy/audio";
 import DefeatDialog from "./DefeatDialog";
 import "./console.css";
 
 const HULL_DAMAGE = 20;
 const HULL_REPAIR = 15;
 const HINT_TIERS = ["Nudge", "Clue", "Walkthrough"];
+
+function getSoundPreference() {
+  if (typeof window === "undefined") return true;
+  try {
+    const raw = localStorage.getItem("edoc_galaxy_settings");
+    if (raw) return JSON.parse(raw).sound !== false;
+  } catch { }
+  return true;
+}
 
 // Submit doesn't return stdout/stderr (only Run does, per the contract),
 // so a verdict needs its own readable message — pass/fail dots alone
@@ -72,7 +81,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   const [busy, setBusy] = useState(null); // null | "run" | "submit"
   const [result, setResult] = useState(null);
   const [solved, setSolved] = useState(false);
-  const [attempts, setAttempts] = useState(1);
+  const [attempts, setAttempts] = useState(0);
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [bolt, setBolt] = useState(false);
   const [defeat, setDefeat] = useState(null); // null | { concept, reason }
@@ -80,6 +89,47 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   const [debugInput, setDebugInput] = useState("");
   const [debugBusy, setDebugBusy] = useState(false);
   const [debugResult, setDebugResult] = useState(null);
+  const [isWriting, setIsWriting] = useState(false);
+  const writingTimerRef = useRef(null);
+  const boltButtonRef = useRef(null);
+
+  const handleWritingChange = (active) => {
+    clearTimeout(writingTimerRef.current);
+    if (active) {
+      setIsWriting(true);
+      setSoundEnabled(false);
+      // Auto-clear silent state after 3s of idle typing if unfocused
+      writingTimerRef.current = setTimeout(() => {
+        setIsWriting(false);
+        setSoundEnabled(getSoundPreference());
+      }, 3000);
+    } else {
+      setIsWriting(false);
+      setSoundEnabled(getSoundPreference());
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(writingTimerRef.current);
+      setSoundEnabled(getSoundPreference());
+    };
+  }, []);
+
+  // Keyboard-only pilots can open Bolt with Enter but had no way to close
+  // it again without a mouse — Escape closes the panel and hands focus
+  // back to the toggle button, same as any dismissible popover.
+  useEffect(() => {
+    if (!bolt) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setBolt(false);
+        boltButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [bolt]);
 
   const mainSplit = useResizable({ axis: "x", initial: 38, min: 25, max: 55 });
   const workspaceSplit = useResizable({ axis: "y", initial: 60, min: 30, max: 80 });
@@ -98,6 +148,28 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setDebugResult(null);
   }, [encounter.id, encounter.starterCode]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restoreProgress() {
+      const res = await getResumeState(encounter.id);
+
+      if (cancelled || !res.ok || !res.data) return;
+
+      setAttempts(res.data.attempts);
+
+      if (res.data.solved) {
+        setSolved(true);
+      }
+    }
+
+    restoreProgress();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [encounter.id]);
+
   // Hints unlock one at a time — asking for a later tier before an
   // earlier one isn't allowed.
   const revealHint = (i) => {
@@ -115,6 +187,13 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setDefeat(null);
     setCode(encounter.starterCode || "");
     setResult(null);
+    setSolved(false);
+    setAttempts(1);
+    setHintsRevealed(0);
+    setBolt(false);
+    setActiveTab("tests");
+    setDebugInput("");
+    setDebugResult(null);
     onHullChange(100);
   };
 
@@ -123,6 +202,9 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   // must never be used to award anything).
   const handleRunDebug = async () => {
     if (busy || defeat) return;
+    clearTimeout(writingTimerRef.current);
+    setIsWriting(false);
+    setSoundEnabled(getSoundPreference());
     setActiveTab("tests");
     setBusy("run");
     const res = await runCode({ encounterId: encounter.id, code });
@@ -140,6 +222,9 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   // and the thing that actually moves hull and progress.
   const handleSubmit = async () => {
     if (busy || defeat) return;
+    clearTimeout(writingTimerRef.current);
+    setIsWriting(false);
+    setSoundEnabled(getSoundPreference());
     setActiveTab("tests");
     setBusy("submit");
     const res = await submitCode({ encounterId: encounter.id, code });
@@ -152,7 +237,11 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     }
 
     const { verdict, tests: testResults, score, execution } = res.data || {};
-
+    console.log("SUBMIT DEBUG:", {
+      verdict,
+      hullBefore: hull,
+      response: res.data
+    });
     // SYSTEM_ERROR means the sandbox itself is down — try again, not a loss.
     if (!verdict || verdict === "SYSTEM_ERROR") {
       setResult({ kind: "unavailable" });
@@ -175,6 +264,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setResult({ kind: "submit", status: "fail", tests: testResults || [], score, runtimeMs, verdictMessage });
     sfx.denied();
     const nextHull = Math.max(0, hull - HULL_DAMAGE);
+    console.log("HULL DAMAGE:", { hullBefore: hull, nextHull });
     onHullChange(nextHull);
     if (nextHull <= 0) {
       setDefeat({ concept: encounter.concept?.name || "this exercise", reason: verdictMessage });
@@ -195,7 +285,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   const conceptLabel = titleCase(encounter.concept?.name);
 
   return (
-    <section className="cs" aria-label={`Code console — ${encounter.title}`}>
+    <section className={`cs ${isWriting ? "is-writing" : ""}`} aria-label={`Code console — ${encounter.title}`}>
       <header className="cs-bar">
         <div className="cs-bar-left">
           <button type="button" className="cs-back" onClick={onExit} disabled={!!defeat} aria-label="Back to obstacle">
@@ -209,6 +299,12 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
             <span className="cs-crumb-sep">/</span>
             <span className="cs-crumb-now">{encounter.title}</span>
           </nav>
+          {isWriting && (
+            <span className="cs-quiet-indicator" title="While someone is writing code, the ship goes quiet, visually and audibly">
+              <VolumeX size={13} aria-hidden="true" />
+              <span>Ship quiet</span>
+            </span>
+          )}
         </div>
         <div className="cs-bar-right">
           <span className="cs-scored-badge">Scored · judged on the server</span>
@@ -258,6 +354,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
               onChange={setCode}
               onRunShortcut={handleRunDebug}
               onSubmitShortcut={handleSubmit}
+              onWritingChange={handleWritingChange}
               disabled={!!defeat}
             />
             <div className="cs-editor-actions">
@@ -328,7 +425,26 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
                     </p>
                   )}
 
-                  {!result && <p className="cs-tests-empty">Run or Submit to see results here.</p>}
+                  {(!result || result.kind === "unavailable") && (
+                    <>
+                      <p className="cs-tests-group-label">Sample tests</p>
+                      <ul className="cs-tests-list">
+                        {(encounter.tests || []).map((test, i) => (
+                          <li key={i} className="cs-test">
+                            <div>
+                              <span>Sample test {i + 1}</span>
+                              <p>{test.description}</p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                      {(!encounter.tests || encounter.tests.length === 0) && (
+                        <p className="cs-tests-empty">
+                          No sample tests are defined for this encounter.
+                        </p>
+                      )}
+                    </>
+                  )}
 
                   {result?.kind === "run" && (
                     <ul className="cs-tests-list">
@@ -441,7 +557,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
         </div>
       </div>
 
-      <button type="button" className="cs-bolt-tab" onClick={() => setBolt((v) => !v)} aria-expanded={bolt} aria-label="Ask Bolt for a hint">
+      <button type="button" ref={boltButtonRef} className="cs-bolt-tab" onClick={() => setBolt((v) => !v)} aria-expanded={bolt} aria-label="Ask Bolt for a hint">
         <Bot size={16} aria-hidden="true" />
         <span>Ask Bolt</span>
       </button>

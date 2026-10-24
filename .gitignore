@@ -16,3 +16,6 @@ _to_delete/
 .DS_Store
 Thumbs.db
 .vercel/
+
+# Local application data
+.data/

@@ -22,7 +22,18 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react").then((mod) => 
  * `onChange` — grading reads that exact string, same as any plain text
  * input would.
  */
-export default function CodeEditor({ language = "python", value, onChange, onRunShortcut, onSubmitShortcut, disabled, className = "" }) {
+export default function CodeEditor({
+  language = "python",
+  value,
+  onChange,
+  onRunShortcut,
+  onSubmitShortcut,
+  onWritingChange,
+  disabled,
+  className = ""
+}) {
+  const onWritingChangeRef = useRef(onWritingChange);
+  onWritingChangeRef.current = onWritingChange;
   const onRunShortcutRef = useRef(onRunShortcut);
   onRunShortcutRef.current = onRunShortcut;
   const onSubmitShortcutRef = useRef(onSubmitShortcut);
@@ -34,17 +45,39 @@ export default function CodeEditor({ language = "python", value, onChange, onRun
     // memory a pilot coming from LeetCode or HackerRank already has.
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => onRunShortcutRef.current?.());
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => onSubmitShortcutRef.current?.());
+
+    // Silent-while-coding: notify when editor receives or loses user focus
+    editor.onDidFocusEditorText(() => {
+      onWritingChangeRef.current?.(true);
+      // Typing resumes Tab-indents-code behavior each time a pilot focuses
+      // in to write — Escape (below) is what switches it back so Tab can
+      // leave the editor again, keyboard-only navigation would otherwise
+      // get trapped inside Monaco forever (it captures Tab by default).
+      editor.updateOptions({ tabFocusMode: false });
+    });
+    editor.onDidBlurEditorText(() => onWritingChangeRef.current?.(false));
+    editor.onKeyDown((e) => {
+      if (e.keyCode === monaco.KeyCode.Escape) {
+        editor.updateOptions({ tabFocusMode: true });
+      }
+    });
   };
 
   return (
     <div className={`ui-code-editor ${className}`}>
+      <span className="ui-code-editor-kbd-hint">
+        Press Escape, then Tab, to move keyboard focus out of the code editor.
+      </span>
       <MonacoEditor
         height="100%"
         width="100%"
         language={language}
         theme="vs-dark"
         value={value}
-        onChange={(v) => onChange(v ?? "")}
+        onChange={(v) => {
+          onWritingChangeRef.current?.(true);
+          onChange(v ?? "");
+        }}
         onMount={handleMount}
         options={{
           readOnly: disabled,
