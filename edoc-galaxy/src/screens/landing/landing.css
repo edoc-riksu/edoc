@@ -142,8 +142,4 @@
   .ld-caption p {
     animation: none;
   }
-  .ld-bar {
-    animation: none;
-    transform: scaleX(1);
-  }
 }

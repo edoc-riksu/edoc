@@ -25,6 +25,7 @@ const SKID = [0.02, 0.12, 0.14];
 
 export function drawLanding(g, W, h, L, S) {
   const { t, calm, px, py } = S;
+  const soft = !!S.soft && !calm; // reduced-motion pilots still get the descent, just without shake, flash or flicker
   const A = L.surface;
   const G = geom(W, h);
   const sev = Math.max(0, Math.min(2, S.severity | 0));
@@ -41,8 +42,8 @@ export function drawLanding(g, W, h, L, S) {
 
   // camera shake: a rumble through the entry, a jolt on touchdown
   const jolt = prog >= tt ? [0, 7, 18][sev] * G.s * Math.exp(-age * 3.2) : sev * 1.7 * G.s * heat;
-  const shx = calm ? 0 : (Math.sin(t * 47) + 0.6 * Math.sin(t * 83)) * jolt;
-  const shy = calm ? 0 : (Math.sin(t * 59 + 1) + 0.6 * Math.sin(t * 71)) * jolt;
+  const shx = calm || soft ? 0 : (Math.sin(t * 47) + 0.6 * Math.sin(t * 83)) * jolt;
+  const shy = calm || soft ? 0 : (Math.sin(t * 59 + 1) + 0.6 * Math.sin(t * 71)) * jolt;
 
   g.clearRect(0, 0, W, h);
   g.save();
@@ -126,7 +127,7 @@ export function drawLanding(g, W, h, L, S) {
   const thEnd = FINAL_TILT[sev];
   const flare = smooth(tt - 0.2, tt - 0.03, prog);
   let th = prog >= tt ? thEnd : lerp(0.34, thEnd, flare);
-  if (sev > 0 && prog < tt && !calm) th += sev * 0.022 * Math.sin(t * 8) * smooth(0.2, 0.45, prog);
+  if (sev > 0 && prog < tt && !calm && !soft) th += sev * 0.022 * Math.sin(t * 8) * smooth(0.2, 0.45, prog);
   const sx = lerp(W * (W / h < 0.85 ? 0.3 : 0.14), G.shipX, smooth(0, 1, fp)) + px * W * 0.006;
   const restY = G.gy - (lowest(thEnd) - SINK[sev]) * G.s;
   let cy = lerp(h * 0.16, restY, Math.pow(fp, 1.9));
@@ -135,6 +136,7 @@ export function drawLanding(g, W, h, L, S) {
   if (prog < tt - 0.03) thrust = lerp(1, 1.35, flare);
   else if (sev === 2) thrust = prog < tt ? (Math.sin(t * 37) > 0 ? 0.9 : 0.1) : 0;
   else thrust = Math.max(0, 1 - (prog - (tt - 0.03)) / 0.07) * 1.25;
+  if (soft && sev === 2 && prog < tt) thrust = 0.6;
   if (calm) thrust = 0;
   const nose = [sx + Math.cos(th) * 84 * G.s, cy + Math.sin(th) * 84 * G.s];
 
@@ -189,7 +191,7 @@ export function drawLanding(g, W, h, L, S) {
     }
   }
   const soot = [0, 0.55, 1][sev] * smooth(0.3, 0.55, prog);
-  drawLander(g, sx, cy, G.s, th, t, calm, { thrust, sev, soot });
+  drawLander(g, sx, cy, G.s, th, t, calm || soft, { thrust, sev, soot });
   if (heat > 0.01) {
     glow(g, nose[0] + 8 * G.s, nose[1], 150 * G.s * heat, "255,150,60", 0.34 * Math.min(1, heat));
     glow(g, nose[0], nose[1], 60 * G.s * heat, "255,238,200", 0.5 * Math.min(1, heat));
@@ -213,12 +215,12 @@ export function drawLanding(g, W, h, L, S) {
     g.fillStyle = `rgba(255,120,40,${0.05 * Math.min(1, heat)})`;
     g.fillRect(0, 0, W, h);
   }
-  if (sev >= 1 && age > 0 && !calm) {
+  if (sev >= 1 && age > 0 && !calm && !soft) {
     const f = [0, 0.35, 0.85][sev] * Math.exp(-age * 9);
     if (f > 0.01) {
       g.fillStyle = `rgba(255,244,225,${f})`;
       g.fillRect(0, 0, W, h);
     }
   }
-  grainFast(g, W, h, calm ? 0 : t, 0.08);
+  grainFast(g, W, h, calm || soft ? 0 : t, 0.08);
 }

@@ -22,13 +22,13 @@ const CAPTIONS = [
 
 /**
  * Down to the surface. How rough the landing is depends on the hull the pilot arrives with: 70 and up is smooth,
- * 35 to 69 is rough, below 35 is a crash. Esc or Enter skips it. With reduced motion it shows the landed ship and waits for Continue.
+ * 35 to 69 is rough, below 35 is a crash. Esc or Enter skips it. With reduced motion it plays the same descent without shaking, flashing or flicker.
  */
 export default function LandingScreen({ planetId, hull, next }) {
   const router = useRouter();
   const sev = severityFor(hull);
   const [beat, setBeat] = useState(0);
-  const [reduced, setReduced] = useState(false);
+  const [soft, setSoft] = useState(false); // the system or the app asks for reduced motion: play the descent gently
   const [ready, setReady] = useState(false); // the scene is built and its clock is running
   const left = useRef(false);
 
@@ -46,11 +46,7 @@ export default function LandingScreen({ planetId, hull, next }) {
       motion = s.motion;
     } catch {}
     const calm = motion === "reduced" || !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    setReduced(calm);
-    if (calm) {
-      setBeat(2);
-      return undefined;
-    }
+    setSoft(calm);
     if (!ready) return undefined; // building the scene takes a moment; the sound, captions and the bar wait for it
     sfx.launch();
     const at = (p) => p * DURATION * 1000;
@@ -77,16 +73,16 @@ export default function LandingScreen({ planetId, hull, next }) {
   return (
     <div className="ld">
       <div className="ld-stage">
-        <LandingScene severity={sev} duration={DURATION} calm={reduced} onPick={() => {}} onReady={() => setReady(true)} />
+        <LandingScene severity={sev} duration={DURATION} soft={soft} onPick={() => {}} onReady={() => setReady(true)} />
       </div>
-      {!reduced && ready && <div className="ld-bar" style={{ animationDuration: `${DURATION}s` }} aria-hidden="true" />}
-      {!reduced && !ready && <p className="ld-wait" aria-hidden="true">Preparing the descent</p>}
+      {ready && <div className="ld-bar" style={{ animationDuration: `${DURATION}s` }} aria-hidden="true" />}
+      {!ready && <p className="ld-wait" aria-hidden="true">Preparing the descent</p>}
       <div className={`ld-caption ${sev > 0 && beat > 0 ? "is-bad" : ""}`} role="status" aria-live="polite">
         <p key={beat}>{CAPTIONS[sev][beat]}</p>
       </div>
-      <Button variant="secondary" className="ld-skip" onClick={go} aria-label={reduced ? "Continue" : "Skip the landing"}>
-        {reduced ? "Continue" : "Skip landing"}
-        {!reduced && <kbd>Esc</kbd>}
+      <Button variant="secondary" className="ld-skip" onClick={go} aria-label="Skip the landing">
+        Skip landing
+        <kbd>Esc</kbd>
         <ChevronRight size={16} aria-hidden="true" />
       </Button>
     </div>

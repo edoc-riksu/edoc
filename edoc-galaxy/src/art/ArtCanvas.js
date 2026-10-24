@@ -10,10 +10,11 @@ import { useEffect, useRef } from "react";
  *   plus anything you pass in `params`, which is merged in on every frame.
  * - `hit(S, x, y)` says whether a canvas point is on the interactive thing; `onPick` fires on click, `onHover` on enter and leave.
  * - With reduced motion on, it paints still frames only (on resize and when params change).
+ * - `ignoreMotionPref` keeps animating even when the system asks for reduced motion (the scene must then tone itself down, see S.soft).
  * - `defer` builds the scene a moment after mount, so the page around it can paint first (building a big scene blocks the
  *   main thread). `onReady` fires once the first frame is queued; its time zero is the scene's time zero.
  */
-export default function ArtCanvas({ make, draw, label, className = "", params, hit, onPick, onHover, calmOverride, defer = false, onReady }) {
+export default function ArtCanvas({ make, draw, label, className = "", params, hit, onPick, onHover, calmOverride, defer = false, onReady, ignoreMotionPref = false }) {
   const ref = useRef(null);
   const live = useRef({ params, onPick, onHover, calmOverride, onReady });
   live.current = { params, onPick, onHover, calmOverride, onReady };
@@ -30,7 +31,7 @@ export default function ArtCanvas({ make, draw, label, className = "", params, h
     let off;
     const id = setTimeout(() => { off = boot(canvas); }, 60);
     return () => { clearTimeout(id); off?.(); };
-  }, [make, draw, hit, defer]);
+  }, [make, draw, hit, defer, ignoreMotionPref]);
 
   function boot(canvas) {
     const ctx = canvas.getContext("2d");
@@ -43,7 +44,7 @@ export default function ArtCanvas({ make, draw, label, className = "", params, h
     let scale = Math.min(2, window.devicePixelRatio || 1), lastNow = 0, slow = 0, frames = 0;
     const t0 = performance.now();
 
-    const isCalm = () => !!mq?.matches || !!live.current.calmOverride;
+    const isCalm = () => (!ignoreMotionPref && !!mq?.matches) || !!live.current.calmOverride;
     const size = () => {
       const r = canvas.parentElement.getBoundingClientRect();
       const dpr = scale;
