@@ -34,6 +34,7 @@ export default async function PlanetPage({ params }) {
         </p>
         <div className="shell-actions">
           {APPROACH[id] && <Button href={`/planet/${id}/course`}>Begin approach</Button>}
+          {!APPROACH[id] && <p className="t-small t-muted">The approach to {p.name} is not open yet. Its obstacles are still being written.</p>}
           <Button variant="secondary" href="/">Back to the galaxy</Button>
         </div>
       </Panel>
