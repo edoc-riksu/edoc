@@ -7,6 +7,7 @@ import {
     readSessionToken,
     SESSION_COOKIE_NAME,
 } from "../../../../lib/server/sessionToken";
+import { recordAcceptedAttempt } from "../../../../lib/server/progressStore";
 import { withErrorLogging } from "../../../../lib/logger";
 
 const BACKEND_URL =
@@ -82,6 +83,16 @@ export const POST = withErrorLogging(async function POST(request) {
                 { error: "Submission was judged, but saving the attempt failed." },
                 { status: 500 }
             );
+        }
+
+        if (result.verdict === "ACCEPTED") {
+            // Progress is a bonus on top of a saved attempt, not a reason to
+            // fail the request - the attempt itself already succeeded above.
+            try {
+                await recordAcceptedAttempt(userId, result.encounter_id);
+            } catch (error) {
+                console.error("Failed to update progress after an accepted attempt:", error);
+            }
         }
     }
 
