@@ -8,5 +8,5 @@ import { makeSurface, drawSurface, hitSurface } from "./surface";
 export default function SurfaceScene({ seed = 21, severity = 0, calm, onPick, onHover, className }) {
   const make = useMemo(() => () => makeSurface(seed), [seed]);
   const params = useMemo(() => ({ severity }), [severity]);
-  return <ArtCanvas make={make} draw={drawSurface} hit={hitSurface} params={params} calmOverride={calm} onPick={onPick} onHover={onHover} className={className} label="The planet's surface at dusk, with your ship on the ground" />;
+  return <ArtCanvas make={make} draw={drawSurface} hit={hitSurface} params={params} calmOverride={calm} onPick={onPick} onHover={onHover} defer className={className} label="The planet's surface at dusk, with your ship on the ground" />;
 }

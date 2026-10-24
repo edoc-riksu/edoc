@@ -2,7 +2,7 @@ import { rng, TAU, clamp, lerp, smooth, fbm } from "./rng";
 import { makeAsteroid } from "./asteroid";
 import { makeNebula } from "./nebula";
 import { makeWorld } from "./world";
-import { makeStars, drawStars, grain, glow } from "./scenes";
+import { makeStars, drawStars, grainFast, glow } from "./scenes";
 import { FINAL_TILT, SINK, lowest, drawLander, drawSmoke, drawFurrow } from "./lander";
 
 /**
@@ -134,7 +134,38 @@ function makeGround(seed) {
 /* ------------------------------------------------------------------ */
 /* sky                                                                 */
 /* ------------------------------------------------------------------ */
+/**
+ * The sky is a pile of gradients, glows and stars, and it changes slowly. So it is painted into a spare canvas about ten
+ * times a second and that picture is what lands on every frame in between. The twinkle and the drift are slow enough
+ * that nobody can tell, and the frame gets much cheaper.
+ */
 export function drawSky(g, W, h, A, S, G, alpha = 1, full = false) {
+  if (alpha <= 0.004) return;
+  if (typeof document === "undefined") { paintSky(g, W, h, A, S, G, alpha, full); return; }
+  const dpr = S.dpr || 1;
+  const key = `${W}x${h}@${dpr.toFixed(2)}`;
+  const slot = full ? "full" : "sky";
+  const store = A.skyCache || (A.skyCache = {});
+  let e = store[slot];
+  if (!e || e.key !== key) {
+    e = store[slot] = { key, c: document.createElement("canvas"), t: -1 };
+    e.c.width = Math.max(1, Math.round(W * dpr));
+    e.c.height = Math.max(1, Math.round(h * dpr));
+  }
+  if (S.calm || e.t < 0 || Math.abs(S.t - e.t) > 0.1) {
+    const og = e.c.getContext("2d");
+    og.setTransform(dpr, 0, 0, dpr, 0, 0);
+    og.clearRect(0, 0, W, h);
+    paintSky(og, W, h, A, S, G, 1, full);
+    e.t = S.t;
+  }
+  g.save();
+  g.globalAlpha = alpha;
+  g.drawImage(e.c, 0, 0, W, h);
+  g.restore();
+}
+
+function paintSky(g, W, h, A, S, G, alpha, full) {
   const { t, calm, px, py } = S;
   const { vw, off, hz } = G;
   g.save();
@@ -386,7 +417,7 @@ export function drawSurface(g, W, h, A, S) {
   v.addColorStop(1, "rgba(0,0,0,0.45)");
   g.fillStyle = v;
   g.fillRect(0, 0, W, h);
-  grain(g, W, h, calm ? 0 : t, 0.08);
+  grainFast(g, W, h, calm ? 0 : t, 0.08);
 }
 
 export function hitSurface(S, x, y) {

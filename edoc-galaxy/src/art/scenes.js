@@ -56,6 +56,38 @@ export function grain(g, w, h, t, amount = 0.07) {
   g.restore();
 }
 
+/**
+ * Film grain that is cheap to lay down: noise baked as black and white specks with their own opacity, drawn with the
+ * ordinary blend instead of "overlay" (which makes the browser read back every pixel under it). Looks the same at a glance.
+ */
+let fastTile;
+export function grainFast(g, w, h, t, amount = 0.07) {
+  if (typeof document === "undefined") return;
+  if (!fastTile) {
+    const n = 256;
+    fastTile = document.createElement("canvas");
+    fastTile.width = fastTile.height = n;
+    const gg = fastTile.getContext("2d");
+    const im = gg.createImageData(n, n);
+    const r = rng(77);
+    for (let i = 0; i < im.data.length; i += 4) {
+      const v = r() * 2 - 1;
+      const c = v > 0 ? 255 : 0;
+      im.data[i] = im.data[i + 1] = im.data[i + 2] = c;
+      im.data[i + 3] = Math.round(Math.abs(v) * 255);
+    }
+    gg.putImageData(im, 0, 0);
+  }
+  const pat = g.createPattern(fastTile, "repeat");
+  g.save();
+  g.globalAlpha = Math.min(1, amount * 1.7);
+  const k = Math.floor(t * 24);
+  g.translate((k * 37) % 256, (k * 91) % 256);
+  g.fillStyle = pat;
+  g.fillRect(-256, -256, w + 512, h + 512);
+  g.restore();
+}
+
 export function glow(g, x, y, rad, rgb, a, mode = "lighter") {
   g.save();
   g.globalCompositeOperation = mode;

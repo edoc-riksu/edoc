@@ -1,6 +1,6 @@
 import { rng, TAU, clamp, lerp, smooth } from "./rng";
 import { makeWorld } from "./world";
-import { grain, glow, drawShip } from "./scenes";
+import { grainFast, glow, drawShip } from "./scenes";
 import { makeSurface, geom, drawSky, drawLand, drawForeground, endScroll } from "./surface";
 import { FINAL_TILT, SINK, lowest, drawLander, drawSmoke, drawFurrow, makeImpact, drawImpact } from "./lander";
 
@@ -220,5 +220,5 @@ export function drawLanding(g, W, h, L, S) {
       g.fillRect(0, 0, W, h);
     }
   }
-  grain(g, W, h, calm ? 0 : t, 0.08);
+  grainFast(g, W, h, calm ? 0 : t, 0.08);
 }

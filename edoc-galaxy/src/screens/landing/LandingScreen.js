@@ -29,6 +29,7 @@ export default function LandingScreen({ planetId, hull, next }) {
   const sev = severityFor(hull);
   const [beat, setBeat] = useState(0);
   const [reduced, setReduced] = useState(false);
+  const [ready, setReady] = useState(false); // the scene is built and its clock is running
   const left = useRef(false);
 
   const go = useCallback(() => {
@@ -50,6 +51,7 @@ export default function LandingScreen({ planetId, hull, next }) {
       setBeat(2);
       return undefined;
     }
+    if (!ready) return undefined; // building the scene takes a moment; the sound, captions and the bar wait for it
     sfx.launch();
     const at = (p) => p * DURATION * 1000;
     const timers = [
@@ -62,7 +64,7 @@ export default function LandingScreen({ planetId, hull, next }) {
       setTimeout(go, DURATION * 1000)
     ];
     return () => timers.forEach(clearTimeout);
-  }, [go, sev]);
+  }, [go, sev, ready]);
 
   useEffect(() => {
     const onKey = (ev) => {
@@ -75,9 +77,10 @@ export default function LandingScreen({ planetId, hull, next }) {
   return (
     <div className="ld">
       <div className="ld-stage">
-        <LandingScene severity={sev} duration={DURATION} calm={reduced} onPick={() => {}} />
+        <LandingScene severity={sev} duration={DURATION} calm={reduced} onPick={() => {}} onReady={() => setReady(true)} />
       </div>
-      {!reduced && <div className="ld-bar" style={{ animationDuration: `${DURATION}s` }} aria-hidden="true" />}
+      {!reduced && ready && <div className="ld-bar" style={{ animationDuration: `${DURATION}s` }} aria-hidden="true" />}
+      {!reduced && !ready && <p className="ld-wait" aria-hidden="true">Preparing the descent</p>}
       <div className={`ld-caption ${sev > 0 && beat > 0 ? "is-bad" : ""}`} role="status" aria-live="polite">
         <p key={beat}>{CAPTIONS[sev][beat]}</p>
       </div>
