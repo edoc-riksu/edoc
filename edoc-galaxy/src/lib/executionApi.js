@@ -7,7 +7,7 @@
  */
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_EXECUTION_API_URL || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_EXECUTION_API_URL || "http://localhost:8001";
 
 async function postJson(path, body, baseUrl = BASE_URL) {
   let res;
@@ -33,6 +33,7 @@ async function postJson(path, body, baseUrl = BASE_URL) {
   return { ok: res.ok, status: res.status, data };
 }
 
+/** `{encounter_id, tests:[{test_id,passed,stdout,stderr}], execution}` on success. Sample tests only. */
 export function runCode({ encounterId, code }) {
   return postJson(
     "/api/v1/executions/run",
@@ -41,6 +42,11 @@ export function runCode({ encounterId, code }) {
   );
 }
 
+/**
+ * Routed through our own `/api/approach/submissions` proxy, not straight to
+ * the execution service — the proxy is what persists an Attempt row so
+ * progress survives a reload (see getResumeState below).
+ */
 export function submitCode({ encounterId, code }) {
   return postJson(
     "/api/approach/submissions",
@@ -48,7 +54,6 @@ export function submitCode({ encounterId, code }) {
     ""
   );
 }
-
 
 export async function getResumeState(encounterId) {
   try {
@@ -68,4 +73,3 @@ export async function getResumeState(encounterId) {
     return { ok: false, status: 0, data: null };
   }
 }
-

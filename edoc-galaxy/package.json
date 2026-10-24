@@ -6,7 +6,7 @@
     "dev": "next dev -p 4173",
     "build": "next build",
     "start": "next start -p 4173",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && node scripts/copy-monaco.js",
     "db:migrate:deploy": "prisma migrate deploy",
     "test": "vitest run"
   },
