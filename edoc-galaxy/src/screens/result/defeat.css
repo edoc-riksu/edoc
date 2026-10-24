@@ -1,0 +1,116 @@
+/* "Hull depleted": dark red scene, the card with the explanation rests low in the middle. */
+.hd {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: #06020a;
+  isolation: isolate;
+}
+.hd-scene {
+  position: absolute;
+  inset: 0;
+}
+.hd-scene canvas {
+  display: block;
+}
+.hd-card {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(16px, 5vh, 44px);
+  width: min(600px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  transform: translateX(-50%);
+  padding: 22px 28px 20px;
+  display: grid;
+  gap: 12px;
+  text-align: center;
+  border-radius: 18px;
+  background: rgba(16, 7, 14, 0.82);
+  border: 1px solid rgba(255, 110, 100, 0.4);
+  box-shadow: 0 -6px 40px rgba(0, 0, 0, 0.55), 0 0 34px rgba(255, 70, 60, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  animation: hd-rise 0.7s 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes hd-rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+}
+.hd-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #ff8a80;
+}
+.hd-title {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  font-family: var(--display);
+  font-size: clamp(22px, 3.4vw, 32px);
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.hd-small {
+  font-family: var(--sans);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+.hd-body {
+  color: var(--ink-soft);
+  font-size: 15.5px;
+  line-height: 1.55;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.hd-body > :first-child {
+  margin-top: 0;
+}
+.hd-body > :last-child {
+  margin-bottom: 0;
+}
+.hd-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.hd-stat b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.hd-actions {
+  display: flex;
+  justify-content: center;
+}
+@media (max-width: 700px) {
+  .hd-card {
+    padding: 18px 18px 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hd-card {
+    animation: none;
+  }
+}
+.hd-lab .hd {
+  height: 100%;
+}
