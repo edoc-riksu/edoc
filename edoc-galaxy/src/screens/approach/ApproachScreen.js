@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Rocket, Settings, User, Volume2, VolumeX, X } from "lucide-react";
 import ApproachScene from "../../art/ApproachScene";
+import CockpitFrame from "../../art/CockpitFrame";
 import Button from "../../ui/Button";
 import HullBar from "../../ui/HullBar";
 import Panel from "../../ui/Panel";
@@ -204,6 +205,8 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
           </div>
         </section>
       ) : engaged ? (
+        <>
+        <CockpitFrame hull={hullPct} calm={settings.motion === "reduced"} />
         <CodeConsole
           key={e.id}
           encounter={e}
@@ -220,6 +223,7 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
           total={encounters.length}
           language={planetName}
         />
+        </>
       ) : (
         <section key={`${idx}-${pulse}`} className={`ap-card ${rockHover ? "is-lit" : ""} ${pulse ? "is-pulse" : ""}`} aria-labelledby="ap-title" aria-live="polite">
           <p className="ap-eyebrow">Obstacle ahead</p>

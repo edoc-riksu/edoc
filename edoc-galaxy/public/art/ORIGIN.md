@@ -13,3 +13,4 @@ One line per file in `public/art/`. No line, no merge. See "Images and art" in C
 | `src/art/nebula.js`: gas clouds behind both scenes | Frontend 1 | Generated from noise | Original |
 | `src/art/world.js`: the planet seen from the cockpit and in flight | Frontend 1 | Generated per pixel from noise | Original |
 | `src/art/scenes.js`: the journey version of the flight scene (planet grows, ship pushes forward, arrival glow) | Frontend 1 | Drawn in code | Original |
+| `src/art/cockpit.js`: the cockpit frame round the encounter console (canopy bar, window pillars, dash with dials and lamps) | Frontend 1 | Drawn in code | Original |
