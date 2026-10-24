@@ -5,7 +5,7 @@
 .cs {
   position: fixed;
   z-index: 90;
-  inset: clamp(8px, 1.6vh, 16px);
+  inset: var(--fr-t, 12px) var(--fr-s, 12px) var(--fr-b, 12px);
   display: flex;
   flex-direction: column;
   gap: 14px;

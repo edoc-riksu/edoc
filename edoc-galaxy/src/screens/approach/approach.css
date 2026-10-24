@@ -1,6 +1,10 @@
 /* Approach screen: the cockpit fills the screen; the HUD and the obstacle card sit on top of it. */
 
 .ap {
+  /* room the cockpit frame takes round the console; src/art/cockpit.js insets() uses the same numbers */
+  --fr-t: clamp(30px, 6.5vh, 56px);
+  --fr-s: clamp(10px, 3vw, 46px);
+  --fr-b: clamp(30px, 7vh, 60px);
   position: fixed;
   inset: 0;
   height: 100dvh;
@@ -373,5 +377,28 @@
   }
   .ap-toast {
     transition-duration: 0.01s;
+  }
+}
+
+@media (max-width: 700px), (max-height: 640px) {
+  .ap {
+    --fr-t: 12px;
+    --fr-s: 8px;
+    --fr-b: 12px;
+  }
+}
+/* the cockpit around the console */
+.cockpit {
+  position: fixed;
+  inset: 0;
+  z-index: 89;
+  width: 100vw;
+  height: 100dvh;
+  pointer-events: none;
+  animation: fr-in 0.45s ease-out both;
+}
+@keyframes fr-in {
+  from {
+    opacity: 0;
   }
 }
