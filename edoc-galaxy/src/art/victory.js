@@ -139,7 +139,7 @@ export function drawVictory(g, W, h, V, S) {
     g.restore();
   } else {
     const drift = (1 - Math.exp(-age * 1.9)) / 1.9;
-    const fade = 1 - smooth(3.4, 5.2, age);
+    const fade = 1 - smooth(2.4, 3.8, age);
     for (const sh of V.shards) {
       const dist = sh.v * drift * G.u * (G.portrait ? 0.7 : 1);
       const rot = sh.spin * (1 - Math.exp(-age * 1.4)) + t * 0.05 * sh.spin * 0.4;
