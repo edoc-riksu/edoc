@@ -23,6 +23,28 @@
 .profile-progress {
   grid-area: progress;
 }
+.profile-module-list {
+  display: grid;
+  gap: 8px;
+}
+.profile-module-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(94, 234, 212, 0.16);
+  border-radius: 8px;
+}
+.profile-module-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--teal);
+}
+.profile-module-count {
+  font-variant-numeric: tabular-nums;
+}
 .profile-mastery {
   grid-area: mastery;
 }

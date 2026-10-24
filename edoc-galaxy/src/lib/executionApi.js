@@ -7,7 +7,7 @@
  */
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_EXECUTION_API_URL || "http://localhost:8001";
+  process.env.NEXT_PUBLIC_EXECUTION_API_URL || "http://localhost:8000";
 
 async function postJson(path, body, baseUrl = BASE_URL) {
   let res;
