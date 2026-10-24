@@ -16,6 +16,8 @@ export default function ApproachScene({ className, variant = 0, onPick, onHover,
       onPick={onPick}
       onHover={onHover}
       calmOverride={calm}
+      defer
+      loadingLabel="Opening the view"
       className={className}
       label="Cockpit view of an asteroid field with the planet ahead"
     />

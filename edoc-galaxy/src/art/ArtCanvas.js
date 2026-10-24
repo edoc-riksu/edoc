@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Paints one of the code-made scenes in src/art onto a canvas that fills its parent.
@@ -11,14 +11,18 @@ import { useEffect, useRef } from "react";
  * - `hit(S, x, y)` says whether a canvas point is on the interactive thing; `onPick` fires on click, `onHover` on enter and leave.
  * - With reduced motion on, it paints still frames only (on resize and when params change).
  * - `ignoreMotionPref` keeps animating even when the system asks for reduced motion (the scene must then tone itself down, see S.soft).
+ * - `loadingLabel` shows that text over the canvas until the scene is built (use it together with `defer`). If the scene can't be
+ *   built or drawn, a short notice replaces the canvas so the rest of the screen still works.
  * - `defer` builds the scene a moment after mount, so the page around it can paint first (building a big scene blocks the
  *   main thread). `onReady` fires once the first frame is queued; its time zero is the scene's time zero.
  */
-export default function ArtCanvas({ make, draw, label, className = "", params, hit, onPick, onHover, calmOverride, defer = false, onReady, ignoreMotionPref = false }) {
+export default function ArtCanvas({ make, draw, label, className = "", params, hit, onPick, onHover, calmOverride, defer = false, onReady, ignoreMotionPref = false, loadingLabel }) {
   const ref = useRef(null);
   const live = useRef({ params, onPick, onHover, calmOverride, onReady });
   live.current = { params, onPick, onHover, calmOverride, onReady };
   const api = useRef({ redraw: () => {} });
+  const [ready, setReady] = useState(!loadingLabel);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     api.current.redraw();
@@ -35,11 +39,18 @@ export default function ArtCanvas({ make, draw, label, className = "", params, h
 
   function boot(canvas) {
     const ctx = canvas.getContext("2d");
-    const data = make();
+    let data;
+    try {
+      data = make();
+    } catch (err) {
+      console.error("Scene could not be built", err);
+      setFailed(true);
+      return undefined;
+    }
     const mq = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
     const S = { t: 0, calm: false, px: 0, py: 0, hover: 0, lockT: 0, dpr: 1, frame: 0 };
     let tx = 0, ty = 0, ht = 0, hovering = false;
-    let raf = 0, w = 0, h = 0;
+    let raf = 0, w = 0, h = 0, failedRef = false;
     // Resolution adapts to the machine: if frames take too long the canvas drops to fewer pixels (softer, but smooth).
     let scale = Math.min(2, window.devicePixelRatio || 1), lastNow = 0, slow = 0, frames = 0;
     const t0 = performance.now();
@@ -68,7 +79,13 @@ export default function ArtCanvas({ make, draw, label, className = "", params, h
         S.py += (ty - S.py) * 0.07;
         S.hover += (ht - S.hover) * 0.16;
       }
-      draw(ctx, w, h, data, S);
+      try {
+        draw(ctx, w, h, data, S);
+      } catch (err) {
+        console.error("Scene could not be drawn", err);
+        failedRef = true;
+        setFailed(true);
+      }
     };
     const tune = (now) => {
       const dt = now - lastNow;
@@ -88,6 +105,7 @@ export default function ArtCanvas({ make, draw, label, className = "", params, h
     const loop = (now) => {
       if (!isCalm()) tune(now);
       paint(now);
+      if (failedRef) return;
       if (!S.calm) raf = requestAnimationFrame(loop);
       else raf = 0;
     };
@@ -100,6 +118,7 @@ export default function ArtCanvas({ make, draw, label, className = "", params, h
     size();
     redraw();
     live.current.onReady?.();
+    setReady(true);
 
     const onMove = (e) => {
       const r = canvas.getBoundingClientRect();
@@ -140,7 +159,21 @@ export default function ArtCanvas({ make, draw, label, className = "", params, h
     };
   }
 
-  return <canvas ref={ref} className={className} role="img" aria-label={label} />;
+  return (
+    <>
+      <canvas ref={ref} className={className} role="img" aria-label={label} hidden={failed} />
+      {!ready && !failed && (
+        <div className="art-loading" role="status">
+          <span>{loadingLabel}</span>
+        </div>
+      )}
+      {failed && (
+        <div className="art-loading is-failed" role="status">
+          <span>This view could not load. Everything else on the screen still works.</span>
+        </div>
+      )}
+    </>
+  );
 }
 
 const clampN = (v) => Math.max(-1, Math.min(1, v));

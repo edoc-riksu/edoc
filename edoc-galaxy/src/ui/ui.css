@@ -300,3 +300,54 @@
   font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
+
+/* ---------- scene loading and fallback (ArtCanvas) ---------- */
+.art-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.art-loading span {
+  padding: 0 24px;
+  text-align: center;
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--teal);
+  animation: art-loading-pulse 1.4s ease-in-out infinite;
+}
+.art-loading.is-failed span {
+  font-family: var(--sans);
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--ink-soft);
+  animation: none;
+}
+@keyframes art-loading-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .art-loading span {
+    animation: none;
+  }
+}
+.art-loading-label {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--teal);
+  animation: art-loading-pulse 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .art-loading-label {
+    animation: none;
+  }
+}

@@ -162,6 +162,25 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
     return () => window.removeEventListener("pointerdown", close);
   }, []);
 
+  if (!e) {
+    // an approach with nothing on it yet (a planet whose encounters are still being written)
+    return (
+      <div className="ap">
+        <div className="ap-scene">
+          <ApproachScene calm={settings.motion === "reduced"} />
+        </div>
+        <section className="ap-card" aria-labelledby="ap-title">
+          <p className="ap-eyebrow">Clear skies</p>
+          <h2 id="ap-title" className="ap-title">No obstacles on this approach yet</h2>
+          <p className="ap-blurb">The obstacles for {planetName} are still being written. Check back soon.</p>
+          <div className="ap-actions">
+            <Button size="lg" onClick={() => router.push("/")}>Back to galaxy</Button>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className={`ap ${shake ? "is-hit" : ""} ${diving ? "is-diving" : ""} ${calmMotion ? "is-calm" : ""}`} style={{ "--hit": hit.k }}>
       <div className="ap-scene">
