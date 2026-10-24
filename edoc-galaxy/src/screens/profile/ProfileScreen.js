@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, Check, Pencil, Rocket, UserRound, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Camera, Check, LogOut, Pencil, Rocket, UserRound, X } from "lucide-react";
 import AppShell from "../../shell/AppShell";
 import Button from "../../ui/Button";
 import Panel from "../../ui/Panel";
@@ -50,7 +51,9 @@ function knownConcepts() {
 }
 
 export default function ProfileScreen() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, signOut } = useAuth();
+  const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
   const fileInputRef = useRef(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [avatarError, setAvatarError] = useState("");
@@ -161,8 +164,24 @@ export default function ProfileScreen() {
     else if (ev.key === "Escape") cancelEditCallsign();
   };
 
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    if (!window.confirm("Sign out of edoc? Your progress is saved to your account.")) return;
+    setSigningOut(true);
+    await signOut();
+    router.push("/signin");
+  };
+
   return (
-    <AppShell section="PILOT PROFILE" tools={<Button variant="secondary" iconOnly icon={Rocket} href="/" aria-label="Back to the galaxy" />}>
+    <AppShell
+      section="PILOT PROFILE"
+      tools={
+        <>
+          <Button variant="secondary" iconOnly icon={Rocket} href="/" aria-label="Back to the galaxy" />
+          <Button variant="secondary" iconOnly icon={LogOut} aria-label="Sign out" disabled={signingOut} onClick={handleSignOut} />
+        </>
+      }
+    >
       <div className="profile-grid">
         <Panel as="section" size="lg" className="profile-identity">
           <button
