@@ -46,7 +46,7 @@ export default function ArtCanvas({ make, draw, label, className = "", params, h
     };
     const paint = (now) => {
       S.calm = isCalm();
-      S.t = (now - t0) / 1000;
+      S.t = Math.max(0, (now - t0) / 1000); // the first frame's timestamp can be a hair before t0
       Object.assign(S, live.current.params);
       if (S.calm) { S.px = 0; S.py = 0; S.hover = ht; }
       else {

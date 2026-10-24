@@ -31,7 +31,7 @@ export function drawStars(g, w, h, stars, t, drift = 0, ox = 0, oy = 0) {
 }
 
 let grainTile;
-function grain(g, w, h, t, amount = 0.07) {
+export function grain(g, w, h, t, amount = 0.07) {
   if (typeof document === "undefined") return;
   if (!grainTile) {
     grainTile = document.createElement("canvas");
@@ -56,7 +56,7 @@ function grain(g, w, h, t, amount = 0.07) {
   g.restore();
 }
 
-function glow(g, x, y, rad, rgb, a, mode = "lighter") {
+export function glow(g, x, y, rad, rgb, a, mode = "lighter") {
   g.save();
   g.globalCompositeOperation = mode;
   const gr = g.createRadialGradient(x, y, 0, x, y, rad);
@@ -482,15 +482,17 @@ export function hitApproach(S, x, y) {
 /* ------------------------------------------------------------------ */
 /* flight scene                                                        */
 /* ------------------------------------------------------------------ */
-function drawShip(g, x, y, s, t, calm, bank) {
+// opts.tilt sets the angle directly (radians, nose down is positive); opts.thrust scales the engine plumes (0 = engines off)
+export function drawShip(g, x, y, s, t, calm, bank, opts = {}) {
   g.save();
   g.translate(x, y);
   g.scale(s, s);
-  g.rotate(-0.1 + bank * 0.06);
-  const f = calm ? 1 : 0.88 + 0.12 * Math.sin(t * 24) + 0.05 * Math.sin(t * 61);
+  g.rotate(opts.tilt != null ? opts.tilt : -0.1 + bank * 0.06);
+  const thrust = opts.thrust != null ? opts.thrust : 1;
+  const f = (calm ? 1 : 0.88 + 0.12 * Math.sin(t * 24) + 0.05 * Math.sin(t * 61)) * thrust;
 
   // engine plumes
-  for (const [ey, el, wd] of [[-16, 110, 7], [0, 160, 9], [16, 110, 7]]) {
+  if (thrust > 0.02) for (const [ey, el, wd] of [[-16, 110, 7], [0, 160, 9], [16, 110, 7]]) {
     glow(g, -52, ey, 46 * f, "120,235,255", 0.55);
     const gr = g.createLinearGradient(-50, ey, -50 - el * f, ey);
     gr.addColorStop(0, "rgba(235,255,255,0.98)");

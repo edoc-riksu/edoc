@@ -195,7 +195,10 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
           </h2>
           <p className="ap-blurb">Every obstacle on this approach is cleared. {planetName} is ahead.</p>
           <div className="ap-actions">
-            <Button size="lg" onClick={back}>
+            <Button size="lg" onClick={() => router.push(`/planet/${planetId}/landing?hull=${Math.round(hullPct)}`)}>
+              Descend to {planetName}
+            </Button>
+            <Button variant="secondary" size="lg" className="ap-back" onClick={back}>
               Back to galaxy
             </Button>
           </div>
