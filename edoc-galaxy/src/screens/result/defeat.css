@@ -114,3 +114,26 @@
 .hd-lab .hd {
   height: 100%;
 }
+
+/* arriving: a dip to dark red that clears */
+.hd-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(circle at 31% 40%, rgba(255, 80, 60, 0.55), rgba(40, 0, 8, 0.92) 70%);
+  animation: hd-veil 1.1s ease-out both;
+}
+@keyframes hd-veil {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hd-veil {
+    display: none;
+  }
+}

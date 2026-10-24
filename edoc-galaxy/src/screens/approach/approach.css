@@ -400,6 +400,82 @@
 @keyframes fr-in {
   from {
     opacity: 0;
+    transform: scale(1.1);
+  }
+}
+
+/* Engage: the view pushes in toward the rock, the card steps aside, then the cockpit closes round the console */
+.ap-scene {
+  transition: transform 0.65s cubic-bezier(0.5, 0, 0.9, 0.4), filter 0.65s ease-in;
+  transform-origin: 62% 44%;
+}
+.ap.is-diving .ap-scene {
+  transform: scale(1.4);
+  filter: brightness(1.25) saturate(1.1);
+}
+.ap.is-diving.is-calm .ap-scene {
+  transform: none;
+  filter: brightness(1.1);
+}
+.ap.is-diving .ap-card {
+  opacity: 0;
+  transform: translate(-50%, 24px);
+  transition: opacity 0.3s ease, transform 0.4s ease;
+  pointer-events: none;
+}
+.ap-dive {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 62% 44%, rgba(160, 255, 240, 0) 25%, rgba(94, 234, 212, 0.35) 100%);
+  animation: ap-dive 0.65s ease-in both;
+}
+@keyframes ap-dive {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* leaving the console */
+.ap-leave {
+  animation: ap-leave 0.28s ease-in both;
+}
+@keyframes ap-leave {
+  to {
+    opacity: 0;
+  }
+}
+/* switching to the next obstacle: a short flash from the middle of the view */
+.ap-warp {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 44%, rgba(94, 234, 212, 0.4), rgba(94, 234, 212, 0) 62%);
+  animation: ap-warp 0.5s ease-out both;
+}
+@keyframes ap-warp {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cockpit {
+    animation-name: fr-fade;
+  }
+  .ap-scene {
+    transition: none;
+  }
+}
+@keyframes fr-fade {
+  from {
+    opacity: 0;
   }
 }
 
