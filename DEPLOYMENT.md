@@ -51,3 +51,19 @@ A connected Neon/Postgres marketplace integration injects its own `DATABASE_URL`
 ## 7. Gotcha: intermittent `Can't reach database server` from a cross-region Vercel/Neon pairing
 
 Our Vercel functions run in `iad1` (US East), but the Neon databases are in `ap-southeast-1` (Singapore). That round-trip, combined with Neon's free-tier compute suspending after a few minutes idle and taking a moment to wake back up, can make the *first* connection after idle time out even though the database is healthy (confirm it's not an outage by running `SELECT 1;` directly in Neon's SQL Editor - it'll work fine even while the app is failing). Fix: append `&connect_timeout=30` to `DATABASE_URL` to give Postgres connections more time to establish before giving up.
+
+## 8. Baseline API response times (plan Day 20)
+
+Measured directly against `edoc-drab.vercel.app` (staging), given the cross-region setup in section 7:
+
+| Route | Cold (after idle) | Warm |
+| --- | --- | --- |
+| `GET /api/health` | ~1.4s | - |
+| `GET /api/planets` | ~3.1s | ~0.5-0.6s |
+| `GET /api/modules` | ~0.8s | - |
+| `GET /api/modules/[slug]` | ~1.2s | - |
+| `GET /api/encounters/[id]` | ~1.2s | - |
+| `POST /api/auth/signin` | ~1.1s | ~0.6-0.8s |
+| `GET /api/auth/me` (no session, no DB call) | ~0.3s | - |
+
+Cold numbers (first request after a few idle minutes) running up to ~3s are expected and come from section 7's cross-region/compute-wake cost, not a code problem. If warm requests start exceeding ~1-1.5s, that's the signal something regressed - these numbers are the baseline to compare against.
