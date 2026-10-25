@@ -41,9 +41,13 @@ function titleCase(s) {
 }
 
 function backendErrorMessage(status) {
-  return status === 404 || status === 422
-    ? "This encounter isn't wired up on the judging backend yet."
-    : "Couldn't reach the judging backend — check your connection and try again.";
+  if (status === 404 || status === 422) {
+    return "This encounter isn't wired up on the judging backend yet.";
+  }
+  if (status === 429) {
+    return "Too many submissions — take a breath and try again in a moment.";
+  }
+  return "Couldn't reach the judging backend — check your connection and try again.";
 }
 
 // Splits a submission's flat test list into sample/hidden groups using

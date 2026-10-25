@@ -8,6 +8,7 @@ import {
     SESSION_COOKIE_NAME,
 } from "../../../../lib/server/sessionToken";
 import { recordAcceptedAttempt } from "../../../../lib/server/progressStore";
+import { rateLimit } from "../../../../lib/server/rateLimit";
 import { withErrorLogging } from "../../../../lib/logger";
 
 const BACKEND_URL =
@@ -25,6 +26,19 @@ export const POST = withErrorLogging(async function POST(request) {
         return NextResponse.json(
             { error: "Please sign in before submitting." },
             { status: 401 }
+        );
+    }
+
+    // Each submission runs the player's code in the sandbox — a real cost,
+    // unlike a run. Keyed per user, not per IP, since this route requires auth.
+    const limited = rateLimit(`submission:${userId}`, { limit: 15, windowMs: 60 * 1000 });
+    if (!limited.allowed) {
+        return NextResponse.json(
+            {
+                error: "Too many submissions — slow down a little.",
+                retryAfter: Math.ceil(limited.retryAfterMs / 1000),
+            },
+            { status: 429 }
         );
     }
 
