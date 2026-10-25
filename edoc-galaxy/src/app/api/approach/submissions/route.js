@@ -8,6 +8,7 @@ import {
     SESSION_COOKIE_NAME,
 } from "../../../../lib/server/sessionToken";
 import { recordAcceptedAttempt } from "../../../../lib/server/progressStore";
+import { rateLimit } from "../../../../lib/server/rateLimit";
 import { withErrorLogging } from "../../../../lib/logger";
 
 const BACKEND_URL =
@@ -25,6 +26,19 @@ export const POST = withErrorLogging(async function POST(request) {
         return NextResponse.json(
             { error: "Please sign in before submitting." },
             { status: 401 }
+        );
+    }
+
+    // Each submission runs real code on the execution service's sandbox -
+    // real cost, not just a database write - so this is limited per
+    // signed-in player rather than per IP. 20/5min comfortably covers
+    // normal retry-until-it-passes play without leaving the sandbox open
+    // to being hammered by a script.
+    const limited = rateLimit(`submission:${userId}`, { limit: 20, windowMs: 5 * 60 * 1000 });
+    if (!limited.allowed) {
+        return NextResponse.json(
+            { error: "Too many submissions. Please wait a moment.", retryAfter: Math.ceil(limited.retryAfterMs / 1000) },
+            { status: 429 }
         );
     }
 
