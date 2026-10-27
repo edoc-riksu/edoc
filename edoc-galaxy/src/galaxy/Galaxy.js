@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ChevronRight, Rocket, Settings, User, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowRight, ChevronRight, Rocket, Settings, Shirt, User, Volume2, VolumeX, X } from "lucide-react";
 import { PLANETS, UNCHARTED, makeFrame, sampleRoute, ROUTE_D_MIN, ROUTE_D_MAX } from "./layout";
 import { Sky } from "./sky";
 import { ShipSystem } from "./ships";
@@ -730,6 +730,7 @@ export default function Galaxy() {
           aria-label="Open profile"
           onClick={() => router.push("/profile")}
         />
+        <Button variant="secondary" iconOnly icon={Shirt} aria-label="Open the Lobby" onClick={() => router.push("/hangar")} />
         <Button variant="secondary" iconOnly icon={Rocket} aria-label={`Fly to ${p.name || "selected world"}`} onClick={() => startFly(sel)} />
         <Button
           variant="secondary"

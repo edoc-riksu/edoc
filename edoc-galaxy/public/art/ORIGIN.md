@@ -16,3 +16,4 @@ One line per file in `public/art/`. No line, no merge. See "Images and art" in C
 | `src/art/cockpit.js`: the cockpit frame round the encounter console (canopy bar, window pillars, dash with dials and lamps) | Frontend 1 | Drawn in code | Original |
 | `src/art/victory.js`: "Encounter cleared" (pulse, the rock breaking into shards, dust, shock ring, rays, the way opening) | Frontend 1 | Drawn in code, rock from `asteroid.js` | Original |
 | `src/art/defeat.js`: "Hull depleted" (the drifting, venting ship with the rock behind it, alarm glow, sparks, wreckage) | Frontend 1 | Drawn in code, rock from `asteroid.js` | Original |
+| `src/screens/hangar/ExplorerFigure.js`: the two explorer busts (Vega, Taro) and two suit trims (base, Starfarer) on the Hangar screen | Frontend 2 | Drawn in code (SVG shapes, no reference art) | Original |

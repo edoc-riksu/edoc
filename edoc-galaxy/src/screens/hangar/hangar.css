@@ -1,0 +1,119 @@
+.hangar {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 360px);
+  gap: 16px;
+  padding: 24px;
+  background: var(--night);
+}
+
+.hangar-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 30%, rgba(94, 234, 212, 0.08), transparent 70%);
+}
+
+.hangar-eyebrow {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  font-family: var(--display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.hangar-panel {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.hangar-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--glass-edge);
+}
+
+.hangar-tab {
+  background: none;
+  border: none;
+  color: var(--ink-dim);
+  font-family: var(--display);
+  letter-spacing: 0.04em;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.hangar-tab.is-active {
+  color: var(--teal);
+  border-bottom-color: var(--teal);
+}
+
+.hangar-list {
+  display: grid;
+  gap: 8px;
+}
+
+.hangar-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 10px;
+  background: var(--glass);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.hangar-option.is-selected {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 1px var(--teal) inset;
+}
+
+.hangar-option.is-locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.hangar-option-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--display);
+  font-size: 13px;
+}
+
+.hangar-option-check {
+  color: var(--teal);
+}
+
+.hangar-option-lock-text {
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+
+.hangar-error {
+  color: #fb7185;
+  font-size: 13px;
+}
+
+.hangar-actions {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .hangar {
+    grid-template-columns: 1fr;
+  }
+}

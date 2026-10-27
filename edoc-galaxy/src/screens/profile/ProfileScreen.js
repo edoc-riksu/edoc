@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Check, LogOut, Pencil, Rocket, UserRound, X } from "lucide-react";
+import { Camera, Check, LogOut, Pencil, Rocket, Shirt, UserRound, X } from "lucide-react";
 import AppShell from "../../shell/AppShell";
 import Button from "../../ui/Button";
 import Panel from "../../ui/Panel";
@@ -177,6 +177,7 @@ export default function ProfileScreen() {
       section="PILOT PROFILE"
       tools={
         <>
+          <Button variant="secondary" iconOnly icon={Shirt} href="/hangar" aria-label="Open the Lobby" />
           <Button variant="secondary" iconOnly icon={Rocket} href="/" aria-label="Back to the galaxy" />
           <Button variant="secondary" iconOnly icon={LogOut} aria-label="Sign out" disabled={signingOut} onClick={handleSignOut} />
         </>

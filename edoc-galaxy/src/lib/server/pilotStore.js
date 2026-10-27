@@ -63,6 +63,8 @@ export function toPublicUser(user) {
     callsign: user.pilotCallsign,
     email: user.email,
     avatar: user.avatar ?? null,
+    explorer: user.explorer || "vega",
+    suit: user.suit || "base",
     createdAt: user.createdAt,
   };
 }
@@ -77,6 +79,14 @@ export async function updateUser(userId, patch) {
 
   if (patch.avatar !== undefined) {
     data.avatar = patch.avatar;
+  }
+
+  if (patch.explorer !== undefined) {
+    data.explorer = patch.explorer;
+  }
+
+  if (patch.suit !== undefined) {
+    data.suit = patch.suit;
   }
 
   try {

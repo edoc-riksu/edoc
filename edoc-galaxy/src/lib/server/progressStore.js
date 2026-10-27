@@ -76,6 +76,27 @@ export async function getModuleProgress(userId, slug) {
   };
 }
 
+/**
+ * The Starfarer suit unlocks once a pilot has fully solved every encounter
+ * in at least one module - checked server-side, not just hidden behind a
+ * disabled button in the UI, since the Hangar's PATCH could otherwise be
+ * called directly to equip it early.
+ */
+export async function hasCompletedAnyModule(userId) {
+  const modules = await db.module.findMany({ select: { id: true }, include: { encounters: { select: { id: true } } } });
+
+  for (const m of modules) {
+    if (m.encounters.length === 0) continue;
+    const solved = await db.attempt.findMany({
+      where: { userId, verdict: "ACCEPTED", encounterId: { in: m.encounters.map((e) => e.id) } },
+      select: { encounterId: true },
+      distinct: ["encounterId"]
+    });
+    if (solved.length === m.encounters.length) return true;
+  }
+  return false;
+}
+
 /** Real numbers for the pilot profile screen - plan Day 18. */
 export async function getProfileStats(userId) {
   const [totalAttempts, allAttempts, solvedGroups, progress] = await Promise.all([
