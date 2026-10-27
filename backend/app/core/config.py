@@ -23,6 +23,20 @@ class Settings(BaseSettings):
     # a submission can't balloon the response size.
     run_output_char_limit: int = 4_000
 
+    # Browsers on these origins may call this service. Comma-separated.
+    # The defaults are the local dev servers; staging and production set
+    # CORS_ALLOWED_ORIGINS to the real site URLs (see DEPLOYMENT.md).
+    cors_allowed_origins: str = (
+        "http://localhost:4173,http://127.0.0.1:4173,http://localhost:3000"
+    )
+    # Optional regex for origins that change per deploy, e.g. Vercel preview
+    # URLs: https://edoc-.*-edoc-riksu\.vercel\.app
+    cors_allowed_origin_regex: str | None = None
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_allowed_origins.split(",") if o.strip()]
+
 
 @lru_cache
 def get_settings() -> Settings:

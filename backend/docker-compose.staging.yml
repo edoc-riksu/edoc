@@ -1,0 +1,69 @@
+# Staging/production stack for the execution service. One small Linux server
+# with Docker runs all three containers. See DEPLOYMENT.md section 9.
+#
+#   cp staging.env.example .env.staging      # then fill it in
+#   docker compose -f docker-compose.staging.yml --env-file .env.staging up -d --build
+#
+# Differences from docker-compose.yml (local dev):
+#   - Piston has NO published port. Only the backend can reach it, over the
+#     compose network. Piston runs untrusted code in a privileged container
+#     with no authentication, so it must never be reachable from the internet.
+#   - The backend has no published port either. Caddy (HTTPS, automatic
+#     certificate) is the only thing listening on the public ports.
+#   - No --reload and no source bind mount: the container runs the code that
+#     was built into the image.
+#   - No postgres or redis: nothing in this service uses them yet.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      EDOC_DOMAIN: ${EDOC_DOMAIN:?set EDOC_DOMAIN in .env.staging}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+  backend:
+    build: .
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      PISTON_BASE_URL: http://piston:2000
+      ENCOUNTERS_DIR: /app/encounters
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?set CORS_ALLOWED_ORIGINS in .env.staging}
+      CORS_ALLOWED_ORIGIN_REGEX: ${CORS_ALLOWED_ORIGIN_REGEX:-}
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      - piston
+
+  piston:
+    image: ghcr.io/engineer-man/piston
+    restart: unless-stopped
+    privileged: true # required by Piston's sandbox
+    expose:
+      - "2000"
+    environment:
+      # Default is 1024 bytes, which would kill verbose-but-legitimate output
+      # before our own truncation runs. See backend/README.md.
+      PISTON_OUTPUT_MAX_SIZE: "65536"
+    volumes:
+      - piston_data:/piston/packages
+
+volumes:
+  piston_data:
+  caddy_data:
+  caddy_config:
