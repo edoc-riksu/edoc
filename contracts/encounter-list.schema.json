@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "encounter-list.schema.json",
+  "title": "Encounter list",
+  "description": "Response of GET /api/v1/encounters?module=<module>&language=<language>. Both filters are optional. The encounters come back in play order: by module, then order, then difficulty, then id. Summaries only: never the problem text, tests or hints. concept is the encounter's main concept, the one named when a player is defeated.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["encounters"],
+  "properties": {
+    "encounters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "version", "language", "title", "difficulty", "module", "order", "concept", "concepts"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z]+-\\d{3}$" },
+          "version": { "type": "integer", "minimum": 1 },
+          "language": { "type": "string" },
+          "title": { "type": "string" },
+          "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+          "module": { "type": "string" },
+          "order": { "type": "integer", "minimum": 1, "description": "Position inside the module, starting at 1." },
+          "concept": { "type": "string", "description": "Always the first entry of concepts." },
+          "concepts": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}
