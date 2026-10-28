@@ -7,6 +7,9 @@ wiring up the console UI, not for testing actual scoring logic.
 Run it on a different port so it can sit alongside the real backend:
 
     uvicorn app.mock_main:app --reload --port 8001
+
+To see a defeat (wrong answer, with the concept and explanation), submit code
+containing the text "#mock-fail". Anything else is accepted.
 """
 
 import uuid
@@ -17,6 +20,7 @@ from app.api.encounters import ENCOUNTER_ID_PATTERN
 from app.core.config import get_settings
 from app.schemas.encounter import EncounterList, EncounterPublic, EncounterSummary
 from app.schemas.submission import (
+    Defeat,
     ExecutionMeta,
     RunRequest,
     RunResponse,
@@ -26,6 +30,7 @@ from app.schemas.submission import (
     SubmissionResult,
     TestResult,
 )
+from app.services.concepts import ConceptInfo, load_concepts
 from app.services.encounter_service import EncounterNotFoundError, EncounterService
 
 app = FastAPI(
@@ -45,6 +50,7 @@ app.add_middleware(
 )
 
 _encounter_service = EncounterService(get_settings().encounters_dir)
+_concepts = load_concepts(get_settings().encounters_dir)
 
 
 @app.get("/health")
@@ -94,14 +100,35 @@ def submit_code(body: SubmissionRequest) -> SubmissionResult:
     except EncounterNotFoundError:
         raise HTTPException(status_code=404, detail="Encounter not found")
 
-    all_tests = encounter.tests.sample + encounter.tests.hidden
-    total = sum(t.points for t in all_tests)
+    # Mirrors the real service: Submit judges the hidden tests only.
+    tests = encounter.tests.hidden
+    total = sum(t.points for t in tests)
+
+    if "#mock-fail" in body.code:
+        concept = _concepts.get(encounter.primary_concept) or ConceptInfo(
+            id=encounter.primary_concept, name=encounter.primary_concept, note=""
+        )
+        return SubmissionResult(
+            submission_id=str(uuid.uuid4()),
+            encounter_id=body.encounter_id,
+            verdict="WRONG_ANSWER",
+            score=ScoreBreakdown(earned=total // 2, total=total),
+            tests=[TestResult(test_id=t.id, passed=i < len(tests) // 2) for i, t in enumerate(tests)],
+            execution=ExecutionMeta(runtime_ms=42),
+            attempt_number=body.attempt_number,
+            first_attempt_clear=False,
+            elapsed_ms=body.elapsed_ms,
+            defeat=Defeat(concept=concept, explanation=encounter.failure_explanation),
+        )
 
     return SubmissionResult(
         submission_id=str(uuid.uuid4()),
         encounter_id=body.encounter_id,
         verdict="ACCEPTED",
         score=ScoreBreakdown(earned=total, total=total),
-        tests=[TestResult(test_id=t.id, passed=True) for t in all_tests],
+        tests=[TestResult(test_id=t.id, passed=True) for t in tests],
         execution=ExecutionMeta(runtime_ms=42),
+        attempt_number=body.attempt_number,
+        first_attempt_clear=body.attempt_number == 1,
+        elapsed_ms=body.elapsed_ms,
     )

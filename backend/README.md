@@ -45,6 +45,7 @@ Isolated Python execution
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/health` | Liveness check |
+| GET | `/api/v1/encounters?module=` | Encounter summaries in play order (id, title, difficulty, order, main concept) - no problem text or tests |
 | GET | `/api/v1/encounters/{id}` | Public encounter view (prompt, starter code, sample tests only — never hidden tests, hints, or the failure explanation) |
 | POST | `/api/v1/executions/run` | RUN — code against sample tests only, unscored |
 | POST | `/api/v1/submissions` | SUBMIT — code against sample + hidden tests, scored, authoritative |
@@ -96,9 +97,11 @@ codebase:
 - `RunResponse` stdout/stderr are truncated to `run_output_char_limit`
   (4,000 chars) before being returned - truncation happens only on the
   response, never before scoring, so it can't affect correctness.
-- Hidden test inputs/outputs and the failure explanation are never
-  serialized into any API response (see `EncounterPublic`,
-  `SubmissionResult`, `RunResponse`).
+- Hidden test inputs/outputs and hints are never serialized into any API
+  response (see `EncounterPublic`, `SubmissionResult`, `RunResponse`). The
+  failure explanation is sent only in a submission's `defeat` object, and
+  only when the player's code was wrong (never for an accepted run or a
+  `SYSTEM_ERROR`).
 
 **Not claimed:** this is not a statement that the system is
 production-secure. Piston's own sandbox (isolate/cgroups, run as configured

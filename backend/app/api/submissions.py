@@ -27,4 +27,9 @@ async def submit_code(
     # NOTE: no persistence yet - Backend 2 owns submission/attempt storage.
     # This returns the authoritative verdict; wiring it into a database row
     # is deferred (see README "Deferred to Day 2+").
-    return await judge_service.judge_submission(encounter=encounter, code=body.code)
+    return await judge_service.judge_submission(
+        encounter=encounter,
+        code=body.code,
+        attempt_number=body.attempt_number,
+        elapsed_ms=body.elapsed_ms,
+    )

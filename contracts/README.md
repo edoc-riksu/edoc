@@ -16,11 +16,13 @@ Base URL: `NEXT_PUBLIC_EXECUTION_API_URL` (mock: `http://localhost:8001`, real l
 
 ## Rules that never change
 
-- **Hidden tests are never returned.** Encounters expose `sample_tests` only. Submissions return a pass/fail per test id and a score, never inputs or expected outputs of hidden tests.
+- **Hidden tests are never returned.** Encounters expose `sample_tests` only. Submissions return a pass/fail per hidden test id and a score, never inputs or expected outputs.
 - **Run is informational, Submit is the result.** Only a submission's `verdict` and `score` count for progress and damage. A run result must never be used to award anything.
 - **Verdicts** (submission only): `ACCEPTED`, `WRONG_ANSWER`, `RUNTIME_ERROR`, `TIME_LIMIT_EXCEEDED`, `COMPILATION_ERROR`, `SYSTEM_ERROR`. If several tests fail, the worst one wins in this order: `SYSTEM_ERROR`, `COMPILATION_ERROR`, `TIME_LIMIT_EXCEEDED`, `RUNTIME_ERROR`, `WRONG_ANSWER`, `ACCEPTED`.
 - **Encounter id** matches `^[a-z]+-\d{3}$` (for example `py-001`). **Code** is at most 20,000 characters.
 - **Output** `stdout` and `stderr` in a run result are cut to 4,000 characters each.
+- **Attempts and time.** A submission may carry `attempt_number` (which try this is, default 1) and `elapsed_ms`. The service does not count attempts itself; the caller passes the number in and the result repeats it back with `first_attempt_clear` (true only for an accepted first try). Neither changes the score yet.
+- **Defeat.** When the player's code was wrong, the result carries `defeat`: the encounter's main concept (`id`, `name`, `note`) and the explanation written for it. It is `null` for an accepted run and when our own system failed. This is the only place the explanation is ever sent.
 - **Score** is `earned` out of `total` points. Sample tests are worth 0, hidden tests carry the points.
 
 ## Errors
