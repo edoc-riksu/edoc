@@ -16,6 +16,8 @@ import "./approach.css";
 
 const SETTINGS_KEY = "edoc-galaxy-settings";
 
+const encounterUrl = (planetId, id) => `/planet/${planetId}/encounter/${id}`;
+
 function loadSettings() {
   try {
     return { sound: true, motion: "full", ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") || {}) };
@@ -29,7 +31,7 @@ function loadSettings() {
  * Arrow keys flip between obstacles, Enter engages, Esc goes back. Move the mouse to look around;
  * the rock lights up when you point at it, and clicking it brings the card forward.
  */
-export default function ApproachScreen({ planetId, planetName, encounters, hull = 100, start = 0 }) {
+export default function ApproachScreen({ planetId, planetName, encounters, hull = 100, start = 0, startEngaged = false }) {
   const router = useRouter();
   const [idx, setIdx] = useState(Math.min(Math.max(start, 0), encounters.length - 1));
   const [settings, setSettings] = useState({ sound: true, motion: "full" });
@@ -39,7 +41,7 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
   const [rockHover, setRockHover] = useState(false);
   const [pulse, setPulse] = useState(0);
   const [hullPct, setHullPct] = useState(hull);
-  const [engaged, setEngaged] = useState(false);
+  const [engaged, setEngaged] = useState(startEngaged);
   const [diving, setDiving] = useState(false); // Engage pressed: the view pushes in toward the rock before the console opens
   const [leaving, setLeaving] = useState(false); // the console is fading out
   const [warp, setWarp] = useState(0); // counts switches between obstacles, for the flash
@@ -51,6 +53,12 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
   const shakeTimer = useRef(null);
   const prevHull = useRef(hull);
   const engageRef = useRef(null);
+  const pushedRef = useRef(false); // this visit pushed the encounter URL, so closing the console steps back over it
+  const backingRef = useRef(false); // our own history.back() is in flight
+  const [urlTick, setUrlTick] = useState(0);
+  const engagedRef = useRef(startEngaged);
+  const doneRef = useRef(false);
+  const leaveRef = useRef(null);
   const toastTimer = useRef(null);
   const e = encounters[idx];
 
@@ -118,8 +126,11 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
     stepTimer.current = setTimeout(() => {
       setDiving(false);
       setEngaged(true);
+      // the console has its own address, so reload, share and the Back button all land in the right place
+      window.history.pushState(null, "", encounterUrl(planetId, encounters[idx]?.id));
+      pushedRef.current = true;
     }, calmMotion ? 160 : 650);
-  }, [engaged, done, diving, calmMotion]);
+  }, [engaged, done, diving, calmMotion, planetId, encounters, idx]);
   // leave the console: fade it out first, then do whatever comes next (next obstacle, the approach card, the docking card)
   const leave = useCallback(
     (after) => {
@@ -129,12 +140,50 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
       stepTimer.current = setTimeout(() => {
         setEngaged(false);
         setLeaving(false);
+        if (pushedRef.current) {
+          pushedRef.current = false;
+          backingRef.current = true;
+          window.history.back();
+        }
         after?.();
       }, calmMotion ? 120 : 280);
     },
     [leaving, calmMotion]
   );
+
+  // The address follows the screen: an obstacle card is /approach?e=N, the console is /encounter/<id>.
+  useEffect(() => {
+    if (engaged || backingRef.current) return;
+    const want = done ? `/planet/${planetId}/approach` : `/planet/${planetId}/approach?e=${idx + 1}`;
+    if (window.location.pathname + window.location.search !== want) window.history.replaceState(null, "", want);
+  }, [engaged, done, idx, planetId, urlTick]);
+
+  // Browser Back closes the console, Forward reopens it. Our own history.back() above lands here too.
+  useEffect(() => {
+    const onPop = () => {
+      if (backingRef.current) {
+        backingRef.current = false;
+        setUrlTick((t) => t + 1);
+        return;
+      }
+      const inConsole = window.location.pathname.includes("/encounter/");
+      if (!inConsole && engagedRef.current) {
+        pushedRef.current = false;
+        leaveRef.current?.();
+      } else if (inConsole && !engagedRef.current && !doneRef.current) {
+        pushedRef.current = true;
+        setEngaged(true);
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
   useEffect(() => () => clearTimeout(stepTimer.current), []);
+  useEffect(() => {
+    engagedRef.current = engaged;
+    doneRef.current = done;
+    leaveRef.current = () => leave();
+  });
 
   useEffect(() => {
     const onKey = (ev) => {
