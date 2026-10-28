@@ -199,7 +199,7 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
         />
       </div>
 
-      <header className="ap-top">
+      <header className={engaged ? "ap-top is-away" : "ap-top"} aria-hidden={engaged || undefined}>
         <nav className="ap-crumb" aria-label="Where you are">
           <button type="button" className="ap-step" aria-label="Previous obstacle" disabled={idx === 0 || engaged || done} onClick={() => goTo(idx - 1)}>
             <ChevronLeft size={16} aria-hidden="true" />
