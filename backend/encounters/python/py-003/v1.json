@@ -5,6 +5,7 @@
   "title": "Even or Odd",
   "difficulty": "easy",
   "module": "python-basics",
+  "order": 3,
   "concepts": ["conditionals", "input-output"],
   "problem": "Given an integer on a single line of input, print \"Even\" if it is even, or \"Odd\" if it is odd.",
   "starter_code": "# Read an integer.\n# Print \"Even\" if it is even, or \"Odd\" if it is odd.\n\n# Write your code here\n",

@@ -6,7 +6,8 @@ Anything inside `contracts/` changes by pull request, with the owner's review (s
 
 | File | What it describes | Status |
 | --- | --- | --- |
-| `encounter.schema.json` + `example-encounter.json` | `GET /api/v1/encounters/{id}` | Live in `backend/`, except `hint_levels`, which the contract adds and the backend and mock still need to return |
+| `encounter.schema.json` + `example-encounter.json` | `GET /api/v1/encounters/{id}` | Live in `backend/` |
+| `encounter-list.schema.json` + `example-encounter-list.json` | `GET /api/v1/encounters?module=` | Live in `backend/` |
 | `run-result.schema.json` + `example-run-result.json` | `POST /api/v1/executions/run` | Live in `backend/` |
 | `submission-result.schema.json` + `example-submission-*.json` | `POST /api/v1/submissions` | Live in `backend/` |
 | `hint.schema.json` + `example-hint.json` | `POST /api/v1/encounters/{id}/hints` | **Proposed.** Not built yet (plan Days 22 and 37). The hint text already exists in each encounter file. |
@@ -55,6 +56,12 @@ Agreed in the review of PR #22 (Frontend 2). Backend 2 still to confirm decision
 
 - How the hints service knows which player is asking, so it can enforce the order. It needs the player identity from Backend 2's session (hint usage per player is plan Day 36).
 - Whether sample tests need a plain-English description for the console to show why a test failed. Not added yet; `id`, `input` and `expected_output` only.
+
+## Encounter order and concepts
+
+- **Order.** Every encounter has an `order` (1, 2, 3, ...) inside its module. The list endpoint returns encounters in play order, so a screen never sorts them itself.
+- **Concept tags.** Every encounter has at least one concept. The first is its **main concept** (`concept` in the list): it is the concept named when a player is defeated. Tags come from one agreed list, `backend/encounters/concepts.json` (`id`, `name`, `note`), so the same idea is never spelled two ways.
+- **Hint tiers.** Every encounter has exactly three hint levels, checked when the encounter file is loaded. That is why `hint_levels` is always 3.
 
 ## Not covered yet
 

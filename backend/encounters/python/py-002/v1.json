@@ -5,6 +5,7 @@
   "title": "Print Numbers 1 to N",
   "difficulty": "easy",
   "module": "python-basics",
+  "order": 2,
   "concepts": ["loops", "input-output"],
   "problem": "Given a positive integer N on a single line of input, print the integers from 1 to N, each on its own line.",
   "starter_code": "# Read a positive integer N.\n# Print 1, 2, 3, ... up to and including N, one per line.\n\n# Write your code here\n",

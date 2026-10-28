@@ -1,0 +1,24 @@
+{
+  "concepts": [
+    {
+      "id": "input-output",
+      "name": "input/output",
+      "note": "Read input, process values, and print the result."
+    },
+    {
+      "id": "arithmetic",
+      "name": "arithmetic",
+      "note": "Calculate with numbers using operators like + - * / and %."
+    },
+    {
+      "id": "loops",
+      "name": "loops",
+      "note": "Repeat an action for a sequence of values."
+    },
+    {
+      "id": "conditionals",
+      "name": "conditionals",
+      "note": "Choose an action based on a condition."
+    }
+  ]
+}

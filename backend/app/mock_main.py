@@ -11,11 +11,11 @@ Run it on a different port so it can sit alongside the real backend:
 
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, HTTPException, Path
+from fastapi import FastAPI, HTTPException, Path, Query
 
 from app.api.encounters import ENCOUNTER_ID_PATTERN
 from app.core.config import get_settings
-from app.schemas.encounter import EncounterPublic
+from app.schemas.encounter import EncounterList, EncounterPublic, EncounterSummary
 from app.schemas.submission import (
     ExecutionMeta,
     RunRequest,
@@ -50,6 +50,15 @@ _encounter_service = EncounterService(get_settings().encounters_dir)
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "mode": "mock"}
+
+
+@app.get("/api/v1/encounters", response_model=EncounterList)
+def list_encounters(
+    module: str | None = Query(default=None, pattern=r"^[a-z0-9-]{1,64}$"),
+    language: str | None = Query(default=None, pattern=r"^[a-z]{1,32}$"),
+) -> EncounterList:
+    found = _encounter_service.list_encounters(module=module, language=language)
+    return EncounterList(encounters=[EncounterSummary.from_encounter(e) for e in found])
 
 
 @app.get("/api/v1/encounters/{encounter_id}", response_model=EncounterPublic)

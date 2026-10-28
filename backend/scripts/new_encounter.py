@@ -2,7 +2,7 @@
 planned encounters means filling in blanks, not retyping the JSON shape.
 
 Usage:
-    python scripts/new_encounter.py py-004 "Reverse a String" --module python-basics --concepts strings
+    python scripts/new_encounter.py py-004 "Reverse a String" --module python-basics --order 4 --concepts loops
 """
 
 import argparse
@@ -13,7 +13,7 @@ from pathlib import Path
 ENCOUNTERS_DIR = Path(__file__).resolve().parents[1] / "encounters"
 
 
-def build_stub(encounter_id: str, title: str, module: str, concepts: list[str]) -> dict:
+def build_stub(encounter_id: str, title: str, module: str, concepts: list[str], order: int) -> dict:
     return {
         "id": encounter_id,
         "version": 1,
@@ -21,6 +21,7 @@ def build_stub(encounter_id: str, title: str, module: str, concepts: list[str]) 
         "title": title,
         "difficulty": "easy",
         "module": module,
+        "order": order,
         "concepts": concepts,
         "problem": "TODO: describe the problem the player needs to solve.",
         "starter_code": "# TODO: starter code shown to the player\n",
@@ -52,7 +53,8 @@ def main() -> int:
     parser.add_argument("encounter_id", help="e.g. py-004")
     parser.add_argument("title", help="e.g. 'Reverse a String'")
     parser.add_argument("--module", default="python-basics")
-    parser.add_argument("--concepts", nargs="+", default=[])
+    parser.add_argument("--order", type=int, default=1, help="position inside the module, starting at 1")
+    parser.add_argument("--concepts", nargs="+", default=[], help="tags from encounters/concepts.json; the first is the main concept")
     args = parser.parse_args()
 
     out_dir = ENCOUNTERS_DIR / "python" / args.encounter_id
@@ -63,7 +65,7 @@ def main() -> int:
         return 1
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    stub = build_stub(args.encounter_id, args.title, args.module, args.concepts)
+    stub = build_stub(args.encounter_id, args.title, args.module, args.concepts, args.order)
     out_path.write_text(json.dumps(stub, indent=2) + "\n", encoding="utf-8")
 
     print(f"Created {out_path}")

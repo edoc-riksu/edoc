@@ -13,6 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from app.services.concepts import load_concept_ids  # noqa: E402
 from app.services.encounter_service import EncounterService  # noqa: E402
 
 ENCOUNTERS_DIR = Path(__file__).resolve().parents[1] / "encounters"
@@ -25,7 +26,9 @@ def main() -> int:
         return 1
 
     service = EncounterService(ENCOUNTERS_DIR)
+    known_concepts = load_concept_ids(ENCOUNTERS_DIR)
     failures = 0
+    seen_order: dict[tuple[str, int], str] = {}
 
     for file in files:
         encounter_id = file.parent.name
@@ -33,6 +36,18 @@ def main() -> int:
             encounter = service.get(encounter_id)
         except Exception as exc:  # noqa: BLE001 - report every bad file, don't stop at first
             print(f"FAIL  {file}: {exc}")
+            failures += 1
+            continue
+
+        problems = []
+        unknown = [c for c in encounter.concepts if c not in known_concepts]
+        if unknown:
+            problems.append(f"unknown concept tag(s) {unknown} (see encounters/concepts.json)")
+        clash = seen_order.setdefault((encounter.module, encounter.order), encounter.id)
+        if clash != encounter.id:
+            problems.append(f"order {encounter.order} in {encounter.module} is already used by {clash}")
+        if problems:
+            print(f"FAIL  {file}: " + "; ".join(problems))
             failures += 1
             continue
 

@@ -1,0 +1,26 @@
+{
+  "encounters": [
+    {
+      "id": "py-001",
+      "version": 1,
+      "language": "python",
+      "title": "Sum of Two Integers",
+      "difficulty": "easy",
+      "module": "python-basics",
+      "order": 1,
+      "concept": "input-output",
+      "concepts": ["input-output", "arithmetic"]
+    },
+    {
+      "id": "py-002",
+      "version": 1,
+      "language": "python",
+      "title": "Print Numbers 1 to N",
+      "difficulty": "easy",
+      "module": "python-basics",
+      "order": 2,
+      "concept": "loops",
+      "concepts": ["loops", "input-output"]
+    }
+  ]
+}
