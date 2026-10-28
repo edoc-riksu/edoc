@@ -1,18 +1,29 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { db } from "../../../lib/db";
+import { readSessionToken, SESSION_COOKIE_NAME } from "../../../lib/server/sessionToken";
+import { getModuleLockState } from "../../../lib/server/progressStore";
 import { withErrorLogging } from "../../../lib/logger";
 
 // Lists modules, optionally filtered to one planet, with an encounter
 // count for display - never the encounters' own content (see Encounter
-// model's comment in schema.prisma for why).
+// model's comment in schema.prisma for why). `locked` is display-only
+// progression (plan Day 22) - see getModuleLockState for why it never
+// blocks actually playing an encounter.
 export const GET = withErrorLogging(async function GET(request) {
   const planetId = new URL(request.url).searchParams.get("planet");
 
-  const modules = await db.module.findMany({
-    where: planetId ? { planetId } : undefined,
-    orderBy: { order: "asc" },
-    include: { _count: { select: { encounters: true } } }
-  });
+  const store = await cookies();
+  const userId = readSessionToken(store.get(SESSION_COOKIE_NAME)?.value);
+
+  const [modules, lockBySlug] = await Promise.all([
+    db.module.findMany({
+      where: planetId ? { planetId } : undefined,
+      orderBy: { order: "asc" },
+      include: { _count: { select: { encounters: true } } }
+    }),
+    getModuleLockState(userId)
+  ]);
 
   return NextResponse.json({
     modules: modules.map((m) => ({
@@ -20,7 +31,8 @@ export const GET = withErrorLogging(async function GET(request) {
       planetId: m.planetId,
       title: m.title,
       order: m.order,
-      encounterCount: m._count.encounters
+      encounterCount: m._count.encounters,
+      locked: lockBySlug.get(m.slug) ?? false
     }))
   });
 }, "GET /api/modules");
