@@ -518,3 +518,10 @@
   from { opacity: 1; }
   to { opacity: 0; }
 }
+
+/* A result scene (victory or defeat) covers the cockpit and the console. */
+.ap-result {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+}
