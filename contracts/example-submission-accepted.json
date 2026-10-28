@@ -2,15 +2,37 @@
   "submission_id": "3f0c2a54-8f55-4e4f-9d1b-6a1f0b7a9c11",
   "encounter_id": "py-001",
   "verdict": "ACCEPTED",
-  "score": { "earned": 100, "total": 100 },
+  "score": {
+    "earned": 100,
+    "total": 100
+  },
   "tests": [
-    { "test_id": "sample-1", "passed": true },
-    { "test_id": "sample-2", "passed": true },
-    { "test_id": "hidden-1", "passed": true },
-    { "test_id": "hidden-2", "passed": true },
-    { "test_id": "hidden-3", "passed": true },
-    { "test_id": "hidden-4", "passed": true },
-    { "test_id": "hidden-5", "passed": true }
+    {
+      "test_id": "hidden-1",
+      "passed": true
+    },
+    {
+      "test_id": "hidden-2",
+      "passed": true
+    },
+    {
+      "test_id": "hidden-3",
+      "passed": true
+    },
+    {
+      "test_id": "hidden-4",
+      "passed": true
+    },
+    {
+      "test_id": "hidden-5",
+      "passed": true
+    }
   ],
-  "execution": { "runtime_ms": 38 }
+  "execution": {
+    "runtime_ms": 38
+  },
+  "attempt_number": 1,
+  "first_attempt_clear": true,
+  "elapsed_ms": 42000,
+  "defeat": null
 }

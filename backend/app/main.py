@@ -7,6 +7,7 @@ from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.execution.piston_client import PistonClient
 from app.judge.harness import TestHarness
+from app.services.concepts import load_concepts
 from app.services.encounter_service import EncounterService
 from app.services.execution_service import ExecutionService
 from app.services.judge_service import JudgeService
@@ -27,7 +28,7 @@ async def lifespan(app: FastAPI):
 
     app.state.encounter_service = EncounterService(settings.encounters_dir)
     app.state.execution_service = ExecutionService(piston_client)
-    app.state.judge_service = JudgeService(harness)
+    app.state.judge_service = JudgeService(harness, load_concepts(settings.encounters_dir))
 
     logger.info(
         "edoc backend starting up: piston_base_url=%s encounters_dir=%s",

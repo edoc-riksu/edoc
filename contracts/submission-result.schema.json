@@ -2,44 +2,149 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "submission-result.schema.json",
   "title": "Submission result",
-  "description": "Response of POST /api/v1/submissions. Request body: { encounter_id, code }. Runs sample and hidden tests and returns the authoritative verdict and score. Hidden test inputs and outputs are never returned.",
+  "description": "Response of POST /api/v1/submissions. Request body: { encounter_id, code, attempt_number?, elapsed_ms? }. attempt_number (default 1) is which try this is for the player and elapsed_ms is how long they spent; both are passed in by the caller and repeated back, and neither changes the score. Judges the encounter's hidden tests only and returns the authoritative verdict and score. Hidden test inputs and outputs are never returned. defeat is set only when the player's code was wrong (WRONG_ANSWER, RUNTIME_ERROR, TIME_LIMIT_EXCEEDED, COMPILATION_ERROR); it is null when accepted and when our own system failed.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["submission_id", "encounter_id", "verdict", "score", "tests", "execution"],
+  "required": [
+    "submission_id",
+    "encounter_id",
+    "verdict",
+    "score",
+    "tests",
+    "execution",
+    "attempt_number",
+    "first_attempt_clear",
+    "elapsed_ms",
+    "defeat"
+  ],
   "properties": {
-    "submission_id": { "type": "string", "format": "uuid" },
-    "encounter_id": { "type": "string", "pattern": "^[a-z]+-\\d{3}$" },
+    "submission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "encounter_id": {
+      "type": "string",
+      "pattern": "^[a-z]+-\\d{3}$"
+    },
     "verdict": {
       "type": "string",
-      "enum": ["ACCEPTED", "WRONG_ANSWER", "RUNTIME_ERROR", "TIME_LIMIT_EXCEEDED", "COMPILATION_ERROR", "SYSTEM_ERROR"]
+      "enum": [
+        "ACCEPTED",
+        "WRONG_ANSWER",
+        "RUNTIME_ERROR",
+        "TIME_LIMIT_EXCEEDED",
+        "COMPILATION_ERROR",
+        "SYSTEM_ERROR"
+      ]
     },
     "score": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["earned", "total"],
+      "required": [
+        "earned",
+        "total"
+      ],
       "properties": {
-        "earned": { "type": "integer", "minimum": 0 },
-        "total": { "type": "integer", "minimum": 0 }
+        "earned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "tests": {
       "type": "array",
-      "description": "Empty when verdict is SYSTEM_ERROR because the sandbox was unavailable.",
+      "description": "One entry per hidden test. Empty when verdict is SYSTEM_ERROR because the sandbox was unavailable.",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["test_id", "passed"],
+        "required": [
+          "test_id",
+          "passed"
+        ],
         "properties": {
-          "test_id": { "type": "string" },
-          "passed": { "type": "boolean" }
+          "test_id": {
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          }
         }
       }
     },
     "execution": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["runtime_ms"],
-      "properties": { "runtime_ms": { "type": "integer", "minimum": 0, "description": "Slowest single test." } }
+      "required": [
+        "runtime_ms"
+      ],
+      "properties": {
+        "runtime_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Slowest single test."
+        }
+      }
+    },
+    "attempt_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "first_attempt_clear": {
+      "type": "boolean",
+      "description": "True only when attempt_number is 1 and the verdict is ACCEPTED. This is what the first-attempt rate counts."
+    },
+    "elapsed_ms": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "defeat": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "concept",
+            "explanation"
+          ],
+          "properties": {
+            "concept": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "name",
+                "note"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "note": {
+                  "type": "string"
+                }
+              },
+              "description": "The encounter's main concept: the one the defeat screen names."
+            },
+            "explanation": {
+              "type": "string",
+              "description": "What a wrong submission probably got wrong, written for this encounter."
+            }
+          }
+        }
+      ]
     }
   }
 }
