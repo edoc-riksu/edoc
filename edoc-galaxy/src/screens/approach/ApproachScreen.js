@@ -12,6 +12,7 @@ import Panel from "../../ui/Panel";
 import Segmented from "../../ui/Segmented";
 import { setSoundEnabled, sfx } from "../../galaxy/audio";
 import CodeConsole from "./CodeConsole";
+import ResultHost from "../result/ResultHost";
 import "./approach.css";
 
 const SETTINGS_KEY = "edoc-galaxy-settings";
@@ -56,6 +57,8 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
   const pushedRef = useRef(false); // this visit pushed the encounter URL, so closing the console steps back over it
   const backingRef = useRef(false); // our own history.back() is in flight
   const [urlTick, setUrlTick] = useState(0);
+  const [outcome, setOutcome] = useState(null); // a result the console has reported: shown as the victory or defeat scene
+  const [rematchN, setRematchN] = useState(0);
   const engagedRef = useRef(startEngaged);
   const doneRef = useRef(false);
   const leaveRef = useRef(null);
@@ -140,6 +143,7 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
       stepTimer.current = setTimeout(() => {
         setEngaged(false);
         setLeaving(false);
+        setOutcome(null);
         if (pushedRef.current) {
           pushedRef.current = false;
           backingRef.current = true;
@@ -179,6 +183,20 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
     return () => window.removeEventListener("popstate", onPop);
   }, []);
   useEffect(() => () => clearTimeout(stepTimer.current), []);
+  // an obstacle is cleared: on to the next one, or to docking after the last
+  const moveOn = useCallback(
+    () =>
+      leave(() => {
+        if (idx === encounters.length - 1) setDone(true);
+        else goTo(idx + 1);
+      }),
+    [leave, idx, encounters.length, goTo]
+  );
+  const rematch = useCallback(() => {
+    setOutcome(null);
+    setHullPct(100);
+    setRematchN((n) => n + 1);
+  }, []);
   useEffect(() => {
     engagedRef.current = engaged;
     doneRef.current = done;
@@ -328,20 +346,28 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
         <div className={leaving ? "ap-leave" : undefined}>
         <CockpitFrame hull={hullPct} calm={settings.motion === "reduced"} />
         <CodeConsole
-          key={e.id}
+          key={`${e.id}-${rematchN}`}
           encounter={e}
           hull={hullPct}
           onHullChange={setHullPct}
-          onPass={() => leave(() => {
-            if (idx === encounters.length - 1) setDone(true);
-            else goTo(idx + 1);
-          })}
+          onPass={moveOn}
+          onVictory={(r) => setOutcome({ kind: "victory", ...r })}
+          onDefeat={(r) => setOutcome({ kind: "defeat", ...r })}
           onExit={() => leave()}
           say={say}
           index={idx}
           total={encounters.length}
           language={planetName}
         />
+          <ResultHost
+            result={outcome}
+            encounter={e}
+            nextLabel={idx === encounters.length - 1 ? "Dock" : "Next obstacle"}
+            onContinue={moveOn}
+            onRematch={rematch}
+            muted={!settings.sound}
+            calm={calmMotion}
+          />
         </div>
       ) : (
         <section key={`${idx}-${pulse}`} className={`ap-card ${rockHover ? "is-lit" : ""} ${pulse ? "is-pulse" : ""}`} aria-labelledby="ap-title" aria-live="polite">
