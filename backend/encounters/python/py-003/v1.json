@@ -69,5 +69,5 @@
     "3": "n = int(input()); print('Even' if n % 2 == 0 else 'Odd')"
   },
 
-  "failure_explanation": "Negative numbers can be even too (e.g. -8 is Even) - check n % 2 == 0 rather than assuming only positive numbers matter, and make sure the output text matches exactly: 'Even' or 'Odd' with that exact capitalization."
+  "failure_explanation": "Your check has to work for every integer, not only positive ones - n % 2 == 0 means Even for any whole number - and the output text must match exactly: 'Even' or 'Odd' with that exact capitalization."
 }
