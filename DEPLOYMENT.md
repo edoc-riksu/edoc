@@ -68,7 +68,27 @@ Measured directly against `edoc-drab.vercel.app` (staging), given the cross-regi
 
 Cold numbers (first request after a few idle minutes) running up to ~3s are expected and come from section 7's cross-region/compute-wake cost, not a code problem. If warm requests start exceeding ~1-1.5s, that's the signal something regressed - these numbers are the baseline to compare against.
 
-## 9. Execution service (`backend/`)
+## 9. Staging checked under load (plan Day 26)
+
+Ran 25 concurrent requests against `edoc-drab.vercel.app` for each read route - no errors, but latency rises under concurrency (expected: more parallel serverless instances each paying the cross-region DB cost from section 7, not a bug):
+
+| Route | 1 request (warm) | 25 concurrent |
+| --- | --- | --- |
+| `GET /api/planets` | ~0.5-0.6s | ~2.8-4.4s |
+| `GET /api/modules` | ~0.8s | ~1.2-2.6s |
+
+No 500s or dropped requests at this concurrency. Fine for our current traffic; re-check if it ever climbs past ~50 concurrent real users.
+
+**Real gap found — sign-in/sign-up/submission rate limiting does not hold under concurrent requests.** `rateLimit()` (`edoc-galaxy/src/lib/server/rateLimit.js`) keeps its counters in a plain in-memory `Map`, and its own comment says so: "fine for a single dev process ... a real backend brings its own real rate limiter." Confirmed live on staging:
+
+- 12 sign-in attempts sent **one at a time** (300ms apart): attempts 1-8 got `401`, attempts 9-12 correctly got `429` (limit is 8/10min) - works as intended when requests are sequential.
+- 15 sign-in attempts sent **all at once** (concurrent): **all 15 got `401`, zero got `429`.**
+
+Cause: Vercel can run multiple separate instances of the function side by side under concurrent load, and each instance has its own private memory - so each one counts attempts independently instead of sharing one real count. The same in-memory design backs the submission rate limiter from Day 13, so it almost certainly has the same gap under concurrent submissions.
+
+Not a correctness bug in normal single-user play (confirmed working sequentially), and not urgent today - the plan already schedules the real fix at Week 6 Day 37 ("Cost controls on code execution") and Week 7 Day 43 ("Rate limits and abuse checks"). The real fix is a shared counter all instances read from (e.g. a Redis/Upstash counter, or a Postgres row with an atomic increment) instead of in-memory. Flagging now so it's not forgotten, not fixing it today - fixing it today would be ahead of the plan's own schedule for this.
+
+## 10. Execution service (`backend/`)
 
 The Python service that runs and judges a player's code. It is **not** deployed by Vercel: it needs Docker, and Piston (the sandbox it runs code in) needs a privileged container, which Vercel and most app platforms don't allow. It runs on its own small server; the Vercel site calls it over HTTPS.
 

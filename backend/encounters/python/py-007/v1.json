@@ -1,0 +1,73 @@
+{
+  "id": "py-007",
+  "version": 1,
+  "language": "python",
+  "title": "Fizz Buzz",
+  "difficulty": "medium",
+  "module": "python-basics",
+  "order": 7,
+  "concepts": ["loops", "conditionals", "input-output"],
+  "problem": "Given a positive integer N on a single line of input, print the numbers from 1 to N, one per line. For multiples of 3 print \"Fizz\" instead of the number, for multiples of 5 print \"Buzz\", and for multiples of both 3 and 5 print \"FizzBuzz\".",
+  "starter_code": "# Read a positive integer N.\n# Print 1 to N, one per line, replacing multiples of 3 with \"Fizz\",\n# multiples of 5 with \"Buzz\", and multiples of both with \"FizzBuzz\".\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "5",
+        "expected_output": "1\n2\nFizz\n4\nBuzz",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "15",
+        "expected_output": "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1",
+        "expected_output": "1",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "3",
+        "expected_output": "1\n2\nFizz",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "30",
+        "expected_output": "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz\n16\n17\nFizz\n19\nBuzz\nFizz\n22\n23\nFizz\nBuzz\n26\nFizz\n28\n29\nFizzBuzz",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "9",
+        "expected_output": "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "10",
+        "expected_output": "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Think about checking \"both 3 and 5\" before checking either one alone.",
+    "2": "Check divisibility by 15 first (both 3 and 5), then 3, then 5, then fall back to the number itself - order matters.",
+    "3": "for i in range(1, int(input()) + 1):\n    if i % 15 == 0: print('FizzBuzz')\n    elif i % 3 == 0: print('Fizz')\n    elif i % 5 == 0: print('Buzz')\n    else: print(i)"
+  },
+
+  "failure_explanation": "Checking i % 3 == 0 before i % 15 == 0 means multiples of 15 only ever print 'Fizz' and never reach the 'FizzBuzz' case - check the combined condition (divisible by both 3 and 5) first, then the single conditions."
+}
