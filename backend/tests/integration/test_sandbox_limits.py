@@ -3,9 +3,8 @@ with Python installed (same setup as test_submission_flow.py); skipped
 otherwise. Every case must end in a normal answer, never a hang or a crash,
 and never in ACCEPTED.
 
-NOT YET RUN: written without access to a live Piston. Run it once on the
-staging server (or locally with docker compose) and note the results in
-README.md. Where Piston reports one cause as another (README: timeout, memory
+First run: 2026-10-28 in a GitHub Codespace; results are in README.md under
+"Sandbox limits". Run it again on the staging server once it exists. Where Piston reports one cause as another (README: timeout, memory
 kill and output limit all surface as TIME_LIMIT_EXCEEDED) the tests accept
 either verdict, and say so.
 """

@@ -45,6 +45,7 @@ Isolated Python execution
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/health` | Liveness check |
+| GET | `/api/v1/encounters?module=` | Encounter summaries in play order (id, title, difficulty, order, main concept) - no problem text or tests |
 | GET | `/api/v1/encounters/{id}` | Public encounter view (prompt, starter code, sample tests only — never hidden tests, hints, or the failure explanation) |
 | POST | `/api/v1/executions/run` | RUN — code against sample tests only, unscored |
 | POST | `/api/v1/submissions` | SUBMIT — code against sample + hidden tests, scored, authoritative |
@@ -59,6 +60,8 @@ against the `Encounter` Pydantic model in `app/schemas/encounter.py`. Hidden
 test inputs/outputs, hints, and the failure explanation are stripped before
 anything is returned to a client — enforced by `EncounterPublic`, a
 separate model the API is typed to return instead of `Encounter`.
+
+Writing a new encounter? See [AUTHORING.md](AUTHORING.md).
 
 ## Verdicts
 
@@ -96,9 +99,11 @@ codebase:
 - `RunResponse` stdout/stderr are truncated to `run_output_char_limit`
   (4,000 chars) before being returned - truncation happens only on the
   response, never before scoring, so it can't affect correctness.
-- Hidden test inputs/outputs and the failure explanation are never
-  serialized into any API response (see `EncounterPublic`,
-  `SubmissionResult`, `RunResponse`).
+- Hidden test inputs/outputs and hints are never serialized into any API
+  response (see `EncounterPublic`, `SubmissionResult`, `RunResponse`). The
+  failure explanation is sent only in a submission's `defeat` object, and
+  only when the player's code was wrong (never for an accepted run or a
+  `SYSTEM_ERROR`).
 
 **Not claimed:** this is not a statement that the system is
 production-secure. Piston's own sandbox (isolate/cgroups, run as configured
@@ -189,6 +194,45 @@ Earlier in this project, Docker wasn't available and the public Piston
 demo API had gone whitelist-only, so this path was implemented and unit
 tested against mocked responses built from Piston's real documented API
 shape, but not run live. It has since been verified for real, as above.
+
+## Sandbox limits (plan Day 16)
+
+`pytest -m integration` includes `tests/integration/test_sandbox_limits.py`,
+which sends misbehaving code through the real service and checks that every
+case ends in a normal answer, never a hang or a crash, and never in
+`ACCEPTED`.
+
+**Run on 2026-10-28** in a GitHub Codespace against the stock Piston
+image with Python 3.10.0 installed, backend at `main` before PR #50. 9 of the
+10 integration tests passed; the one failure is explained below.
+
+| Case | What the test sends | Result |
+| --- | --- | --- |
+| Infinite loop, Submit | `while True: pass` | Stopped. `TIME_LIMIT_EXCEEDED`, score 0, about 11 s wall time for the 5 hidden tests (limit in the test: 30 s). |
+| Infinite loop, Run | the same | Returned instead of hanging; no test passed. |
+| Memory hog | asks for about 2 GB (limit 256 MB) | Stopped. The test accepts `RUNTIME_ERROR` or `TIME_LIMIT_EXCEEDED`, because Piston can report a memory kill as a timeout. |
+| Huge output | prints 500,000 characters | Stopped. Response stayed within the output limit plus slack. |
+| Network | `urlopen('http://example.com')` | Did not end in `ACCEPTED`. The test accepts any failure verdict, so it shows the call failed, not why (blocked network or no DNS). |
+| Service afterwards | health check and a correct solution | Still answers; `ACCEPTED`. |
+
+The failure: `test_infinite_loop_is_stopped_and_reported_as_time_limit`
+asserts that the response has a `defeat` field, which was added by PR #50
+(Day 19) and was not on `main` yet. The sandbox behaved correctly in that
+case (the log shows `verdict=TIME_LIMIT_EXCEEDED score=0/100`). Re-run it on
+a checkout that includes #50 to see all 10 pass.
+
+**Not covered:** this was a codespace, not the staging server, so it does not
+show that staging is deployed or that its Docker host allows the same limits.
+Also not tested: fork bombs, writing to disk, many players at once (plan
+Day 25 load test), and whether the 256 MB memory limit is enforced when the
+code allocates gradually instead of in one go.
+
+**Setup notes from this run:**
+
+- Port 2000 was already in use in the codespace, so Piston ran on 2001 and
+  the tests were run with `PISTON_BASE_URL=http://localhost:2001`.
+- Python 3.14 (the codespace default) cannot install the pinned
+  `pydantic-core`; a Python 3.12 virtual environment worked.
 
 ## Deferred to Day 2+
 

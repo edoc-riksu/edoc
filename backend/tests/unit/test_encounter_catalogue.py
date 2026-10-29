@@ -20,14 +20,14 @@ def _raw(encounters_dir, encounter_id="py-001"):
 
 def test_every_encounter_uses_only_agreed_concepts(encounters_dir):
     known = load_concept_ids(encounters_dir)
-    for encounter in EncounterService(encounters_dir).list_encounters():
+    for encounter in EncounterService(encounters_dir).list_encounters(strict=True):
         assert encounter.concepts, f"{encounter.id} has no concept tag"
         assert set(encounter.concepts) <= known, f"{encounter.id} uses an unknown concept"
 
 
 def test_order_is_unique_inside_each_module(encounters_dir):
     seen = {}
-    for e in EncounterService(encounters_dir).list_encounters():
+    for e in EncounterService(encounters_dir).list_encounters(strict=True):
         key = (e.module, e.order)
         assert key not in seen, f"{e.id} and {seen[key]} share order {e.order} in {e.module}"
         seen[key] = e.id
@@ -35,8 +35,12 @@ def test_order_is_unique_inside_each_module(encounters_dir):
 
 def test_list_is_sorted_by_module_then_order(encounters_dir):
     listed = EncounterService(encounters_dir).list_encounters(module="python-basics")
-    assert [e.id for e in listed] == ["py-001", "py-002", "py-003", "py-004", "py-005", "py-006", "py-007"]
-    assert [e.order for e in listed] == [1, 2, 3, 4, 5, 6, 7]
+    # More encounters will be added over time, so check the order rule and that
+    # the first three are still present, not an exact count.
+    orders = [e.order for e in listed]
+    assert orders == sorted(orders)
+    assert len(set(orders)) == len(orders)
+    assert {"py-001", "py-002", "py-003"} <= {e.id for e in listed}
 
 
 def test_missing_concept_is_rejected(encounters_dir):
@@ -81,8 +85,10 @@ def test_list_endpoint_returns_summaries_only():
         response = client.get("/api/v1/encounters", params={"module": "python-basics"})
     assert response.status_code == 200
     rows = response.json()["encounters"]
-    assert [r["id"] for r in rows] == ["py-001", "py-002", "py-003", "py-004", "py-005", "py-006", "py-007"]
-    first = rows[0]
+    assert {"py-001", "py-002", "py-003"} <= {r["id"] for r in rows}
+    orders = [r["order"] for r in rows]
+    assert orders == sorted(orders)
+    first = next(r for r in rows if r["id"] == "py-001")
     assert first["concept"] == "input-output"
     assert first["concepts"] == ["input-output", "arithmetic"]
     assert first["order"] == 1
@@ -96,3 +102,58 @@ def test_list_endpoint_filters_and_rejects_bad_input():
         bad = client.get("/api/v1/encounters", params={"module": "../etc"})
     assert none.status_code == 200 and none.json() == {"encounters": []}
     assert bad.status_code == 422
+
+
+# One broken encounter file must not break the list for everyone else.
+
+
+def _copy_with_broken_encounter(encounters_dir, tmp_path, *, module="data-structures", language="python"):
+    import shutil
+
+    copy = tmp_path / "encounters"
+    shutil.copytree(encounters_dir, copy)
+    broken = _raw(encounters_dir)
+    broken["id"] = "py-900"
+    broken["module"] = module
+    broken["language"] = language
+    broken["concepts"] = []  # fails validation
+    target = copy / "python" / "py-900"
+    target.mkdir(parents=True)
+    (target / "v1.json").write_text(json.dumps(broken))
+    return copy
+
+
+def test_broken_encounter_in_another_module_does_not_break_the_list(encounters_dir, tmp_path):
+    copy = _copy_with_broken_encounter(encounters_dir, tmp_path)
+    listed = EncounterService(copy).list_encounters(module="python-basics")
+    expected = EncounterService(encounters_dir).list_encounters(module="python-basics")
+    assert [e.id for e in listed] == [e.id for e in expected]
+
+
+def test_unfiltered_list_skips_and_logs_the_broken_encounter(encounters_dir, tmp_path, caplog):
+    copy = _copy_with_broken_encounter(encounters_dir, tmp_path)
+    with caplog.at_level("ERROR"):
+        listed = EncounterService(copy).list_encounters()
+    assert "py-900" not in [e.id for e in listed]
+    assert len(listed) == len(EncounterService(encounters_dir).list_encounters())
+    assert "py-900" in caplog.text
+
+
+def test_strict_list_still_fails_on_a_broken_encounter(encounters_dir, tmp_path):
+    copy = _copy_with_broken_encounter(encounters_dir, tmp_path)
+    with pytest.raises(ValidationError):
+        EncounterService(copy).list_encounters(strict=True)
+
+
+def test_unreadable_json_is_skipped_in_the_list(encounters_dir, tmp_path):
+    copy = _copy_with_broken_encounter(encounters_dir, tmp_path)
+    (copy / "python" / "py-900" / "v1.json").write_text("{not json")
+    assert len(EncounterService(copy).list_encounters()) == len(
+        EncounterService(encounters_dir).list_encounters()
+    )
+
+
+def test_a_broken_encounter_still_fails_on_its_own_endpoint(encounters_dir, tmp_path):
+    copy = _copy_with_broken_encounter(encounters_dir, tmp_path)
+    with pytest.raises(ValidationError):
+        EncounterService(copy).get("py-900")

@@ -65,9 +65,9 @@
 
   "hints": {
     "1": "Think about checking each character of the line one at a time and keeping a running count.",
-    "2": "Loop over the string directly (for ch in line), and check whether each character is in the set 'aeiou'.",
+    "2": "Loop over the string directly (for ch in line), and check whether each character is a, e, i, o, or u.",
     "3": "line = input(); print(sum(1 for ch in line if ch in 'aeiou'))"
   },
 
-  "failure_explanation": "Spaces and consonants should not be counted, only a/e/i/o/u - and remember the count includes every vowel occurrence in the whole line, not just unique vowels (e.g. 'banana' has 3 vowels, not 1)."
+  "failure_explanation": "Spaces and consonants should not be counted, only a/e/i/o/u - and remember the count includes every vowel occurrence in the whole line, not just the number of distinct vowel letters that appear."
 }

@@ -14,6 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.services.concepts import load_concept_ids  # noqa: E402
+from app.services.encounter_checks import find_placeholders  # noqa: E402
 from app.services.encounter_service import EncounterService  # noqa: E402
 
 ENCOUNTERS_DIR = Path(__file__).resolve().parents[1] / "encounters"
@@ -46,6 +47,7 @@ def main() -> int:
         clash = seen_order.setdefault((encounter.module, encounter.order), encounter.id)
         if clash != encounter.id:
             problems.append(f"order {encounter.order} in {encounter.module} is already used by {clash}")
+        problems += [f"unfinished: {p}" for p in find_placeholders(encounter)]
         if problems:
             print(f"FAIL  {file}: " + "; ".join(problems))
             failures += 1

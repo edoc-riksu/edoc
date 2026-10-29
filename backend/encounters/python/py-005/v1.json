@@ -69,5 +69,5 @@
     "3": "a, b, c = map(int, input().split()); print(max(a, b, c))"
   },
 
-  "failure_explanation": "Watch out for ties (e.g. 100 100 99 should still print 100) and negative numbers (e.g. -5 -1 -9 should print -1, the one closest to zero) - a chain of if/elif that assumes the first number read is the largest will get these wrong."
+  "failure_explanation": "Watch out for ties, where two or three numbers are equal, and for negative numbers, where the largest value is the one closest to zero - a chain of if/elif that assumes the first number read is the largest will get these wrong."
 }

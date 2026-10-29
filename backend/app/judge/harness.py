@@ -16,6 +16,8 @@ class JudgeOutcome(BaseModel):
 class HarnessRun(BaseModel):
     outcomes: list[JudgeOutcome]
     max_runtime_ms: int
+    # Sum of every test's sandbox time: what this submission cost to run.
+    total_runtime_ms: int = 0
 
 
 class TestHarness:
@@ -38,6 +40,7 @@ class TestHarness:
     ) -> HarnessRun:
         outcomes: list[JudgeOutcome] = []
         max_runtime_ms = 0
+        total_runtime_ms = 0
 
         for test in tests:
             result = await self._piston.execute(
@@ -49,6 +52,7 @@ class TestHarness:
                 memory_limit_bytes=memory_limit_bytes,
             )
             max_runtime_ms = max(max_runtime_ms, result.runtime_ms)
+            total_runtime_ms += result.runtime_ms
 
             passed = result.status == ExecutionStatus.SUCCESS and compare_output(
                 result.stdout, test.expected_output
@@ -63,4 +67,8 @@ class TestHarness:
                 )
             )
 
-        return HarnessRun(outcomes=outcomes, max_runtime_ms=max_runtime_ms)
+        return HarnessRun(
+            outcomes=outcomes,
+            max_runtime_ms=max_runtime_ms,
+            total_runtime_ms=total_runtime_ms,
+        )

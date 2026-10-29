@@ -39,6 +39,15 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.2s ease, visibility 0s linear 0s;
+}
+
+/* While the console is open it has its own top bar (back, hull, attempt). Two stacked bars read as a glitch. */
+.ap-top.is-away {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0s linear 0.2s;
 }
 .ap-crumb {
   display: flex;
@@ -508,4 +517,11 @@
 @keyframes ap-hit {
   from { opacity: 1; }
   to { opacity: 0; }
+}
+
+/* A result scene (victory or defeat) covers the cockpit and the console. */
+.ap-result {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
 }
