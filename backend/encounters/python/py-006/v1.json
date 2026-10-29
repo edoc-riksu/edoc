@@ -1,0 +1,73 @@
+{
+  "id": "py-006",
+  "version": 1,
+  "language": "python",
+  "title": "Count Vowels",
+  "difficulty": "medium",
+  "module": "python-basics",
+  "order": 6,
+  "concepts": ["loops", "conditionals", "input-output"],
+  "problem": "Given a single line of lowercase text, print how many of its characters are vowels (a, e, i, o, u).",
+  "starter_code": "# Read a line of lowercase text.\n# Print how many of its characters are vowels (a, e, i, o, u).\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "hello world",
+        "expected_output": "3",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "sky",
+        "expected_output": "0",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "aeiou",
+        "expected_output": "5",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "bcdfg",
+        "expected_output": "0",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "banana",
+        "expected_output": "3",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "the quick brown fox",
+        "expected_output": "5",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "a",
+        "expected_output": "1",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Think about checking each character of the line one at a time and keeping a running count.",
+    "2": "Loop over the string directly (for ch in line), and check whether each character is in the set 'aeiou'.",
+    "3": "line = input(); print(sum(1 for ch in line if ch in 'aeiou'))"
+  },
+
+  "failure_explanation": "Spaces and consonants should not be counted, only a/e/i/o/u - and remember the count includes every vowel occurrence in the whole line, not just unique vowels (e.g. 'banana' has 3 vowels, not 1)."
+}

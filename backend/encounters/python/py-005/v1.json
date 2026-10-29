@@ -1,0 +1,73 @@
+{
+  "id": "py-005",
+  "version": 1,
+  "language": "python",
+  "title": "Largest of Three",
+  "difficulty": "easy",
+  "module": "python-basics",
+  "order": 5,
+  "concepts": ["conditionals", "input-output"],
+  "problem": "Given three integers on a single line of input, separated by spaces, print the largest of the three.",
+  "starter_code": "# Read three integers from a single line of input, separated by spaces.\n# Print the largest one.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "3 7 5",
+        "expected_output": "7",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "9 2 4",
+        "expected_output": "9",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1 1 1",
+        "expected_output": "1",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "-5 -1 -9",
+        "expected_output": "-1",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "0 -3 2",
+        "expected_output": "2",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "100 100 99",
+        "expected_output": "100",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "-2 -2 -2",
+        "expected_output": "-2",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Think about comparing the three numbers two at a time, or using a built-in that finds the biggest of several values.",
+    "2": "Python's max() function can take three arguments directly: max(a, b, c).",
+    "3": "a, b, c = map(int, input().split()); print(max(a, b, c))"
+  },
+
+  "failure_explanation": "Watch out for ties (e.g. 100 100 99 should still print 100) and negative numbers (e.g. -5 -1 -9 should print -1, the one closest to zero) - a chain of if/elif that assumes the first number read is the largest will get these wrong."
+}

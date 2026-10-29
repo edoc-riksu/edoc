@@ -35,8 +35,8 @@ def test_order_is_unique_inside_each_module(encounters_dir):
 
 def test_list_is_sorted_by_module_then_order(encounters_dir):
     listed = EncounterService(encounters_dir).list_encounters(module="python-basics")
-    assert [e.id for e in listed] == ["py-001", "py-002", "py-003"]
-    assert [e.order for e in listed] == [1, 2, 3]
+    assert [e.id for e in listed] == ["py-001", "py-002", "py-003", "py-004", "py-005", "py-006", "py-007"]
+    assert [e.order for e in listed] == [1, 2, 3, 4, 5, 6, 7]
 
 
 def test_missing_concept_is_rejected(encounters_dir):
@@ -81,7 +81,7 @@ def test_list_endpoint_returns_summaries_only():
         response = client.get("/api/v1/encounters", params={"module": "python-basics"})
     assert response.status_code == 200
     rows = response.json()["encounters"]
-    assert [r["id"] for r in rows] == ["py-001", "py-002", "py-003"]
+    assert [r["id"] for r in rows] == ["py-001", "py-002", "py-003", "py-004", "py-005", "py-006", "py-007"]
     first = rows[0]
     assert first["concept"] == "input-output"
     assert first["concepts"] == ["input-output", "arithmetic"]
