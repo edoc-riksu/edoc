@@ -61,6 +61,8 @@ test inputs/outputs, hints, and the failure explanation are stripped before
 anything is returned to a client — enforced by `EncounterPublic`, a
 separate model the API is typed to return instead of `Encounter`.
 
+Writing a new encounter? See [AUTHORING.md](AUTHORING.md).
+
 ## Verdicts
 
 `ACCEPTED`, `WRONG_ANSWER`, `RUNTIME_ERROR`, `TIME_LIMIT_EXCEEDED`,
