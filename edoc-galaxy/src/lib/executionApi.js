@@ -47,10 +47,10 @@ export function runCode({ encounterId, code }) {
  * the execution service — the proxy is what persists an Attempt row so
  * progress survives a reload (see getResumeState below).
  */
-export function submitCode({ encounterId, code }) {
+export function submitCode({ encounterId, code, hintsUsed }) {
   return postJson(
     "/api/approach/submissions",
-    { encounter_id: encounterId, code },
+    { encounter_id: encounterId, code, hints_used: hintsUsed },
     ""
   );
 }
