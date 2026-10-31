@@ -159,14 +159,15 @@ export async function getConceptMastery(userId) {
 
 /** Real numbers for the pilot profile screen - plan Day 18. */
 export async function getProfileStats(userId) {
-  const [totalAttempts, allAttempts, solvedGroups, progress, concepts] = await Promise.all([
+  const [totalAttempts, allAttempts, solvedGroups, progress, concepts, hintsUsedSum] = await Promise.all([
     db.attempt.count({ where: { userId } }),
     // Ordered oldest-first per encounter so the first entry seen for each
     // encounterId below is that encounter's actual first attempt.
     db.attempt.findMany({ where: { userId }, select: { encounterId: true, verdict: true }, orderBy: { createdAt: "asc" } }),
     db.attempt.findMany({ where: { userId, verdict: "ACCEPTED" }, select: { encounterId: true }, distinct: ["encounterId"] }),
     db.progress.findMany({ where: { userId }, select: { sectorId: true, level: true } }),
-    getConceptMastery(userId)
+    getConceptMastery(userId),
+    db.attempt.aggregate({ where: { userId }, _sum: { hintsUsed: true } })
   ]);
 
   const encountersSolved = solvedGroups.length;
@@ -185,6 +186,7 @@ export async function getProfileStats(userId) {
     encountersSolved,
     firstAttemptRate: attemptedCount === 0 ? null : Math.round((firstTryAccepted / attemptedCount) * 100) / 100,
     planets: progress.map((p) => ({ planetId: p.sectorId, level: p.level })),
-    concepts
+    concepts,
+    hintsUsed: hintsUsedSum._sum.hintsUsed ?? 0
   };
 }
