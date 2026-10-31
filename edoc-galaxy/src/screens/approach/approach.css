@@ -525,3 +525,42 @@
   inset: 0;
   z-index: 120;
 }
+
+/* ---------- polish: small screens and touch ---------- */
+
+/* On a phone the bar is tight: keep just the planet's name (the full phrase stays for screen readers). */
+@media (max-width: 520px) {
+  .ap-pre {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* A finger needs about 44px. The look stays the same; the targets grow. */
+@media (pointer: coarse) {
+  .ap-step {
+    width: 44px;
+    height: 44px;
+  }
+  .ap-top .ap-tools button,
+  .ap-top .ap-tools a {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .ap-crumb-link {
+    padding: 12px 6px;
+    margin: -12px -6px;
+  }
+  .ap-concept {
+    position: relative;
+  }
+  .ap-concept::after {
+    content: "";
+    position: absolute;
+    inset: -14px -10px;
+  }
+}

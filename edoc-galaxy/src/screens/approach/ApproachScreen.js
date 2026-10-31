@@ -277,7 +277,10 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
           <span className="ap-slash" aria-hidden="true">
             /
           </span>
-          <h1 className="ap-crumb-now">Approach to {planetName}</h1>
+          <h1 className="ap-crumb-now">
+            <span className="ap-pre">Approach to </span>
+            {planetName}
+          </h1>
           <button
             type="button"
             className="ap-step"
