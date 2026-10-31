@@ -234,6 +234,55 @@ code allocates gradually instead of in one go.
 - Python 3.14 (the codespace default) cannot install the pinned
   `pydantic-core`; a Python 3.12 virtual environment worked.
 
+## Scoring is server-side only (plan Day 26)
+
+Checked on 2026-10-31 against `main` at `ec258f1`, by reading every path in
+`edoc-galaxy/` that can show or save a result.
+
+**Confirmed:**
+
+- Verdict, score and rating are computed only in this service
+  (`app/services/judge_service.py`, `scoring_service.py`). The browser never
+  sees hidden tests, so it could not compute them.
+- Saved results come only from `edoc-galaxy/src/app/api/approach/submissions/route.js`.
+  It calls `POST /api/v1/submissions` itself, server to server, and stores
+  the verdict and score from that response. The browser sends only the
+  encounter id and the code.
+- Everything derived from results (module completion, unlocks, concept
+  mastery, profile stats, resume state in `src/lib/server/progressStore.js`
+  and the `api/` routes) reads those saved `Attempt` rows. No route lets the
+  browser write progress or a verdict directly.
+- Run results are never saved. The in-browser debug runner
+  (`src/lib/pyDebugRunner.js`) never contacts the judge and never changes
+  hull or progress.
+- A browser can call this service's `/api/v1/submissions` directly (CORS
+  allows the site), but nothing it gets back is saved, so it cannot award
+  itself anything.
+
+**Gaps (not scoring bugs, but they need an owner):**
+
+1. **Attempts and time are not passed in** (Backend 2). The submission
+   proxy sends only `encounter_id` and `code`, so every submission is judged
+   as `attempt_number` 1 with no `elapsed_ms`. That makes
+   `first_attempt_clear` and the rating's first-try star wrong from the
+   second try on. The proxy should count the player's saved attempts for
+   the encounter, pass `attempt_number` and the console's `elapsed_ms`, and
+   save `rating` with the attempt.
+2. **Hints, the explanation and the worked solution ship with the page**
+   (Frontend 1 and 2). `src/data/approach.js` holds them, and
+   `src/lib/server/approachData.js` passes them to the console, so the
+   walkthrough is in the browser before the player asks for any hint. Now
+   that `POST /api/v1/encounters/{id}/hints` is live, the console should ask
+   for each hint there (through a proxy that knows the player and passes
+   `highest_level_asked`), and the defeat screen should show the result's
+   `defeat.explanation` instead of the built-in text.
+3. **Hull is tracked in the browser** (Frontend 2). `CodeConsole.js` takes
+   `HULL_DAMAGE` off on any non-accepted verdict and adds `HULL_REPAIR` on
+   an accepted one. It is driven only by the server's verdict, which is what
+   the product rule asks for, but it is not saved, so a reload resets it.
+   Fine for now; if hull ever counts towards progress it has to move to the
+   server.
+
 ## Deferred to Day 2+
 
 - No database wiring in `app/` (SQLAlchemy models, connections). Postgres
