@@ -47,6 +47,7 @@ Isolated Python execution
 | GET | `/health` | Liveness check |
 | GET | `/api/v1/encounters?module=` | Encounter summaries in play order (id, title, difficulty, order, main concept) - no problem text or tests |
 | GET | `/api/v1/encounters/{id}` | Public encounter view (prompt, starter code, sample tests only — never hidden tests, hints, or the failure explanation) |
+| POST | `/api/v1/encounters/{id}/hints` | One hint level (1 nudge, 2 approach, 3 walkthrough), asked in order. Body `{level, highest_level_asked}`; 409 if a level is skipped |
 | POST | `/api/v1/executions/run` | RUN — code against sample tests only, unscored |
 | POST | `/api/v1/submissions` | SUBMIT — code against sample + hidden tests, scored, authoritative |
 
