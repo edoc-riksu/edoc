@@ -50,3 +50,14 @@ def test_submission_and_run_shapes_match_the_contract():
             jsonschema.validate(client.post("/api/v1/submissions", json=body).json(), _schema("submission-result"))
         run = client.post("/api/v1/executions/run", json={"encounter_id": "py-001", "code": "print(1)"})
         jsonschema.validate(run.json(), _schema("run-result"))
+
+
+def test_run_never_carries_a_verdict_score_or_rating():
+    """Day 26: Run is informational. If a verdict, score or rating ever appears
+    on a run result, a client could start treating Run as a result that counts."""
+
+    run_fields = set(_schema("run-result")["properties"])
+    assert not run_fields & {"verdict", "score", "rating", "first_attempt_clear", "defeat"}
+    with TestClient(mock_app) as client:
+        run = client.post("/api/v1/executions/run", json={"encounter_id": "py-001", "code": "print(1)"}).json()
+    assert not set(run) & {"verdict", "score", "rating", "first_attempt_clear", "defeat"}
