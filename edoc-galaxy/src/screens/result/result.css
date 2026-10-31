@@ -156,3 +156,23 @@
     display: none;
   }
 }
+
+/* A short landscape screen (a phone on its side): the card moves to the right and tightens, so the ship stays in view. */
+@media (max-height: 480px) and (min-aspect-ratio: 3/2) {
+  .ec-card {
+    left: auto;
+    right: 16px;
+    bottom: 12px;
+    width: min(420px, 56vw);
+    transform: none;
+    padding: 14px 18px 12px;
+    gap: 8px;
+    animation-name: ec-rise-side;
+  }
+  @keyframes ec-rise-side {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  }
+}
