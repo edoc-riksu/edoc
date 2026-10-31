@@ -1,0 +1,72 @@
+{
+  "id": "py-012",
+  "version": 1,
+  "language": "python",
+  "title": "Reverse a Number",
+  "difficulty": "medium",
+  "module": "python-basics",
+  "order": 11,
+  "concepts": [
+    "arithmetic",
+    "loops"
+  ],
+  "problem": "Read one integer. It may be negative. Print its digits in reverse order, and keep the minus sign at the front if the number is negative. Zeros at the end of the input disappear from the front of the answer, so 120 gives 21. For example, 123 gives 321 and -450 gives -54.",
+  "starter_code": "# Read one integer (it may be negative).\n# Print its digits in reverse order. Keep the minus sign at the front.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "123",
+        "expected_output": "321",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "-450",
+        "expected_output": "-54",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "7",
+        "expected_output": "7",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "1200",
+        "expected_output": "21",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "-908",
+        "expected_output": "-809",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "0",
+        "expected_output": "0",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "-10",
+        "expected_output": "-1",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Deal with the minus sign separately from the digits: note whether the number is negative, then reverse only the number without its sign.",
+    "2": "Take digits off the end with % 10 and // 10, and build the answer with result = result * 10 + digit. Because you are building a number, zeros that end up at the front vanish by themselves. Put the minus sign back at the end.",
+    "3": "n = int(input())\nsign = -1 if n < 0 else 1\nn = abs(n)\nresult = 0\nwhile n > 0:\n    result = result * 10 + n % 10\n    n //= 10\nprint(sign * result)"
+  },
+  "failure_explanation": "Check three things: the minus sign has to stay at the front of the answer rather than move to the end, zeros at the end of the input must disappear from the front of the output instead of being kept, and the number zero itself must still print as a single digit. Compare your output with the sample character by character."
+}

@@ -1,0 +1,72 @@
+{
+  "id": "py-013",
+  "version": 1,
+  "language": "python",
+  "title": "Palindrome Check",
+  "difficulty": "medium",
+  "module": "python-basics",
+  "order": 12,
+  "concepts": [
+    "conditionals",
+    "loops"
+  ],
+  "problem": "Read one word made of lowercase letters. Print Yes if it reads the same forwards and backwards, otherwise print No. For example, level gives Yes and plane gives No. Write the answer exactly as Yes or No.",
+  "starter_code": "# Read one word (lowercase letters only).\n# Print Yes if it is the same forwards and backwards, otherwise No.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "level",
+        "expected_output": "Yes",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "plane",
+        "expected_output": "No",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "a",
+        "expected_output": "Yes",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "noon",
+        "expected_output": "Yes",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "abca",
+        "expected_output": "No",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "racecar",
+        "expected_output": "Yes",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "ab",
+        "expected_output": "No",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Compare the word with itself from the other end: the first letter has to match the last, the second has to match the second from the end, and so on.",
+    "2": "Keep two positions, one at the front and one at the back, and move them towards each other in a loop. Stop when they meet or cross. If any pair of letters differs, the word is not a palindrome.",
+    "3": "word = input()\nleft = 0\nright = len(word) - 1\nsame = True\nwhile left < right:\n    if word[left] != word[right]:\n        same = False\n    left += 1\n    right -= 1\nprint(\"Yes\" if same else \"No\")"
+  },
+  "failure_explanation": "A word is a palindrome only if every pair of letters, counting in from both ends, matches. Checking just the first and last letter is not enough. Also print exactly Yes or No with those capital letters, and remember that a word with a single letter counts as a palindrome."
+}
