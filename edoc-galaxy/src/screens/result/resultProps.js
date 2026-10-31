@@ -48,13 +48,17 @@ export function victoryProps({ encounter, result, attempts, hullBefore, hullAfte
 }
 
 /**
- * Props for <HullDepleted> after the hull ran out. The teaching text comes from, in order: the explanation the
- * API gives (`apiExplanation`), the encounter's own, then a plain line for the verdict.
+ * Props for <HullDepleted> after the hull ran out. The judging API sends `defeat` with every wrong answer:
+ * the main concept that failed ({ id, name, note }) and the explanation written for it. That is what the scene
+ * teaches. If the result has none (an older service, a built-in encounter), the encounter's own explanation is
+ * used, then a plain line for the verdict.
  */
-export function defeatProps({ encounter, result, attempts, apiExplanation }) {
-  const text = apiExplanation || encounter?.explanation || VERDICT_LINES[result?.verdict] || FALLBACK_LINE;
+export function defeatProps({ encounter, result, attempts }) {
+  const api = result?.defeat;
+  const text = api?.explanation || encounter?.explanation || VERDICT_LINES[result?.verdict] || FALLBACK_LINE;
   return {
-    concept: encounter?.concept?.name,
+    concept: api?.concept?.name || encounter?.concept?.name,
+    conceptNote: api?.concept?.note || undefined,
     explanation: text,
     failedTests: missedTests(result?.tests),
     attempts: attempts ?? undefined

@@ -84,6 +84,15 @@
 .hd-body > :last-child {
   margin-bottom: 0;
 }
+.hd-note {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-dim, var(--ink-soft));
+  opacity: 0.85;
+}
 .hd-meta {
   display: flex;
   flex-wrap: wrap;

@@ -11,9 +11,9 @@ Frontend 1 owns this folder and the approach screen. The console (Frontend 2) is
 | Prop | Call it when | Payload |
 | --- | --- | --- |
 | `onVictory` | a submission comes back `ACCEPTED` | `{ result, hullBefore, hullAfter, attempts }` |
-| `onDefeat` | the hull reached 0 after a submission | `{ result, attempts, explanation? }` |
+| `onDefeat` | the hull reached 0 after a submission | `{ result, attempts }` |
 
-`result` is the submission result exactly as the API returns it (`contracts/submission-result.schema.json`). `explanation` is optional: the failure explanation from the API, once it exists. If it is missing, the scene falls back to the encounter's own explanation, then to a line for the verdict.
+`result` is the submission result exactly as the API returns it (`contracts/submission-result.schema.json`). Pass it on untouched: a wrong answer carries `defeat` (the main concept with its note, and the explanation written for it), and that is what the defeat scene teaches. If a result has no `defeat` (an older service, a built-in encounter), the scene falls back to the encounter's own explanation, then to a line for the verdict.
 
 Until the console calls them, nothing changes: it keeps its own banner and defeat dialog. When it does call them it should skip its own banner and dialog, or two dialogs will stack and fight over focus.
 
@@ -27,4 +27,4 @@ What the approach screen does with them:
 - `resultProps.js`: pure functions that turn a result into scene props. Tested in `resultProps.test.js`. Hidden tests are only ever counted ("2 hidden tests"), never named.
 - `ResultHost.js`: picks the scene for a result.
 - `EncounterCleared.js`, `HullDepleted.js`: the scenes (props only, nothing fetched or saved).
-- `/art/results`: a review page that feeds the scenes API-shaped results. `?scene=win|winFull|lose|loseApi`, `&calm=1`.
+- `/art/results`: a review page that feeds the scenes API-shaped results. `?scene=win|winFull|lose|loseLoops|loseNoApi`, `&calm=1`.

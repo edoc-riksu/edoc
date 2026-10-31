@@ -28,21 +28,31 @@ const WRONG = {
   ],
   execution: { runtime_ms: 44 }
 };
+// What the service really sends with a wrong answer: the main concept and the explanation written for it.
+const DEFEAT = {
+  concept: { id: "input-output", name: "input/output", note: "Read input, process values, and print the result." },
+  explanation: "Make sure you convert the input to integers before adding them - adding the raw strings concatenates them instead of summing, and the result must be printed, not just computed or returned."
+};
 const ENCOUNTER = {
   id: "py-001",
   title: "Sum of Two Integers",
   concept: { id: "input-output", name: "input/output" },
-  explanation: "Make sure you convert the input to integers before adding them. Adding the raw strings joins them instead of summing, and the result must be printed, not just computed."
+  explanation: "The encounter's own explanation (used only when the API sends none)."
 };
 
 const SCENARIOS = {
   win: { kind: "victory", result: ACCEPTED, attempts: 2, hullBefore: 80, hullAfter: 95 },
   winFull: { kind: "victory", result: ACCEPTED, attempts: 1, hullBefore: 100, hullAfter: 100 },
-  lose: { kind: "defeat", result: WRONG, attempts: 5 },
-  loseApi: { kind: "defeat", result: { ...WRONG, verdict: "TIME_LIMIT_EXCEEDED" }, attempts: 3, explanation: "Your loop never ends when N is zero, so the program keeps running until it is stopped." }
+  lose: { kind: "defeat", result: { ...WRONG, defeat: DEFEAT }, attempts: 5 },
+  loseLoops: {
+    kind: "defeat",
+    result: { ...WRONG, verdict: "TIME_LIMIT_EXCEEDED", defeat: { concept: { id: "loops", name: "loops", note: "Repeat an action for a sequence of values." }, explanation: "Make sure your loop includes N itself - range(1, N+1), not range(1, N) - and that you print each number on its own line." } },
+    attempts: 3
+  },
+  loseNoApi: { kind: "defeat", result: { ...WRONG, defeat: null }, attempts: 4 }
 };
 
-/** Review page: feed the scenes a real-shaped result. ?scene=win|winFull|lose|loseApi opens one straight away. */
+/** Review page: feed the scenes a real-shaped result. ?scene=win|winFull|lose|loseLoops|loseNoApi opens one straight away. */
 export default function ResultsLab({ initial, calm }) {
   const [key, setKey] = useState(SCENARIOS[initial] ? initial : null);
   const [count, setCount] = useState(0);

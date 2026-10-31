@@ -55,14 +55,40 @@ describe("victoryProps", () => {
 });
 
 describe("defeatProps", () => {
-  it("prefers the API's explanation, then the encounter's, then a line for the verdict", () => {
-    expect(defeatProps({ encounter: ENC, result: WRONG, apiExplanation: "From the API." }).explanation).toBe("From the API.");
-    expect(defeatProps({ encounter: ENC, result: WRONG }).explanation).toBe("Convert to integers, then print the sum.");
+  // the shape the judging API really returns on a wrong answer (contracts/example-submission-wrong-answer.json)
+  const WITH_DEFEAT = {
+    ...WRONG,
+    defeat: {
+      concept: { id: "input-output", name: "input/output", note: "Read input, process values, and print the result." },
+      explanation: "Make sure you convert the input to integers before adding them."
+    }
+  };
+
+  it("teaches what the API's defeat object says: its concept, its note and its explanation", () => {
+    expect(defeatProps({ encounter: ENC, result: WITH_DEFEAT, attempts: 3 })).toEqual({
+      concept: "input/output",
+      conceptNote: "Read input, process values, and print the result.",
+      explanation: "Make sure you convert the input to integers before adding them.",
+      failedTests: ["Sample test 2", "2 hidden tests"],
+      attempts: 3
+    });
+  });
+
+  it("uses the API's concept even when the screen's encounter names a different one", () => {
+    const other = { ...WITH_DEFEAT, defeat: { ...WITH_DEFEAT.defeat, concept: { id: "loops", name: "loops", note: "" } } };
+    const p = defeatProps({ encounter: ENC, result: other });
+    expect(p.concept).toBe("loops");
+    expect(p.conceptNote).toBeUndefined();
+  });
+
+  it("falls back to the encounter's explanation, then a line for the verdict, when there is no defeat object", () => {
+    expect(defeatProps({ encounter: ENC, result: { ...WRONG, defeat: null } }).explanation).toBe("Convert to integers, then print the sum.");
     expect(defeatProps({ encounter: { ...ENC, explanation: undefined }, result: WRONG }).explanation).toMatch(/did not match/);
     expect(defeatProps({ encounter: { ...ENC, explanation: undefined }, result: { verdict: "TIME_LIMIT_EXCEEDED" } }).explanation).toMatch(/too long/);
     expect(defeatProps({ encounter: { ...ENC, explanation: undefined }, result: undefined }).explanation).toMatch(/Every miss/);
   });
-  it("names the concept and the misses", () => {
+
+  it("names the concept from the encounter when the result has no defeat object", () => {
     expect(defeatProps({ encounter: ENC, result: WRONG, attempts: 3 })).toMatchObject({ concept: "input/output", failedTests: ["Sample test 2", "2 hidden tests"], attempts: 3 });
   });
 });
