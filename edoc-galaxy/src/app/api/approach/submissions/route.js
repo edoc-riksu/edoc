@@ -63,12 +63,27 @@ export const POST = withErrorLogging(async function POST(request) {
         );
     }
 
+    // Tell the judge which try this is (earlier saved attempts at this
+    // encounter, plus this one) and how long the player took, if the page
+    // sent it. The judge repeats both in its result and flags a first-try
+    // clear. A failed count must not block judging, so fall back to 1.
+    let attemptNumber = 1;
+    try {
+        attemptNumber = (await db.attempt.count({ where: { userId, encounterId } })) + 1;
+    } catch (error) {
+        console.error("Failed to count earlier attempts:", error);
+    }
+    const elapsedMs =
+        Number.isInteger(body?.elapsed_ms) && body.elapsed_ms >= 0 ? body.elapsed_ms : undefined;
+
     const response = await fetch(`${BACKEND_URL}/api/v1/submissions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             encounter_id: encounterId,
             code,
+            attempt_number: attemptNumber,
+            elapsed_ms: elapsedMs,
         }),
         cache: "no-store",
     });

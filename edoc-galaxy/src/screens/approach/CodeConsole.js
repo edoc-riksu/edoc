@@ -92,6 +92,10 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   const [isWriting, setIsWriting] = useState(false);
   const writingTimerRef = useRef(null);
   const boltButtonRef = useRef(null);
+  // When this attempt started — wall-clock time spent on this encounter,
+  // sent with Submit so the judge can report it back. Reset on a fresh
+  // encounter and on Rematch, never on Run (Run doesn't count).
+  const startedAtRef = useRef(Date.now());
 
   const handleWritingChange = (active) => {
     clearTimeout(writingTimerRef.current);
@@ -146,6 +150,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setActiveTab("tests");
     setDebugInput("");
     setDebugResult(null);
+    startedAtRef.current = Date.now();
   }, [encounter.id, encounter.starterCode]);
 
   useEffect(() => {
@@ -194,6 +199,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setActiveTab("tests");
     setDebugInput("");
     setDebugResult(null);
+    startedAtRef.current = Date.now();
     onHullChange(100);
   };
 
@@ -227,7 +233,8 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setSoundEnabled(getSoundPreference());
     setActiveTab("tests");
     setBusy("submit");
-    const res = await submitCode({ encounterId: encounter.id, code, hintsUsed: hintsRevealed });
+    const elapsedMs = Date.now() - startedAtRef.current;
+    const res = await submitCode({ encounterId: encounter.id, code, elapsedMs, hintsUsed: hintsRevealed });
     setBusy(null);
 
     if (!res.ok) {

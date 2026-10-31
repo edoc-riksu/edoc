@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { readSessionToken, SESSION_COOKIE_NAME } from "../../../../lib/server/sessionToken";
 import { updateUser } from "../../../../lib/server/pilotStore";
+import { hasCompletedAnyModule } from "../../../../lib/server/progressStore";
 import { normalizeCallsign, isValidCallsign, AUTH_MESSAGES } from "../../../../lib/authValidation";
 
 // A small, square avatar JPEG/WebP at modest quality comfortably fits well
 // under this — it's a backstop against someone posting a huge data URL,
 // not a real target size (resizing happens client-side before upload).
 const MAX_AVATAR_LENGTH = 300_000;
+
+const EXPLORERS = new Set(["vega", "taro"]);
+const SUITS = new Set(["base", "starfarer"]);
 
 export async function PATCH(request) {
   const store = await cookies();
@@ -41,6 +45,24 @@ export async function PATCH(request) {
       return NextResponse.json({ fields: { avatar: "Image must be a small image file." } }, { status: 422 });
     }
     patch.avatar = body.avatar;
+  }
+
+  if (body?.explorer !== undefined) {
+    if (!EXPLORERS.has(body.explorer)) {
+      return NextResponse.json({ fields: { explorer: "Unknown explorer." } }, { status: 422 });
+    }
+    patch.explorer = body.explorer;
+  }
+
+  if (body?.suit !== undefined) {
+    if (!SUITS.has(body.suit)) {
+      return NextResponse.json({ fields: { suit: "Unknown suit." } }, { status: 422 });
+    }
+    // Checked server-side, not just a disabled button client-side.
+    if (body.suit === "starfarer" && !(await hasCompletedAnyModule(userId))) {
+      return NextResponse.json({ fields: { suit: "Finish a module to unlock this suit." } }, { status: 403 });
+    }
+    patch.suit = body.suit;
   }
 
   if (Object.keys(patch).length === 0) {

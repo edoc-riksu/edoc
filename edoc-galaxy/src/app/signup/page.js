@@ -118,7 +118,10 @@ function SignupForm() {
     }
     if (result.ok) {
       setUser(result.data.user);
-      router.push(safeReturnTo(searchParams.get("returnTo"), "/"));
+      // New pilots pick an explorer/suit once before their first galaxy
+      // view — Hangar itself carries the original destination forward.
+      const dest = safeReturnTo(searchParams.get("returnTo"), "/");
+      router.push(`/hangar?onboarding=1&returnTo=${encodeURIComponent(dest)}`);
       return;
     }
     if (result.status === 409) {

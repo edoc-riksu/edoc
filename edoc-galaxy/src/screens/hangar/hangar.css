@@ -1,0 +1,393 @@
+/*
+ * Hangar screen: the bay fills the screen (drawn in code, see hangarArt.js);
+ * the top bar and the loadout panel sit on top of it. Colours and fonts come
+ * from globals.css (--ink, --teal, --glass ...); Button/Panel are the shared
+ * src/ui components. No tokens or fonts of this screen's own.
+ */
+.hg {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: #05070f;
+  isolation: isolate;
+}
+.hg-scene {
+  position: absolute;
+  inset: 0;
+}
+.hg-scene-canvas {
+  display: block;
+}
+
+/* ---------- top bar (same recipe as the approach screen's) ---------- */
+.hg-top {
+  position: absolute;
+  z-index: 60;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: clamp(8px, 1.6vh, 14px) clamp(8px, 1.6vw, 20px) 0;
+  padding: 10px clamp(10px, 1.4vw, 18px);
+  border-radius: 14px;
+  background: rgba(9, 15, 34, 0.82);
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.hg-crumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.hg-wordmark {
+  font-size: 17px;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+.hg-wordmark:hover {
+  color: var(--teal);
+}
+.hg-slash {
+  color: var(--ink-dim);
+}
+.hg-crumb-now {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.hg-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+/* ---------- loadout panel ---------- */
+.hg-panel {
+  position: absolute;
+  z-index: 50;
+  top: clamp(68px, 10vh, 92px);
+  right: clamp(10px, 2vw, 24px);
+  bottom: clamp(10px, 2.4vh, 24px);
+  width: min(296px, calc(100% - 20px));
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+/* lighter than the shared Panel default — the pilot behind it is the point
+   of this screen, the panel should feel like glass over it, not a wall */
+.hg .hg-panel {
+  background: rgba(8, 13, 30, 0.58);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* ---------- tabs ---------- */
+.hg-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 3px;
+  margin-bottom: 14px;
+  border-radius: 999px;
+  background: rgba(120, 140, 200, 0.12);
+}
+.hg-tab {
+  flex: 1;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 10px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.hg-tab.is-active {
+  background: rgba(94, 234, 212, 0.18);
+  color: var(--teal);
+}
+
+/* ---------- card list ---------- */
+.hg-list {
+  display: grid;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+.hg-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  text-align: left;
+  border-radius: 14px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(10, 18, 44, 0.5);
+  color: var(--ink);
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+.hg-card:hover {
+  border-color: rgba(190, 210, 255, 0.4);
+}
+.hg-card--equipped {
+  border-color: rgba(94, 234, 212, 0.55);
+  background: rgba(94, 234, 212, 0.08);
+  animation: hg-neon-pulse 2.4s ease-in-out infinite;
+}
+.hg-card--selected {
+  border-color: rgba(94, 234, 212, 0.55);
+  animation: hg-neon-pulse 2.4s ease-in-out infinite;
+}
+@keyframes hg-neon-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.25), 0 0 20px rgba(94, 234, 212, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.45), 0 0 28px rgba(94, 234, 212, 0.18);
+  }
+}
+.hg-card--locked {
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.06);
+}
+.hg-card--skeleton {
+  height: 64px;
+  border-color: var(--glass-edge);
+  background: linear-gradient(100deg, rgba(120, 140, 200, 0.08) 30%, rgba(120, 140, 200, 0.18) 50%, rgba(120, 140, 200, 0.08) 70%);
+  background-size: 220% 100%;
+  animation: hg-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes hg-shimmer {
+  from {
+    background-position: 160% 0;
+  }
+  to {
+    background-position: -60% 0;
+  }
+}
+
+.hg-card-tile {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(150, 170, 220, 0.14);
+  color: var(--ink-soft);
+}
+.hg-card--equipped .hg-card-tile,
+.hg-card--selected .hg-card-tile {
+  background: rgba(94, 234, 212, 0.18);
+  color: var(--teal);
+}
+.hg-card--locked .hg-card-tile {
+  background: rgba(251, 191, 36, 0.14);
+  color: var(--warn);
+}
+
+/* explorer cards get a bigger portrait tile instead of the small icon glyph,
+   so picking a person reads as its own kind of choice, not another setting */
+.hg-card--portrait {
+  padding: 8px 12px;
+}
+.hg-card--portrait .hg-card-tile {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: rgba(150, 170, 220, 0.1);
+  overflow: hidden;
+}
+.hg-card--portrait.hg-card--equipped .hg-card-tile,
+.hg-card--portrait.hg-card--selected .hg-card-tile {
+  background: rgba(94, 234, 212, 0.12);
+}
+.hg-portrait {
+  display: block;
+}
+
+/* ---------- character info block ---------- */
+.hg-charinfo {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background: rgba(150, 170, 220, 0.08);
+  border: 1px solid var(--glass-edge);
+}
+.hg-charinfo-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.hg-charinfo-tagline {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.hg-charinfo-sub {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* ---------- prev/next browser ---------- */
+.hg-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+.hg-nav-arrow {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(150, 170, 220, 0.1);
+  color: var(--ink-soft);
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+.hg-nav-arrow:hover {
+  border-color: rgba(94, 234, 212, 0.45);
+  color: var(--teal);
+  background: rgba(94, 234, 212, 0.1);
+}
+.hg-nav-count {
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  letter-spacing: 0.03em;
+}
+
+.hg-card-body {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.hg-card-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.hg-card-lock {
+  color: var(--warn);
+}
+.hg-badge {
+  justify-self: start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #04201c;
+  background: var(--teal);
+}
+.hg-card-unlock {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.hg-card-unlock strong {
+  color: var(--warn);
+}
+.hg-card-subtitle {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.hg-card-check {
+  flex: none;
+  color: var(--teal);
+}
+
+.hg-error {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: #fb7185;
+}
+
+.hg-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.hg-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- toast ---------- */
+.hg-toast {
+  position: absolute;
+  z-index: 80;
+  left: 50%;
+  top: 78px;
+  max-width: calc(100% - 28px);
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: rgba(9, 15, 38, 0.92);
+  border: 1px solid var(--glass-edge);
+  color: var(--ink);
+  opacity: 0;
+  transform: translate(-50%, -8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+}
+.hg-toast.is-on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- small screens ---------- */
+@media (max-width: 720px) {
+  .hg-crumb-now {
+    font-size: 15px;
+  }
+  .hg-panel {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 58dvh;
+    border-radius: 18px 18px 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hg-card,
+  .hg-toast {
+    transition-duration: 0.01s;
+  }
+  .hg-card--skeleton,
+  .hg-card--equipped,
+  .hg-card--selected {
+    animation: none;
+  }
+}

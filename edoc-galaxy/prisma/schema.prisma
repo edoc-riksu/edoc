@@ -15,6 +15,10 @@ model User {
   // real accounts can take over that identity once sign-in is wired up.
   pilotCallsign String     @unique
   avatar        String?    @db.Text
+  // Hangar loadout — cosmetic only, never affects judging/scoring.
+  // "vega" | "taro" for explorer, "base" | "starfarer" for suit.
+  explorer      String     @default("vega")
+  suit          String     @default("base")
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   progress      Progress[]
