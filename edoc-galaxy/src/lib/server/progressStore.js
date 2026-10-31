@@ -97,15 +97,98 @@ export async function hasCompletedAnyModule(userId) {
   return false;
 }
 
+/**
+ * Whether each module is locked for this player - plan Day 22. A module
+ * unlocks once the previous module on the same planet (by order) is fully
+ * complete; the first module on each planet is always unlocked. This is
+ * display-only progression, not an access gate - practice is never locked
+ * (product spec rule), so nothing here stops a request to play or submit
+ * any encounter directly regardless of this flag.
+ */
+export async function getModuleLockState(userId) {
+  const modules = await db.module.findMany({
+    orderBy: [{ planetId: "asc" }, { order: "asc" }],
+    include: { encounters: { select: { id: true } } }
+  });
+
+  const solved = userId
+    ? new Set(
+        (
+          await db.attempt.findMany({
+            where: { userId, verdict: "ACCEPTED" },
+            select: { encounterId: true },
+            distinct: ["encounterId"]
+          })
+        ).map((a) => a.encounterId)
+      )
+    : new Set();
+
+  const isComplete = (m) => m.encounters.length > 0 && m.encounters.every((e) => solved.has(e.id));
+
+  const lockBySlug = new Map();
+  let previousInPlanet = null;
+  let previousPlanetId = null;
+  for (const m of modules) {
+    if (m.planetId !== previousPlanetId) {
+      lockBySlug.set(m.slug, false);
+      previousPlanetId = m.planetId;
+    } else {
+      lockBySlug.set(m.slug, !isComplete(previousInPlanet));
+    }
+    previousInPlanet = m;
+  }
+  return lockBySlug;
+}
+
+/**
+ * Per-concept mastery across all seeded encounters - plan Day 23. `mastery`
+ * is just solved/total for encounters tagged with that concept; concepts
+ * come from real encounter data (Encounter.concepts), never invented ones.
+ */
+export async function getConceptMastery(userId) {
+  const encounters = await db.encounter.findMany({ select: { id: true, concepts: true } });
+
+  const solved = new Set(
+    (
+      await db.attempt.findMany({
+        where: { userId, verdict: "ACCEPTED" },
+        select: { encounterId: true },
+        distinct: ["encounterId"]
+      })
+    ).map((a) => a.encounterId)
+  );
+
+  const byConcept = new Map();
+  for (const e of encounters) {
+    for (const concept of e.concepts) {
+      const entry = byConcept.get(concept) || { total: 0, solved: 0 };
+      entry.total += 1;
+      if (solved.has(e.id)) entry.solved += 1;
+      byConcept.set(concept, entry);
+    }
+  }
+
+  return Array.from(byConcept.entries())
+    .map(([concept, { total, solved: solvedCount }]) => ({
+      concept,
+      solved: solvedCount,
+      total,
+      mastery: total === 0 ? 0 : Math.round((solvedCount / total) * 100) / 100
+    }))
+    .sort((a, b) => b.mastery - a.mastery || a.concept.localeCompare(b.concept));
+}
+
 /** Real numbers for the pilot profile screen - plan Day 18. */
 export async function getProfileStats(userId) {
-  const [totalAttempts, allAttempts, solvedGroups, progress] = await Promise.all([
+  const [totalAttempts, allAttempts, solvedGroups, progress, concepts, hintsUsedSum] = await Promise.all([
     db.attempt.count({ where: { userId } }),
     // Ordered oldest-first per encounter so the first entry seen for each
     // encounterId below is that encounter's actual first attempt.
     db.attempt.findMany({ where: { userId }, select: { encounterId: true, verdict: true }, orderBy: { createdAt: "asc" } }),
     db.attempt.findMany({ where: { userId, verdict: "ACCEPTED" }, select: { encounterId: true }, distinct: ["encounterId"] }),
-    db.progress.findMany({ where: { userId }, select: { sectorId: true, level: true } })
+    db.progress.findMany({ where: { userId }, select: { sectorId: true, level: true } }),
+    getConceptMastery(userId),
+    db.attempt.aggregate({ where: { userId }, _sum: { hintsUsed: true } })
   ]);
 
   const encountersSolved = solvedGroups.length;
@@ -123,6 +206,8 @@ export async function getProfileStats(userId) {
     totalAttempts,
     encountersSolved,
     firstAttemptRate: attemptedCount === 0 ? null : Math.round((firstTryAccepted / attemptedCount) * 100) / 100,
-    planets: progress.map((p) => ({ planetId: p.sectorId, level: p.level }))
+    planets: progress.map((p) => ({ planetId: p.sectorId, level: p.level })),
+    concepts,
+    hintsUsed: hintsUsedSum._sum.hintsUsed ?? 0
   };
 }

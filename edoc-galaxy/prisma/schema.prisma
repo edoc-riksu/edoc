@@ -99,6 +99,7 @@ model Attempt {
   scoreEarned Int
   scoreTotal  Int
   runtimeMs   Int
+  hintsUsed   Int      @default(0) @db.SmallInt
   createdAt   DateTime @default(now())
 
   @@index([userId, encounterId])

@@ -1,17 +1,17 @@
 import { notFound } from "next/navigation";
 import LandingScreen from "../../../../screens/landing/LandingScreen";
-import { APPROACH } from "../../../../data/approach";
+import { summarizeApproach } from "../../../../lib/server/approachData";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
-  const a = APPROACH[id];
+  const a = await summarizeApproach(id);
   return { title: a ? `Landing on ${a.name} · edoc` : "edoc" };
 }
 
 /** ?hull=NN is the hull the pilot arrives with (0 to 100). It decides how rough the landing is. */
 export default async function LandingPage({ params, searchParams }) {
   const { id } = await params;
-  const a = APPROACH[id];
+  const a = await summarizeApproach(id);
   if (!a) notFound();
   const q = Number((await searchParams)?.hull);
   const hull = Number.isFinite(q) ? Math.min(100, Math.max(0, Math.round(q))) : 100;

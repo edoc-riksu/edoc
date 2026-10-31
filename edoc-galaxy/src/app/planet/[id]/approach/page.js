@@ -1,17 +1,13 @@
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import ApproachScreen from "../../../../screens/approach/ApproachScreen";
-import { APPROACH } from "../../../../data/approach";
+import { loadApproach, summarizeApproach } from "../../../../lib/server/approachData";
 import { db } from "../../../../lib/db";
 import { readSessionToken, SESSION_COOKIE_NAME } from "../../../../lib/server/sessionToken";
 
-export async function generateStaticParams() {
-  return Object.keys(APPROACH).map((id) => ({ id }));
-}
-
 export async function generateMetadata({ params }) {
   const { id } = await params;
-  const a = APPROACH[id];
+  const a = await summarizeApproach(id);
   return { title: a ? `Approach to ${a.name} · edoc` : "edoc" };
 }
 
@@ -41,7 +37,7 @@ async function firstUnsolvedIndex(encounters) {
 
 export default async function ApproachPage({ params, searchParams }) {
   const { id } = await params;
-  const a = APPROACH[id];
+  const a = await loadApproach(id);
   if (!a) notFound();
   const q = Number((await searchParams)?.e);
   const start = Number.isFinite(q) && q >= 1 ? q - 1 : await firstUnsolvedIndex(a.encounters);

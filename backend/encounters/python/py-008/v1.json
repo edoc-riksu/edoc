@@ -1,0 +1,73 @@
+{
+  "id": "py-008",
+  "version": 1,
+  "language": "python",
+  "title": "Digit Sum",
+  "difficulty": "medium",
+  "module": "python-basics",
+  "order": 8,
+  "concepts": ["arithmetic", "loops", "input-output"],
+  "problem": "Given a non-negative integer N on a single line of input, print the sum of its digits. For example, for 4096 the answer is 4 + 0 + 9 + 6 = 19.",
+  "starter_code": "# Read a non-negative integer N.\n# Print the sum of its digits.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "123",
+        "expected_output": "6",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "4096",
+        "expected_output": "19",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "0",
+        "expected_output": "0",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "7",
+        "expected_output": "7",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "1000000",
+        "expected_output": "1",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "99999",
+        "expected_output": "45",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "908070",
+        "expected_output": "24",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Think about how to pull a number apart one digit at a time, and when to stop.",
+    "2": "In a while loop, n % 10 gives the last digit and n // 10 drops it. Add the last digit each time until n reaches 0. Reading the input as text and adding int() of each character works too.",
+    "3": "print(sum(int(d) for d in input().strip()))"
+  },
+
+  "failure_explanation": "Use whole-number arithmetic: n % 10 is the last digit and n // 10 removes it (a single / gives a decimal number, so the digits come out wrong). Keep going until no digits are left, and check that a single-digit number and zero still give the right sum."
+}

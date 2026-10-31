@@ -84,6 +84,15 @@
 .hd-body > :last-child {
   margin-bottom: 0;
 }
+.hd-note {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-dim, var(--ink-soft));
+  opacity: 0.85;
+}
 .hd-meta {
   display: flex;
   flex-wrap: wrap;
@@ -135,5 +144,30 @@
 @media (prefers-reduced-motion: reduce) {
   .hd-veil {
     display: none;
+  }
+}
+
+/* A short landscape screen (a phone on its side): the card moves to the right and tightens, so the ship stays in view. */
+@media (max-height: 480px) and (min-aspect-ratio: 3/2) {
+  .hd-card {
+    left: auto;
+    right: 16px;
+    bottom: 12px;
+    width: min(440px, 56vw);
+    max-height: calc(100dvh - 24px);
+    transform: none;
+    padding: 14px 18px 14px;
+    gap: 8px;
+    animation-name: hd-rise-side;
+  }
+  .hd-body {
+    font-size: 14px;
+    padding: 9px 12px;
+  }
+  @keyframes hd-rise-side {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
   }
 }

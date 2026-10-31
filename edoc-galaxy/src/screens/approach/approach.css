@@ -39,6 +39,15 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.2s ease, visibility 0s linear 0s;
+}
+
+/* While the console is open it has its own top bar (back, hull, attempt). Two stacked bars read as a glitch. */
+.ap-top.is-away {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0s linear 0.2s;
 }
 .ap-crumb {
   display: flex;
@@ -123,6 +132,7 @@
   bottom: clamp(10px, 2.4vh, 26px);
   width: min(468px, calc(100% - 24px));
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   gap: 8px;
   padding: 20px 26px 16px;
@@ -165,6 +175,8 @@
 }
 .ap-title {
   margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   font-family: var(--display);
   font-size: clamp(24px, 3.1vw, 34px);
   font-weight: 600;
@@ -508,4 +520,67 @@
 @keyframes ap-hit {
   from { opacity: 1; }
   to { opacity: 0; }
+}
+
+/* A result scene (victory or defeat) covers the cockpit and the console. */
+.ap-result {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+}
+
+/* ---------- polish: small screens and touch ---------- */
+
+/* On a phone the bar is tight: keep just the planet's name (the full phrase stays for screen readers). */
+@media (max-width: 520px) {
+  .ap-pre {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* A finger needs about 44px. The look stays the same; the targets grow. */
+@media (max-width: 360px) {
+  .ap-card {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .ap-title {
+    font-size: 22px;
+    letter-spacing: 0.01em;
+  }
+  .ap-actions {
+    gap: 8px;
+  }
+  .ap-actions .ui-btn {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+@media (pointer: coarse) {
+  .ap-step {
+    width: 44px;
+    height: 44px;
+  }
+  .ap-top .ap-tools button,
+  .ap-top .ap-tools a {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .ap-crumb-link {
+    padding: 12px 6px;
+    margin: -12px -6px;
+  }
+  .ap-concept {
+    position: relative;
+  }
+  .ap-concept::after {
+    content: "";
+    position: absolute;
+    inset: -14px -10px;
+  }
 }

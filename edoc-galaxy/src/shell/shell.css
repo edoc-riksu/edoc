@@ -22,6 +22,14 @@
   color: var(--ink);
   text-decoration: none;
 }
+@media (pointer: coarse) {
+  /* a 44px touch target around the wordmark; the negative margin keeps the bar looking the same */
+  .shell-wordmark {
+    display: inline-block;
+    padding: 12px 8px;
+    margin: -12px -8px;
+  }
+}
 .shell-crumb {
   color: var(--ink-dim);
 }

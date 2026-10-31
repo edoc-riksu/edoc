@@ -143,3 +143,9 @@
     animation: none;
   }
 }
+@media (pointer: coarse) {
+  /* a thumb needs 44px, even in short landscape where the button shrinks */
+  .ld-skip.ui-btn {
+    min-height: 44px;
+  }
+}

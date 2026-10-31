@@ -1,0 +1,73 @@
+{
+  "id": "py-011",
+  "version": 1,
+  "language": "python",
+  "title": "Second Largest",
+  "difficulty": "hard",
+  "module": "python-basics",
+  "order": 11,
+  "concepts": ["conditionals", "loops", "input-output"],
+  "problem": "The first line of input is a positive integer N. The second line holds N integers separated by spaces. Print the second largest distinct value: the largest value that is smaller than the maximum. If there is no such value, print \"None\". For example, in 5 9 9 3 the largest is 9 and the second largest distinct value is 5.",
+  "starter_code": "# The first line is N, the count of numbers.\n# The second line holds N integers separated by spaces.\n# Print the largest value that is smaller than the maximum,\n# or \"None\" if there isn't one.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "4\n5 9 9 3",
+        "expected_output": "5",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "3\n7 7 7",
+        "expected_output": "None",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1\n42",
+        "expected_output": "None",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "5\n-4 -9 -1 -1 -6",
+        "expected_output": "-4",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "6\n3 8 8 8 2 6",
+        "expected_output": "6",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "2\n10 20",
+        "expected_output": "10",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "7\n1 2 3 4 5 6 7",
+        "expected_output": "6",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Repeats of the largest value do not count as a second largest. Think about removing repeats first.",
+    "2": "Turn the numbers into a set to drop repeats, then sort it. If only one distinct value is left, the answer is None; otherwise it is the second value from the top.",
+    "3": "input()\nvalues = sorted(set(map(int, input().split())))\nprint(values[-2] if len(values) > 1 else 'None')"
+  },
+
+  "failure_explanation": "The second largest must be strictly smaller than the largest, so repeats of the maximum have to be skipped: taking the second item of a sorted list picks the maximum again when it appears twice. Print None when only one distinct value exists, including a list with a single number, and compare the values as numbers so negative numbers work too."
+}

@@ -5,6 +5,7 @@
   "title": "Sum of Two Integers",
   "difficulty": "easy",
   "module": "python-basics",
+  "order": 1,
   "concepts": ["input-output", "arithmetic"],
   "problem": "Given two integers on a single line of standard input, separated by a space, print their sum.",
   "starter_code": "# Read two integers from a single line of input, separated by a space.\n# Print their sum.\n\n# Write your code here\n",

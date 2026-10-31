@@ -7,16 +7,23 @@ wiring up the console UI, not for testing actual scoring logic.
 Run it on a different port so it can sit alongside the real backend:
 
     uvicorn app.mock_main:app --reload --port 8001
+
+To see a defeat (wrong answer, with the concept and explanation), submit code
+containing the text "#mock-fail". Anything else is accepted.
 """
 
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, HTTPException, Path
+from fastapi import FastAPI, HTTPException, Path, Query
 
 from app.api.encounters import ENCOUNTER_ID_PATTERN
+from app.api.hints import HintOutOfOrderError, hint_for
 from app.core.config import get_settings
-from app.schemas.encounter import EncounterPublic
+from app.judge.verdicts import Verdict
+from app.schemas.encounter import EncounterList, EncounterPublic, EncounterSummary
+from app.schemas.hint import HintRequest, HintResponse
 from app.schemas.submission import (
+    Defeat,
     ExecutionMeta,
     RunRequest,
     RunResponse,
@@ -26,7 +33,9 @@ from app.schemas.submission import (
     SubmissionResult,
     TestResult,
 )
+from app.services.concepts import ConceptInfo, load_concepts
 from app.services.encounter_service import EncounterNotFoundError, EncounterService
+from app.services.scoring_service import rate_submission
 
 app = FastAPI(
     title="edoc backend (MOCK - no Piston required)",
@@ -45,11 +54,21 @@ app.add_middleware(
 )
 
 _encounter_service = EncounterService(get_settings().encounters_dir)
+_concepts = load_concepts(get_settings().encounters_dir)
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "mode": "mock"}
+
+
+@app.get("/api/v1/encounters", response_model=EncounterList)
+def list_encounters(
+    module: str | None = Query(default=None, pattern=r"^[a-z0-9-]{1,64}$"),
+    language: str | None = Query(default=None, pattern=r"^[a-z]{1,32}$"),
+) -> EncounterList:
+    found = _encounter_service.list_encounters(module=module, language=language)
+    return EncounterList(encounters=[EncounterSummary.from_encounter(e) for e in found])
 
 
 @app.get("/api/v1/encounters/{encounter_id}", response_model=EncounterPublic)
@@ -59,6 +78,19 @@ def get_encounter(encounter_id: str = Path(pattern=ENCOUNTER_ID_PATTERN)) -> Enc
     except EncounterNotFoundError:
         raise HTTPException(status_code=404, detail="Encounter not found")
     return EncounterPublic.from_encounter(encounter)
+
+
+@app.post("/api/v1/encounters/{encounter_id}/hints", response_model=HintResponse)
+def request_hint(body: HintRequest, encounter_id: str = Path(pattern=ENCOUNTER_ID_PATTERN)) -> HintResponse:
+    # Real hint text and the real order rule: neither needs Piston.
+    try:
+        encounter = _encounter_service.get(encounter_id)
+    except EncounterNotFoundError:
+        raise HTTPException(status_code=404, detail="Encounter not found")
+    try:
+        return hint_for(encounter, body)
+    except HintOutOfOrderError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
 
 
 @app.post("/api/v1/executions/run", response_model=RunResponse)
@@ -85,14 +117,47 @@ def submit_code(body: SubmissionRequest) -> SubmissionResult:
     except EncounterNotFoundError:
         raise HTTPException(status_code=404, detail="Encounter not found")
 
-    all_tests = encounter.tests.sample + encounter.tests.hidden
-    total = sum(t.points for t in all_tests)
+    # Mirrors the real service: Submit judges the hidden tests only.
+    tests = encounter.tests.hidden
+    total = sum(t.points for t in tests)
+
+    if "#mock-fail" in body.code:
+        concept = _concepts.get(encounter.primary_concept) or ConceptInfo(
+            id=encounter.primary_concept, name=encounter.primary_concept, note=""
+        )
+        return SubmissionResult(
+            submission_id=str(uuid.uuid4()),
+            encounter_id=body.encounter_id,
+            verdict="WRONG_ANSWER",
+            score=ScoreBreakdown(earned=total // 2, total=total),
+            tests=[TestResult(test_id=t.id, passed=i < len(tests) // 2) for i, t in enumerate(tests)],
+            execution=ExecutionMeta(runtime_ms=42),
+            attempt_number=body.attempt_number,
+            first_attempt_clear=False,
+            elapsed_ms=body.elapsed_ms,
+            rating=rate_submission(
+                verdict=Verdict.WRONG_ANSWER,
+                attempt_number=body.attempt_number,
+                elapsed_ms=body.elapsed_ms,
+                difficulty=encounter.difficulty,
+            ),
+            defeat=Defeat(concept=concept, explanation=encounter.failure_explanation),
+        )
 
     return SubmissionResult(
         submission_id=str(uuid.uuid4()),
         encounter_id=body.encounter_id,
         verdict="ACCEPTED",
         score=ScoreBreakdown(earned=total, total=total),
-        tests=[TestResult(test_id=t.id, passed=True) for t in all_tests],
+        tests=[TestResult(test_id=t.id, passed=True) for t in tests],
         execution=ExecutionMeta(runtime_ms=42),
+        attempt_number=body.attempt_number,
+        first_attempt_clear=body.attempt_number == 1,
+        elapsed_ms=body.elapsed_ms,
+        rating=rate_submission(
+            verdict=Verdict.ACCEPTED,
+            attempt_number=body.attempt_number,
+            elapsed_ms=body.elapsed_ms,
+            difficulty=encounter.difficulty,
+        ),
     )

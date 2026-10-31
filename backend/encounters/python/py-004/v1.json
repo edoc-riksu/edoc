@@ -1,0 +1,73 @@
+{
+  "id": "py-004",
+  "version": 1,
+  "language": "python",
+  "title": "Sum of N Numbers",
+  "difficulty": "easy",
+  "module": "python-basics",
+  "order": 4,
+  "concepts": ["loops", "arithmetic", "input-output"],
+  "problem": "The first line of input is a positive integer N. The second line has N integers separated by spaces. Print their sum.",
+  "starter_code": "# Read N, then read N integers from the next line.\n# Print their sum.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "3\n1 2 3",
+        "expected_output": "6",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "1\n10",
+        "expected_output": "10",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "4\n0 0 0 0",
+        "expected_output": "0",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "5\n-1 -2 -3 -4 -5",
+        "expected_output": "-15",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "2\n100 200",
+        "expected_output": "300",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "6\n1 -1 2 -2 3 -3",
+        "expected_output": "0",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "5\n10 20 30 40 50",
+        "expected_output": "150",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Think about reading N first, then a separate line holding N numbers together.",
+    "2": "input().split() on the second line gives you a list of strings - convert each to int, then use sum() or a loop with a running total.",
+    "3": "n = int(input()); nums = map(int, input().split()); print(sum(nums))"
+  },
+
+  "failure_explanation": "N on its own line and the numbers on the next line are two separate input() calls - don't try to read them all from one line. Also make sure every value is converted to int before adding; summing strings concatenates them instead."
+}

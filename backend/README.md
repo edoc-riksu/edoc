@@ -45,7 +45,9 @@ Isolated Python execution
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/health` | Liveness check |
+| GET | `/api/v1/encounters?module=` | Encounter summaries in play order (id, title, difficulty, order, main concept) - no problem text or tests |
 | GET | `/api/v1/encounters/{id}` | Public encounter view (prompt, starter code, sample tests only — never hidden tests, hints, or the failure explanation) |
+| POST | `/api/v1/encounters/{id}/hints` | One hint level (1 nudge, 2 approach, 3 walkthrough), asked in order. Body `{level, highest_level_asked}`; 409 if a level is skipped |
 | POST | `/api/v1/executions/run` | RUN — code against sample tests only, unscored |
 | POST | `/api/v1/submissions` | SUBMIT — code against sample + hidden tests, scored, authoritative |
 
@@ -59,6 +61,8 @@ against the `Encounter` Pydantic model in `app/schemas/encounter.py`. Hidden
 test inputs/outputs, hints, and the failure explanation are stripped before
 anything is returned to a client — enforced by `EncounterPublic`, a
 separate model the API is typed to return instead of `Encounter`.
+
+Writing a new encounter? See [AUTHORING.md](AUTHORING.md).
 
 ## Verdicts
 
@@ -96,9 +100,11 @@ codebase:
 - `RunResponse` stdout/stderr are truncated to `run_output_char_limit`
   (4,000 chars) before being returned - truncation happens only on the
   response, never before scoring, so it can't affect correctness.
-- Hidden test inputs/outputs and the failure explanation are never
-  serialized into any API response (see `EncounterPublic`,
-  `SubmissionResult`, `RunResponse`).
+- Hidden test inputs/outputs and hints are never serialized into any API
+  response (see `EncounterPublic`, `SubmissionResult`, `RunResponse`). The
+  failure explanation is sent only in a submission's `defeat` object, and
+  only when the player's code was wrong (never for an accepted run or a
+  `SYSTEM_ERROR`).
 
 **Not claimed:** this is not a statement that the system is
 production-secure. Piston's own sandbox (isolate/cgroups, run as configured
@@ -189,6 +195,94 @@ Earlier in this project, Docker wasn't available and the public Piston
 demo API had gone whitelist-only, so this path was implemented and unit
 tested against mocked responses built from Piston's real documented API
 shape, but not run live. It has since been verified for real, as above.
+
+## Sandbox limits (plan Day 16)
+
+`pytest -m integration` includes `tests/integration/test_sandbox_limits.py`,
+which sends misbehaving code through the real service and checks that every
+case ends in a normal answer, never a hang or a crash, and never in
+`ACCEPTED`.
+
+**Run on 2026-10-28** in a GitHub Codespace against the stock Piston
+image with Python 3.10.0 installed, backend at `main` before PR #50. 9 of the
+10 integration tests passed; the one failure is explained below.
+
+| Case | What the test sends | Result |
+| --- | --- | --- |
+| Infinite loop, Submit | `while True: pass` | Stopped. `TIME_LIMIT_EXCEEDED`, score 0, about 11 s wall time for the 5 hidden tests (limit in the test: 30 s). |
+| Infinite loop, Run | the same | Returned instead of hanging; no test passed. |
+| Memory hog | asks for about 2 GB (limit 256 MB) | Stopped. The test accepts `RUNTIME_ERROR` or `TIME_LIMIT_EXCEEDED`, because Piston can report a memory kill as a timeout. |
+| Huge output | prints 500,000 characters | Stopped. Response stayed within the output limit plus slack. |
+| Network | `urlopen('http://example.com')` | Did not end in `ACCEPTED`. The test accepts any failure verdict, so it shows the call failed, not why (blocked network or no DNS). |
+| Service afterwards | health check and a correct solution | Still answers; `ACCEPTED`. |
+
+The failure: `test_infinite_loop_is_stopped_and_reported_as_time_limit`
+asserts that the response has a `defeat` field, which was added by PR #50
+(Day 19) and was not on `main` yet. The sandbox behaved correctly in that
+case (the log shows `verdict=TIME_LIMIT_EXCEEDED score=0/100`). Re-run it on
+a checkout that includes #50 to see all 10 pass.
+
+**Not covered:** this was a codespace, not the staging server, so it does not
+show that staging is deployed or that its Docker host allows the same limits.
+Also not tested: fork bombs, writing to disk, many players at once (plan
+Day 25 load test), and whether the 256 MB memory limit is enforced when the
+code allocates gradually instead of in one go.
+
+**Setup notes from this run:**
+
+- Port 2000 was already in use in the codespace, so Piston ran on 2001 and
+  the tests were run with `PISTON_BASE_URL=http://localhost:2001`.
+- Python 3.14 (the codespace default) cannot install the pinned
+  `pydantic-core`; a Python 3.12 virtual environment worked.
+
+## Scoring is server-side only (plan Day 26)
+
+Checked on 2026-10-31 against `main` at `ec258f1`, by reading every path in
+`edoc-galaxy/` that can show or save a result.
+
+**Confirmed:**
+
+- Verdict, score and rating are computed only in this service
+  (`app/services/judge_service.py`, `scoring_service.py`). The browser never
+  sees hidden tests, so it could not compute them.
+- Saved results come only from `edoc-galaxy/src/app/api/approach/submissions/route.js`.
+  It calls `POST /api/v1/submissions` itself, server to server, and stores
+  the verdict and score from that response. The browser sends only the
+  encounter id and the code.
+- Everything derived from results (module completion, unlocks, concept
+  mastery, profile stats, resume state in `src/lib/server/progressStore.js`
+  and the `api/` routes) reads those saved `Attempt` rows. No route lets the
+  browser write progress or a verdict directly.
+- Run results are never saved. The in-browser debug runner
+  (`src/lib/pyDebugRunner.js`) never contacts the judge and never changes
+  hull or progress.
+- A browser can call this service's `/api/v1/submissions` directly (CORS
+  allows the site), but nothing it gets back is saved, so it cannot award
+  itself anything.
+
+**Gaps (not scoring bugs, but they need an owner):**
+
+1. **Attempts and time are not passed in** (Backend 2). The submission
+   proxy sends only `encounter_id` and `code`, so every submission is judged
+   as `attempt_number` 1 with no `elapsed_ms`. That makes
+   `first_attempt_clear` and the rating's first-try star wrong from the
+   second try on. The proxy should count the player's saved attempts for
+   the encounter, pass `attempt_number` and the console's `elapsed_ms`, and
+   save `rating` with the attempt.
+2. **Hints, the explanation and the worked solution ship with the page**
+   (Frontend 1 and 2). `src/data/approach.js` holds them, and
+   `src/lib/server/approachData.js` passes them to the console, so the
+   walkthrough is in the browser before the player asks for any hint. Now
+   that `POST /api/v1/encounters/{id}/hints` is live, the console should ask
+   for each hint there (through a proxy that knows the player and passes
+   `highest_level_asked`), and the defeat screen should show the result's
+   `defeat.explanation` instead of the built-in text.
+3. **Hull is tracked in the browser** (Frontend 2). `CodeConsole.js` takes
+   `HULL_DAMAGE` off on any non-accepted verdict and adds `HULL_REPAIR` on
+   an accepted one. It is driven only by the server's verdict, which is what
+   the product rule asks for, but it is not saved, so a reload resets it.
+   Fine for now; if hull ever counts towards progress it has to move to the
+   server.
 
 ## Deferred to Day 2+
 

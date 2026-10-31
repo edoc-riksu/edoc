@@ -67,3 +67,78 @@ Measured directly against `edoc-drab.vercel.app` (staging), given the cross-regi
 | `GET /api/auth/me` (no session, no DB call) | ~0.3s | - |
 
 Cold numbers (first request after a few idle minutes) running up to ~3s are expected and come from section 7's cross-region/compute-wake cost, not a code problem. If warm requests start exceeding ~1-1.5s, that's the signal something regressed - these numbers are the baseline to compare against.
+
+## 9. Staging checked under load (plan Day 26)
+
+Ran 25 concurrent requests against `edoc-drab.vercel.app` for each read route - no errors, but latency rises under concurrency (expected: more parallel serverless instances each paying the cross-region DB cost from section 7, not a bug):
+
+| Route | 1 request (warm) | 25 concurrent |
+| --- | --- | --- |
+| `GET /api/planets` | ~0.5-0.6s | ~2.8-4.4s |
+| `GET /api/modules` | ~0.8s | ~1.2-2.6s |
+
+No 500s or dropped requests at this concurrency. Fine for our current traffic; re-check if it ever climbs past ~50 concurrent real users.
+
+**Real gap found — sign-in/sign-up/submission rate limiting does not hold under concurrent requests.** `rateLimit()` (`edoc-galaxy/src/lib/server/rateLimit.js`) keeps its counters in a plain in-memory `Map`, and its own comment says so: "fine for a single dev process ... a real backend brings its own real rate limiter." Confirmed live on staging:
+
+- 12 sign-in attempts sent **one at a time** (300ms apart): attempts 1-8 got `401`, attempts 9-12 correctly got `429` (limit is 8/10min) - works as intended when requests are sequential.
+- 15 sign-in attempts sent **all at once** (concurrent): **all 15 got `401`, zero got `429`.**
+
+Cause: Vercel can run multiple separate instances of the function side by side under concurrent load, and each instance has its own private memory - so each one counts attempts independently instead of sharing one real count. The same in-memory design backs the submission rate limiter from Day 13, so it almost certainly has the same gap under concurrent submissions.
+
+Not a correctness bug in normal single-user play (confirmed working sequentially), and not urgent today - the plan already schedules the real fix at Week 6 Day 37 ("Cost controls on code execution") and Week 7 Day 43 ("Rate limits and abuse checks"). The real fix is a shared counter all instances read from (e.g. a Redis/Upstash counter, or a Postgres row with an atomic increment) instead of in-memory. Flagging now so it's not forgotten, not fixing it today - fixing it today would be ahead of the plan's own schedule for this.
+
+## 10. Execution service (`backend/`)
+
+The Python service that runs and judges a player's code. It is **not** deployed by Vercel: it needs Docker, and Piston (the sandbox it runs code in) needs a privileged container, which Vercel and most app platforms don't allow. It runs on its own small server; the Vercel site calls it over HTTPS.
+
+**Host: a single Linux VPS running Docker** (Hetzner, DigitalOcean or similar). *Proposed by Backend 1, to be confirmed with Backend 2; replace this line with the final choice, the monthly cost and who owns the account.* Suggested size to start: 2 vCPU and 2 GB RAM or more, Ubuntu LTS. Re-check after the load test on plan Day 25.
+
+```
+Browser / Vercel  --HTTPS-->  Caddy  -->  backend (FastAPI)  -->  Piston (sandbox)
+                              :443         internal only          internal only
+```
+
+Only Caddy is reachable from the internet. Piston and the backend have no published ports. **Never publish Piston's port 2000:** it runs untrusted code and has no authentication.
+
+### One-time setup
+
+1. Create the server and a DNS name that points at its public IP (for example `api-staging.<our-domain>`). With no domain yet, `<ip-with-dashes>.sslip.io` works (for `203.0.113.5` use `203-0-113-5.sslip.io`).
+2. Install Docker (the official convenience script or the Docker apt repository), then allow only SSH and web traffic: `ufw allow 22 && ufw allow 80 && ufw allow 443 && ufw enable`.
+3. Clone the repo and configure it:
+   ```bash
+   git clone https://github.com/edoc-riksu/edoc.git && cd edoc/backend
+   cp staging.env.example .env.staging
+   nano .env.staging     # set EDOC_DOMAIN and CORS_ALLOWED_ORIGINS
+   ```
+   `CORS_ALLOWED_ORIGINS` must contain the exact web app URL(s), with no trailing slash. `CORS_ALLOWED_ORIGIN_REGEX` lets Vercel preview URLs call it; leave it empty to disallow previews.
+4. Start it:
+   ```bash
+   docker compose -f docker-compose.staging.yml --env-file .env.staging up -d --build
+   ```
+5. Install Python into Piston once (it ships with no languages; the package is kept in a volume, so this survives restarts):
+   ```bash
+   docker compose -f docker-compose.staging.yml --env-file .env.staging exec backend \
+     python -c "import httpx; print(httpx.post('http://piston:2000/api/v2/packages', json={'language':'python','version':'3.10.0'}, timeout=300).text)"
+   ```
+6. Point the web app at it. In Vercel, **Settings -> Environment Variables**, set for Preview and Production: `NEXT_PUBLIC_EXECUTION_API_URL` (used by the browser for Run) and `EXECUTION_API_URL` (used by the server for Submit) both to `https://<EDOC_DOMAIN>`. Redeploy so the new values are picked up.
+
+### Check that it works
+
+```bash
+curl https://<EDOC_DOMAIN>/health
+# -> {"status":"ok"}
+
+curl -s https://<EDOC_DOMAIN>/api/v1/submissions -H 'content-type: application/json' \
+  -d '{"encounter_id":"py-001","code":"a, b = map(int, input().split())\nprint(a + b)"}'
+# -> "verdict":"ACCEPTED" with "score":{"earned":100,"total":100}
+```
+
+Then open the web app, run code in the console and submit once. If `/health` works but a submission returns `SYSTEM_ERROR`, Python isn't installed in Piston yet (step 5). If the browser console shows a CORS error, the site's URL isn't in `CORS_ALLOWED_ORIGINS`.
+
+### Updating and operating
+
+- Deploy a new version: `git pull && docker compose -f docker-compose.staging.yml --env-file .env.staging up -d --build`.
+- Logs: `docker compose -f docker-compose.staging.yml logs -f backend`. Logs contain encounter id, verdict and runtime, never the player's code.
+- The service has no login and no rate limiting yet: anyone who can reach the URL can run code. Rate limits and cost controls are Backend 2's work (plan Day 37); until then keep the URL out of public places.
+- Production will be a second server and stack with its own `.env.staging`-style file, following the environments table in `CONTRIBUTING.md`.

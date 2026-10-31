@@ -45,6 +45,11 @@ export const POST = withErrorLogging(async function POST(request) {
     const body = await request.json();
     const encounterId = body?.encounter_id;
     const code = body?.code;
+    // Self-reported by the console's own hint panel, which only ever reveals
+    // 0-3 tiers in order - anything outside that range is bad input, not a
+    // real hint count, so it's clamped rather than trusted as-is.
+    const rawHintsUsed = body?.hints_used;
+    const hintsUsed = Number.isInteger(rawHintsUsed) ? Math.min(3, Math.max(0, rawHintsUsed)) : 0;
 
     if (
         typeof encounterId !== "string" ||
@@ -104,6 +109,7 @@ export const POST = withErrorLogging(async function POST(request) {
                     scoreEarned: result.score.earned,
                     scoreTotal: result.score.total,
                     runtimeMs: result.execution.runtime_ms,
+                    hintsUsed,
                 },
             });
         } catch (error) {
