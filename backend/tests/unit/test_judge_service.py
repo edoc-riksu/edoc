@@ -148,3 +148,30 @@ def test_mock_can_show_a_defeat():
     assert win["verdict"] == "ACCEPTED" and win["first_attempt_clear"] is True and win["defeat"] is None
     assert loss["verdict"] == "WRONG_ANSWER" and loss["defeat"]["concept"]["id"] == "input-output"
     assert loss["attempt_number"] == 2
+
+
+async def test_result_carries_a_rating_apart_from_the_score(encounter, service_factory):
+    fast_first_try = await service_factory(FakeHarness()).judge_submission(
+        encounter=encounter, code="x", attempt_number=1, elapsed_ms=60_000
+    )
+    assert fast_first_try.rating.stars == 3
+    assert fast_first_try.rating.within_par is True
+    assert fast_first_try.score.earned == fast_first_try.score.total
+
+    later_try = await service_factory(FakeHarness()).judge_submission(
+        encounter=encounter, code="x", attempt_number=3
+    )
+    assert later_try.rating.stars == 1
+    assert later_try.rating.within_par is None
+    # Same tests passed, same score: the rating never changes the score.
+    assert later_try.score == fast_first_try.score
+
+    loss = await service_factory(FakeHarness(passing=2)).judge_submission(
+        encounter=encounter, code="x", attempt_number=1, elapsed_ms=10
+    )
+    assert loss.rating.stars == 0
+
+    down = await service_factory(FakeHarness(unavailable=True)).judge_submission(
+        encounter=encounter, code="x"
+    )
+    assert down.rating is None

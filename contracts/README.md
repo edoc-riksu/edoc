@@ -21,9 +21,10 @@ Base URL: `NEXT_PUBLIC_EXECUTION_API_URL` (mock: `http://localhost:8001`, real l
 - **Verdicts** (submission only): `ACCEPTED`, `WRONG_ANSWER`, `RUNTIME_ERROR`, `TIME_LIMIT_EXCEEDED`, `COMPILATION_ERROR`, `SYSTEM_ERROR`. If several tests fail, the worst one wins in this order: `SYSTEM_ERROR`, `COMPILATION_ERROR`, `TIME_LIMIT_EXCEEDED`, `RUNTIME_ERROR`, `WRONG_ANSWER`, `ACCEPTED`.
 - **Encounter id** matches `^[a-z]+-\d{3}$` (for example `py-001`). **Code** is at most 20,000 characters.
 - **Output** `stdout` and `stderr` in a run result are cut to 4,000 characters each.
-- **Attempts and time.** A submission may carry `attempt_number` (which try this is, default 1) and `elapsed_ms`. The service does not count attempts itself; the caller passes the number in and the result repeats it back with `first_attempt_clear` (true only for an accepted first try). Neither changes the score yet.
+- **Attempts and time.** A submission may carry `attempt_number` (which try this is, default 1) and `elapsed_ms`. The service does not count attempts itself; the caller passes the number in and the result repeats it back with `first_attempt_clear` (true only for an accepted first try). Neither changes the score; both feed the rating.
 - **Defeat.** When the player's code was wrong, the result carries `defeat`: the encounter's main concept (`id`, `name`, `note`) and the explanation written for it. It is `null` for an accepted run and when our own system failed. This is the only place the explanation is ever sent.
 - **Score** is `earned` out of `total` points. Sample tests are worth 0, hidden tests carry the points.
+- **Rating** (plan Day 15) is 0 to 3 stars, kept apart from the score. Accepted earns 1 star, plus 1 if `attempt_number` is 1, plus 1 if `elapsed_ms` is within par time for the difficulty (easy 5 min, medium 10 min, hard 20 min). Any wrong verdict earns 0. `within_par` is `null` when `elapsed_ms` was not sent; that costs the time star but is not treated as slow. `rating` is `null` only for `SYSTEM_ERROR`.
 
 ## Errors
 
@@ -67,4 +68,4 @@ Agreed in the review of PR #22 (Frontend 2). Backend 2 still to confirm decision
 
 ## Not covered yet
 
-Attempts, first-attempt rate and time (plan Day 13), the session, and the module list (Backend 2). The submission `submission_id` is generated per request and is not stored yet; saving it is Backend 2's work.
+The session and the module list (Backend 2). Storing `attempt_number`, `elapsed_ms` and `rating` with each attempt is Backend 2's work. The submission `submission_id` is generated per request and is not stored yet; saving it is Backend 2's work.

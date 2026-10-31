@@ -34,6 +34,11 @@
   "attempt_number": 2,
   "first_attempt_clear": false,
   "elapsed_ms": 95000,
+  "rating": {
+    "stars": 0,
+    "par_ms": 300000,
+    "within_par": true
+  },
   "defeat": {
     "concept": {
       "id": "input-output",

@@ -34,6 +34,18 @@ class ScoreBreakdown(BaseModel):
     total: int
 
 
+class Rating(BaseModel):
+    """How well an encounter was cleared, separate from the test score: one
+    star for clearing it, one for clearing it on the first try, one for
+    clearing it within par time. Never changes score.earned or score.total."""
+
+    stars: int = Field(ge=0, le=3)
+    # Par time for the encounter's difficulty (see scoring_service).
+    par_ms: int
+    # None when the caller didn't send elapsed_ms, so time can't be judged.
+    within_par: bool | None
+
+
 class ExecutionMeta(BaseModel):
     runtime_ms: int
 
@@ -59,6 +71,8 @@ class SubmissionResult(BaseModel):
     # counts for the first-attempt rate.
     first_attempt_clear: bool = False
     elapsed_ms: int | None = None
+    # None only when our own system failed (SYSTEM_ERROR): that is not rated.
+    rating: Rating | None = None
     defeat: Defeat | None = None
 
 

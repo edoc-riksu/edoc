@@ -18,6 +18,7 @@ from fastapi import FastAPI, HTTPException, Path, Query
 
 from app.api.encounters import ENCOUNTER_ID_PATTERN
 from app.core.config import get_settings
+from app.judge.verdicts import Verdict
 from app.schemas.encounter import EncounterList, EncounterPublic, EncounterSummary
 from app.schemas.submission import (
     Defeat,
@@ -32,6 +33,7 @@ from app.schemas.submission import (
 )
 from app.services.concepts import ConceptInfo, load_concepts
 from app.services.encounter_service import EncounterNotFoundError, EncounterService
+from app.services.scoring_service import rate_submission
 
 app = FastAPI(
     title="edoc backend (MOCK - no Piston required)",
@@ -118,6 +120,12 @@ def submit_code(body: SubmissionRequest) -> SubmissionResult:
             attempt_number=body.attempt_number,
             first_attempt_clear=False,
             elapsed_ms=body.elapsed_ms,
+            rating=rate_submission(
+                verdict=Verdict.WRONG_ANSWER,
+                attempt_number=body.attempt_number,
+                elapsed_ms=body.elapsed_ms,
+                difficulty=encounter.difficulty,
+            ),
             defeat=Defeat(concept=concept, explanation=encounter.failure_explanation),
         )
 
@@ -131,4 +139,10 @@ def submit_code(body: SubmissionRequest) -> SubmissionResult:
         attempt_number=body.attempt_number,
         first_attempt_clear=body.attempt_number == 1,
         elapsed_ms=body.elapsed_ms,
+        rating=rate_submission(
+            verdict=Verdict.ACCEPTED,
+            attempt_number=body.attempt_number,
+            elapsed_ms=body.elapsed_ms,
+            difficulty=encounter.difficulty,
+        ),
     )

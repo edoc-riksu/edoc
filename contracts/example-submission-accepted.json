@@ -34,5 +34,10 @@
   "attempt_number": 1,
   "first_attempt_clear": true,
   "elapsed_ms": 42000,
+  "rating": {
+    "stars": 3,
+    "par_ms": 300000,
+    "within_par": true
+  },
   "defeat": null
 }
