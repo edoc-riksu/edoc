@@ -227,7 +227,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setSoundEnabled(getSoundPreference());
     setActiveTab("tests");
     setBusy("submit");
-    const res = await submitCode({ encounterId: encounter.id, code });
+    const res = await submitCode({ encounterId: encounter.id, code, hintsUsed: hintsRevealed });
     setBusy(null);
 
     if (!res.ok) {
@@ -237,11 +237,6 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     }
 
     const { verdict, tests: testResults, score, execution } = res.data || {};
-    console.log("SUBMIT DEBUG:", {
-      verdict,
-      hullBefore: hull,
-      response: res.data
-    });
     // SYSTEM_ERROR means the sandbox itself is down — try again, not a loss.
     if (!verdict || verdict === "SYSTEM_ERROR") {
       setResult({ kind: "unavailable" });
@@ -264,7 +259,6 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setResult({ kind: "submit", status: "fail", tests: testResults || [], score, runtimeMs, verdictMessage });
     sfx.denied();
     const nextHull = Math.max(0, hull - HULL_DAMAGE);
-    console.log("HULL DAMAGE:", { hullBefore: hull, nextHull });
     onHullChange(nextHull);
     if (nextHull <= 0) {
       setDefeat({ concept: encounter.concept?.name || "this exercise", reason: verdictMessage });

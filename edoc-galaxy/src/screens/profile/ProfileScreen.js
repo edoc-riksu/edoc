@@ -10,17 +10,17 @@ import { useAuth } from "../../context/AuthContext";
 import { updateProfile } from "../../lib/authService";
 import { resizeImageToDataUrl } from "../../lib/avatarImage";
 import { normalizeCallsign, isValidCallsign, AUTH_MESSAGES } from "../../lib/authValidation";
-import { APPROACH } from "../../data/approach";
+import { conceptFor } from "../../data/concepts";
 import "./profile.css";
 
-// Time coding and hints used aren't tracked anywhere yet (no schema field,
-// no API) — real numbers only for what the backend actually records, rather
-// than a fabricated value for the rest.
+// Time coding still isn't tracked anywhere (no schema field, no API) — real
+// numbers only for what the backend actually records, rather than a
+// fabricated value for the rest.
 const STATS = [
   { label: "Encounters solved", key: "encountersSolved" },
   { label: "First-attempt rate", key: "firstAttemptRate" },
   { label: "Time coding", key: null },
-  { label: "Hints used", key: null }
+  { label: "Hints used", key: "hintsUsed" }
 ];
 
 function formatStat(key, stats) {
@@ -35,19 +35,6 @@ function pilotSince(createdAt) {
   const d = new Date(createdAt);
   if (Number.isNaN(d.getTime())) return null;
   return d.toLocaleDateString(undefined, { month: "short", year: "numeric" });
-}
-
-// Concepts pulled from the real encounter data — not invented. Mastery
-// tracking per concept doesn't exist yet (see delivery plan, week 6), so
-// this just lists what's taught so far rather than faking a score.
-function knownConcepts() {
-  const names = new Set();
-  Object.values(APPROACH).forEach((planet) => {
-    planet.encounters.forEach((e) => {
-      if (e.concept?.name) names.add(e.concept.name);
-    });
-  });
-  return Array.from(names);
 }
 
 export default function ProfileScreen() {
@@ -104,7 +91,7 @@ export default function ProfileScreen() {
 
   if (!user) return null;
   const since = pilotSince(user.createdAt);
-  const concepts = knownConcepts();
+  const concepts = stats?.concepts || [];
 
   const handleAvatarChange = async (ev) => {
     const file = ev.target.files?.[0];
@@ -272,18 +259,23 @@ export default function ProfileScreen() {
         </Panel>
 
         <Panel as="section" size="lg" title="Concept mastery" className="profile-mastery">
-          {concepts.length > 0 ? (
+          {stats === null ? (
+            <p className="t-body">Loading…</p>
+          ) : concepts.length > 0 ? (
             <div className="profile-concepts">
-              {concepts.map((c) => (
-                <span key={c} className="profile-concept-chip">
-                  {c}
-                </span>
-              ))}
+              {concepts.map((c) => {
+                const info = conceptFor(c.concept);
+                const mastered = c.total > 0 && c.solved === c.total;
+                return (
+                  <span key={c.concept} className={`profile-concept-chip ${mastered ? "is-mastered" : ""}`}>
+                    {info.name} · {c.solved}/{c.total}
+                  </span>
+                );
+              })}
             </div>
           ) : (
             <p className="t-body">No concepts taught yet.</p>
           )}
-          <p className="t-small t-muted profile-concepts-note">Mastery per concept starts tracking once attempts are recorded.</p>
         </Panel>
       </div>
     </AppShell>

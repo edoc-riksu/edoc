@@ -193,9 +193,12 @@
   background: rgba(120, 150, 210, 0.1);
   color: var(--ink-soft);
   font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
-.profile-concepts-note {
-  margin: 0;
+.profile-concept-chip.is-mastered {
+  border-color: rgba(94, 234, 212, 0.55);
+  background: rgba(94, 234, 212, 0.08);
+  color: var(--teal);
 }
 
 @media (max-width: 640px) {
