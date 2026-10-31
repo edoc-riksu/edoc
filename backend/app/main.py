@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import encounters, executions, health, submissions
+from app.api import encounters, executions, health, hints, submissions
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.execution.piston_client import PistonClient
@@ -59,5 +59,6 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(encounters.router)
+app.include_router(hints.router)
 app.include_router(executions.router)
 app.include_router(submissions.router)

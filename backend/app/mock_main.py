@@ -17,8 +17,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Path, Query
 
 from app.api.encounters import ENCOUNTER_ID_PATTERN
+from app.api.hints import HintOutOfOrderError, hint_for
 from app.core.config import get_settings
 from app.schemas.encounter import EncounterList, EncounterPublic, EncounterSummary
+from app.schemas.hint import HintRequest, HintResponse
 from app.schemas.submission import (
     Defeat,
     ExecutionMeta,
@@ -74,6 +76,19 @@ def get_encounter(encounter_id: str = Path(pattern=ENCOUNTER_ID_PATTERN)) -> Enc
     except EncounterNotFoundError:
         raise HTTPException(status_code=404, detail="Encounter not found")
     return EncounterPublic.from_encounter(encounter)
+
+
+@app.post("/api/v1/encounters/{encounter_id}/hints", response_model=HintResponse)
+def request_hint(body: HintRequest, encounter_id: str = Path(pattern=ENCOUNTER_ID_PATTERN)) -> HintResponse:
+    # Real hint text and the real order rule: neither needs Piston.
+    try:
+        encounter = _encounter_service.get(encounter_id)
+    except EncounterNotFoundError:
+        raise HTTPException(status_code=404, detail="Encounter not found")
+    try:
+        return hint_for(encounter, body)
+    except HintOutOfOrderError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
 
 
 @app.post("/api/v1/executions/run", response_model=RunResponse)
