@@ -15,7 +15,7 @@ from app.schemas.submission import (
     TestResult,
 )
 from app.services.concepts import ConceptInfo
-from app.services.scoring_service import score_outcomes
+from app.services.scoring_service import rate_submission, score_outcomes
 
 logger = get_logger(__name__)
 
@@ -121,6 +121,12 @@ class JudgeService:
             attempt_number=attempt_number,
             first_attempt_clear=verdict == Verdict.ACCEPTED and attempt_number == 1,
             elapsed_ms=elapsed_ms,
+            rating=rate_submission(
+                verdict=verdict,
+                attempt_number=attempt_number,
+                elapsed_ms=elapsed_ms,
+                difficulty=encounter.difficulty,
+            ),
             defeat=self._defeat_for(encounter, verdict),
         )
 

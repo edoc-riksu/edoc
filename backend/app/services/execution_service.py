@@ -1,3 +1,5 @@
+import time
+
 from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.execution.piston_client import PistonClient, PistonUnavailableError
@@ -33,6 +35,8 @@ class ExecutionService:
         settings = get_settings()
         results: list[RunTestResult] = []
         max_runtime_ms = 0
+        total_runtime_ms = 0
+        started = time.monotonic()
 
         try:
             for test in encounter.tests.sample:
@@ -45,6 +49,7 @@ class ExecutionService:
                     memory_limit_bytes=settings.run_memory_limit_bytes,
                 )
                 max_runtime_ms = max(max_runtime_ms, result.runtime_ms)
+                total_runtime_ms += result.runtime_ms
                 results.append(
                     RunTestResult(
                         test_id=test.id,
@@ -59,6 +64,18 @@ class ExecutionService:
         except PistonUnavailableError as exc:
             logger.error("run request failed, execution backend unavailable: %s", exc)
             raise ExecutionError("Execution backend is currently unavailable") from exc
+
+        # Same cost line as a submission, so every attempt - practice or scored -
+        # leaves one. Never the player's code or their output.
+        logger.info(
+            "run finished: encounter=%s passed=%s/%s runtime_ms=%s cost_runtime_ms=%s wall_ms=%s",
+            encounter.id,
+            sum(r.passed for r in results),
+            len(results),
+            max_runtime_ms,
+            total_runtime_ms,
+            int((time.monotonic() - started) * 1000),
+        )
 
         return RunResponse(
             encounter_id=encounter.id,
