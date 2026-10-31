@@ -1,0 +1,73 @@
+{
+  "id": "py-010",
+  "version": 1,
+  "language": "python",
+  "title": "Prime Check",
+  "difficulty": "medium",
+  "module": "python-basics",
+  "order": 10,
+  "concepts": ["loops", "conditionals", "input-output"],
+  "problem": "Given an integer N (1 <= N <= 1000000) on a single line of input, print \"Prime\" if N is a prime number and \"Not prime\" otherwise. A prime number has exactly two divisors: 1 and itself. For example, 7 is prime, and 9 is not because 9 = 3 x 3.",
+  "starter_code": "# Read an integer N.\n# Print \"Prime\" if N is prime, otherwise \"Not prime\".\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "7",
+        "expected_output": "Prime",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "9",
+        "expected_output": "Not prime",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1",
+        "expected_output": "Not prime",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "2",
+        "expected_output": "Prime",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "25",
+        "expected_output": "Not prime",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "961",
+        "expected_output": "Not prime",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "999983",
+        "expected_output": "Prime",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Think about what makes a number not prime, and which of the smallest numbers are special cases.",
+    "2": "Numbers below 2 are not prime. Otherwise, loop d from 2 while d * d <= N: if N % d == 0 for any d, it is not prime. Testing d * d <= N (rather than stopping just below the square root) makes sure perfect squares are caught, and it is fast enough for large N.",
+    "3": "n = int(input())\nprint('Prime' if n > 1 and all(n % d for d in range(2, int(n ** 0.5) + 1)) else 'Not prime')"
+  },
+
+  "failure_explanation": "A prime has exactly two divisors, so 1 is not prime and 2 is. If you only test divisors up to the square root, include the square root itself (loop while d * d <= N), or perfect squares slip through as prime. Print the words exactly as shown, with the same capital letters."
+}

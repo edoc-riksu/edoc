@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from app.main import app
-from app.schemas.encounter import Encounter, EncounterPublic
+from app.schemas.encounter import DIFFICULTY_RANK, Encounter, EncounterPublic
 from app.services.concepts import load_concept_ids
 from app.services.encounter_service import EncounterService
 
@@ -31,6 +31,20 @@ def test_order_is_unique_inside_each_module(encounters_dir):
         key = (e.module, e.order)
         assert key not in seen, f"{e.id} and {seen[key]} share order {e.order} in {e.module}"
         seen[key] = e.id
+
+
+def test_difficulty_never_drops_in_play_order(encounters_dir):
+    # Day 23: inside a module, a player never meets an easier encounter after
+    # a harder one. Same difficulty in a row is fine.
+    last = {}
+    for e in EncounterService(encounters_dir).list_encounters(strict=True):
+        rank = DIFFICULTY_RANK[e.difficulty]
+        if e.module in last:
+            prev_id, prev_rank = last[e.module]
+            assert rank >= prev_rank, (
+                f"{e.id} ({e.difficulty}) comes after the harder {prev_id} in {e.module}"
+            )
+        last[e.module] = (e.id, rank)
 
 
 def test_list_is_sorted_by_module_then_order(encounters_dir):
