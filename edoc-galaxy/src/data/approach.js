@@ -283,6 +283,166 @@ export const APPROACH = {
           "Loop from 1 to N. Check divisibility by 15 first, then 3, then 5, printing FizzBuzz, Fizz, or Buzz accordingly, and the number itself otherwise.",
         solution:
           "for i in range(1, int(input()) + 1):\n    if i % 15 == 0:\n        print('FizzBuzz')\n    elif i % 3 == 0:\n        print('Fizz')\n    elif i % 5 == 0:\n        print('Buzz')\n    else:\n        print(i)"
+      },
+      {
+        id: "py-008",
+        title: "Digit Sum",
+        blurb:
+          "Given a non-negative integer N, print the sum of its digits.",
+        concept: {
+          id: "arithmetic",
+          name: "arithmetic",
+          note: "Calculate with numbers using operators like + - * / and %."
+        },
+        rock: 7,
+        starterCode:
+          "# Read a non-negative integer N.\n# Print the sum of its digits.\n\n# Write your code here\n",
+        example: "Input: 4096 → Output: 19",
+        constraints: [
+          "Use integer division and modulo, not /",
+          "Handle 0 and single-digit numbers correctly"
+        ],
+        tests: [
+          {
+            description: "Input 123 should produce 6",
+            input: "123",
+            expectedOutput: "6"
+          },
+          {
+            description: "Input 4096 should produce 19",
+            input: "4096",
+            expectedOutput: "19"
+          }
+        ],
+        hints: [
+          "Think about how to pull a number apart one digit at a time, and when to stop.",
+          "In a while loop, n % 10 gives the last digit and n // 10 drops it. Add the last digit each time until n reaches 0. Reading the input as text and adding int() of each character works too.",
+          "print(sum(int(d) for d in input().strip()))"
+        ],
+        explanation:
+          "Take the last digit with n % 10 and remove it with n // 10, adding each digit to a running total until nothing is left — or treat the input as text and sum int() of each character.",
+        solution:
+          "line = input().strip()\nprint(sum(int(d) for d in line))"
+      },
+      {
+        id: "py-009",
+        title: "Largest in a List",
+        blurb:
+          "Read a positive integer N, then a second line with N integers separated by spaces. Print the largest of them.",
+        concept: {
+          id: "loops",
+          name: "loops",
+          note: "Repeat an action for a sequence of values."
+        },
+        rock: 8,
+        starterCode:
+          "# The first line is N, the count of numbers.\n# The second line holds N integers separated by spaces.\n# Print the largest one.\n\n# Write your code here\n",
+        example: "Input: 3, then 4 9 2 → Output: 9",
+        constraints: [
+          "Read N first, then the N numbers on the next line",
+          "Compare the values as numbers, not text"
+        ],
+        tests: [
+          {
+            description: "Input 3 then 4 9 2 should produce 9",
+            input: "3\n4 9 2",
+            expectedOutput: "9"
+          },
+          {
+            description: "Input 5 then 10 3 7 10 1 should produce 10",
+            input: "5\n10 3 7 10 1",
+            expectedOutput: "10"
+          }
+        ],
+        hints: [
+          "Keep track of the biggest value you have seen so far as you look at each number in turn.",
+          "Convert every value with int() first. Start your largest-so-far at the first number, not at 0 (that breaks when every number is negative), then loop over the rest and replace it whenever you see a bigger one.",
+          "input()\nprint(max(map(int, input().split())))"
+        ],
+        explanation:
+          "Read N, then read the second line and use max() to find the largest value among the N integers.",
+        solution:
+          "input()\nprint(max(map(int, input().split())))"
+      },
+      {
+        id: "py-010",
+        title: "Prime Check",
+        blurb:
+          "Given an integer N, print \"Prime\" if N is a prime number and \"Not prime\" otherwise.",
+        concept: {
+          id: "loops",
+          name: "loops",
+          note: "Repeat an action for a sequence of values."
+        },
+        rock: 9,
+        starterCode:
+          "# Read an integer N.\n# Print \"Prime\" if N is prime, otherwise \"Not prime\".\n\n# Write your code here\n",
+        example: "Input: 7 → Output: Prime",
+        constraints: [
+          "1 is not prime, but 2 is",
+          "Check divisors up to and including the square root of N"
+        ],
+        tests: [
+          {
+            description: "Input 7 should produce Prime",
+            input: "7",
+            expectedOutput: "Prime"
+          },
+          {
+            description: "Input 9 should produce Not prime",
+            input: "9",
+            expectedOutput: "Not prime"
+          }
+        ],
+        hints: [
+          "Think about what makes a number not prime, and which of the smallest numbers are special cases.",
+          "Numbers below 2 are not prime. Otherwise, loop d from 2 while d * d <= N: if N % d == 0 for any d, it is not prime. Testing d * d <= N (rather than stopping just below the square root) makes sure perfect squares are caught, and it is fast enough for large N.",
+          "n = int(input()); print('Prime' if n > 1 and all(n % d for d in range(2, int(n ** 0.5) + 1)) else 'Not prime')"
+        ],
+        explanation:
+          "A number is prime when it has no divisors other than 1 and itself. Check divisibility by every number from 2 up to and including its square root.",
+        solution:
+          "n = int(input())\nprint('Prime' if n > 1 and all(n % d for d in range(2, int(n ** 0.5) + 1)) else 'Not prime')"
+      },
+      {
+        id: "py-011",
+        title: "Second Largest",
+        blurb:
+          "Read a positive integer N, then a second line with N integers. Print the largest value that is smaller than the maximum, or \"None\" if there isn't one.",
+        concept: {
+          id: "conditionals",
+          name: "conditionals",
+          note: "Choose an action based on a condition."
+        },
+        rock: 10,
+        starterCode:
+          "# The first line is N, the count of numbers.\n# The second line holds N integers separated by spaces.\n# Print the largest value that is smaller than the maximum,\n# or \"None\" if there isn't one.\n\n# Write your code here\n",
+        example: "Input: 4, then 5 9 9 3 → Output: 5",
+        constraints: [
+          "Repeats of the largest value don't count as the second largest",
+          "Print None when there's no second distinct value"
+        ],
+        tests: [
+          {
+            description: "Input 4 then 5 9 9 3 should produce 5",
+            input: "4\n5 9 9 3",
+            expectedOutput: "5"
+          },
+          {
+            description: "Input 3 then 7 7 7 should produce None",
+            input: "3\n7 7 7",
+            expectedOutput: "None"
+          }
+        ],
+        hints: [
+          "Repeats of the largest value do not count as a second largest. Think about removing repeats first.",
+          "Turn the numbers into a set to drop repeats, then sort it. If only one distinct value is left, the answer is None; otherwise it is the second value from the top.",
+          "input()\nvalues = sorted(set(map(int, input().split())))\nprint(values[-2] if len(values) > 1 else 'None')"
+        ],
+        explanation:
+          "Drop duplicate values with a set, sort what's left, and take the second-from-top value — or None if only one distinct value remains.",
+        solution:
+          "input()\nvalues = sorted(set(map(int, input().split())))\nprint(values[-2] if len(values) > 1 else 'None')"
       }
     ]
   }
