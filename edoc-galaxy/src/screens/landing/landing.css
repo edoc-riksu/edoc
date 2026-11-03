@@ -106,6 +106,30 @@
   }
 }
 
+/* the landing fades to black as it hands over, and the surface fades in from the same black */
+.ld.is-leaving::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: #02060d;
+  animation: ld-out 0.38s ease both;
+}
+@keyframes ld-out {
+  from {
+    opacity: 0;
+  }
+}
+.sf {
+  background: #02060d;
+  animation: sf-in 0.7s ease both;
+}
+@keyframes sf-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* surface screen: reuse the approach card and top bar, tinted for arrival */
 .sf .ap-eyebrow {
   color: var(--teal);
@@ -139,6 +163,10 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .ld.is-leaving::after,
+  .sf {
+    animation: none;
+  }
   .ld-caption p {
     animation: none;
   }

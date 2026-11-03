@@ -11,6 +11,7 @@ import "./landing.css";
 
 const SETTINGS_KEY = "edoc-galaxy-settings";
 const DURATION = 9; // seconds, start to finish
+const FADE_MS = 380; // the fade to black between the landing and the surface
 const TOUCHDOWN = [0.8, 0.78, 0.76]; // when the ship meets the ground, as a share of the whole
 
 // What the pilot hears and reads on the way down. Three beats: the atmosphere, the trouble (or the calm), the landing.
@@ -30,12 +31,16 @@ export default function LandingScreen({ planetId, hull, next }) {
   const [beat, setBeat] = useState(0);
   const [soft, setSoft] = useState(false); // the system or the app asks for reduced motion: play the descent gently
   const [ready, setReady] = useState(false); // the scene is built and its clock is running
+  const [leaving, setLeaving] = useState(false); // the screen is fading out on its way to the surface
   const left = useRef(false);
+  const softRef = useRef(false);
 
+  // Skip, Esc, Enter and the end of the descent all leave the same way: a short fade, then the surface.
   const go = useCallback(() => {
     if (left.current) return;
     left.current = true;
-    router.replace(next);
+    setLeaving(true);
+    setTimeout(() => router.replace(next), softRef.current ? 0 : FADE_MS);
   }, [router, next]);
 
   useEffect(() => {
@@ -47,6 +52,7 @@ export default function LandingScreen({ planetId, hull, next }) {
     } catch {}
     const calm = motion === "reduced" || !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     setSoft(calm);
+    softRef.current = calm;
     if (!ready) return undefined; // building the scene takes a moment; the sound, captions and the bar wait for it
     sfx.launch();
     const at = (p) => p * DURATION * 1000;
@@ -71,7 +77,7 @@ export default function LandingScreen({ planetId, hull, next }) {
   }, [go]);
 
   return (
-    <div className="ld">
+    <div className={`ld ${leaving ? "is-leaving" : ""}`}>
       <div className="ld-stage">
         <LandingScene severity={sev} duration={DURATION} soft={soft} onPick={() => {}} onReady={() => setReady(true)} />
       </div>
