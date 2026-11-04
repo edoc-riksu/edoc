@@ -11,6 +11,7 @@ import HullBar from "../../ui/HullBar";
 import Panel from "../../ui/Panel";
 import Segmented from "../../ui/Segmented";
 import { setSoundEnabled, sfx } from "../../galaxy/audio";
+import { loadRunHull, saveRunHull, clearRunHull } from "../../lib/encounterResume";
 import CodeConsole from "./CodeConsole";
 import ResultHost from "../result/ResultHost";
 import "./approach.css";
@@ -41,7 +42,7 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
   const [toast, setToast] = useState("");
   const [rockHover, setRockHover] = useState(false);
   const [pulse, setPulse] = useState(0);
-  const [hullPct, setHullPct] = useState(hull);
+  const [hullPct, setHullPct] = useState(() => loadRunHull(planetId) ?? hull);
   const [engaged, setEngaged] = useState(startEngaged);
   const [diving, setDiving] = useState(false); // Engage pressed: the view pushes in toward the rock before the console opens
   const [leaving, setLeaving] = useState(false); // the console is fading out
@@ -105,6 +106,14 @@ export default function ApproachScreen({ planetId, planetName, encounters, hull 
   }, [hullPct, settings.motion]);
 
   useEffect(() => () => clearTimeout(shakeTimer.current), []);
+
+  // Hull carries across encounters within one approach run, so a reload
+  // mid-run must not snap it back to 100 - save on every change, drop the
+  // save once the whole approach is cleared so a future visit starts fresh.
+  useEffect(() => {
+    if (done) clearRunHull(planetId);
+    else saveRunHull(planetId, hullPct);
+  }, [planetId, hullPct, done]);
 
   useEffect(() => {
     if (firstIdx.current) { firstIdx.current = false; return; }

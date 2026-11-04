@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Check, LogOut, Pencil, Rocket, Shirt, UserRound, X } from "lucide-react";
+import Link from "next/link";
+import { Camera, Check, CornerDownRight, LogOut, Pencil, Rocket, Shirt, UserRound, X } from "lucide-react";
 import AppShell from "../../shell/AppShell";
 import Button from "../../ui/Button";
 import Panel from "../../ui/Panel";
@@ -11,7 +12,12 @@ import { updateProfile } from "../../lib/authService";
 import { resizeImageToDataUrl } from "../../lib/avatarImage";
 import { normalizeCallsign, isValidCallsign, AUTH_MESSAGES } from "../../lib/authValidation";
 import { conceptFor } from "../../data/concepts";
+import { findContinueTarget } from "../../lib/moduleResume";
 import "./profile.css";
+
+// Every module here is on the Python planet so far (v1's one playable
+// planet) - module rows link into its module list once more planets land.
+const PROGRESS_PLANET_ID = "python";
 
 // Time coding still isn't tracked anywhere (no schema field, no API) — real
 // numbers only for what the backend actually records, rather than a
@@ -92,6 +98,7 @@ export default function ProfileScreen() {
   if (!user) return null;
   const since = pilotSince(user.createdAt);
   const concepts = stats?.concepts || [];
+  const continueTarget = moduleProgress && findContinueTarget(moduleProgress);
 
   const handleAvatarChange = async (ev) => {
     const file = ev.target.files?.[0];
@@ -243,19 +250,36 @@ export default function ProfileScreen() {
               Module-by-module progress shows here once modules and saved progress exist — tracked from day one, shown once it's real.
             </p>
           ) : (
-            <ul className="profile-module-list">
-              {moduleProgress.map((m) => (
-                <li key={m.slug} className="profile-module-row">
-                  <span className="profile-module-title">
-                    {m.title}
-                    {m.complete && <Check size={13} aria-hidden="true" />}
-                  </span>
-                  <span className="profile-module-count">
-                    {m.solvedCount} / {m.totalCount}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <>
+              {continueTarget && (
+                <div className="profile-continue">
+                  <span className="t-small t-muted">Continue: {continueTarget.encounterTitle}</span>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    icon={CornerDownRight}
+                    href={`/planet/${PROGRESS_PLANET_ID}/encounter/${continueTarget.encounterId}`}
+                  >
+                    Resume
+                  </Button>
+                </div>
+              )}
+              <ul className="profile-module-list">
+                {moduleProgress.map((m) => (
+                  <li key={m.slug}>
+                    <Link href={`/planet/${PROGRESS_PLANET_ID}/modules/${m.slug}`} className="profile-module-row">
+                      <span className="profile-module-title">
+                        {m.title}
+                        {m.complete && <Check size={13} aria-hidden="true" />}
+                      </span>
+                      <span className="profile-module-count">
+                        {m.solvedCount} / {m.totalCount}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </Panel>
 

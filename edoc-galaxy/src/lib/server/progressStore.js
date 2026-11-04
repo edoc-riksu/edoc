@@ -38,6 +38,9 @@ export async function recordAcceptedAttempt(userId, encounterId) {
  * One module's encounters, each flagged solved or not, for this player -
  * the module completion logic plan Day 17 asks for. `complete` is true
  * once every encounter in the module has been solved at least once.
+ * `attempts` is every attempt regardless of verdict, so the module detail
+ * screen (plan Day 30) can tell "never opened" from "tried, not solved
+ * yet" instead of just solved/unsolved.
  */
 export async function getModuleProgress(userId, slug) {
   const module_ = await db.module.findUnique({
@@ -46,15 +49,17 @@ export async function getModuleProgress(userId, slug) {
   });
   if (!module_) return null;
 
-  const solved = new Set(
-    (
-      await db.attempt.findMany({
-        where: { userId, verdict: "ACCEPTED", encounterId: { in: module_.encounters.map((e) => e.id) } },
-        select: { encounterId: true },
-        distinct: ["encounterId"]
-      })
-    ).map((a) => a.encounterId)
-  );
+  const allAttempts = await db.attempt.findMany({
+    where: { userId, encounterId: { in: module_.encounters.map((e) => e.id) } },
+    select: { encounterId: true, verdict: true }
+  });
+
+  const solved = new Set();
+  const attemptCount = new Map();
+  for (const a of allAttempts) {
+    attemptCount.set(a.encounterId, (attemptCount.get(a.encounterId) || 0) + 1);
+    if (a.verdict === "ACCEPTED") solved.add(a.encounterId);
+  }
 
   const encounters = module_.encounters.map((e) => ({
     id: e.id,
@@ -62,7 +67,8 @@ export async function getModuleProgress(userId, slug) {
     difficulty: e.difficulty,
     concepts: e.concepts,
     title: e.title,
-    solved: solved.has(e.id)
+    solved: solved.has(e.id),
+    attempts: attemptCount.get(e.id) || 0
   }));
 
   return {

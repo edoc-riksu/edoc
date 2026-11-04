@@ -1,23 +1,76 @@
 /*
- * Hangar screen: the bay fills the screen (drawn in code, see hangarArt.js);
- * the top bar and the loadout panel sit on top of it. Colours and fonts come
- * from globals.css (--ink, --teal, --glass ...); Button/Panel are the shared
- * src/ui components. No tokens or fonts of this screen's own.
+ * Hangar screen: a three.js crashed-ship bay (see hangarBayScene.js) fills
+ * the screen, with a floating nameplate on top; the Explorer/Suit loadout
+ * panel (tabs + card list) is the original pre-mockup design, restored as
+ * requested rather than the mockup's crew/locker grid. Colours and fonts
+ * come from globals.css (--ink, --teal, --display, --sans ...); Button/
+ * Panel are the shared src/ui components. No tokens or fonts of this
+ * screen's own.
  */
 .hg {
   position: fixed;
   inset: 0;
   height: 100dvh;
   overflow: hidden;
-  background: #05070f;
+  background: var(--night);
+  color: var(--ink);
   isolation: isolate;
 }
 .hg-scene {
   position: absolute;
   inset: 0;
-}
-.hg-scene-canvas {
+  width: 100%;
+  height: 100%;
   display: block;
+  touch-action: none;
+  cursor: grab;
+}
+.hg-scene:active {
+  cursor: grabbing;
+}
+.hg-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 34% 52%, transparent 50%, rgba(2, 3, 6, 0.7) 100%);
+}
+.hg-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+/* a full-screen "red alert" wash, like the hangar's own crash-alarm bulbs
+   flashing across the whole room rather than just a point light - sits
+   below the UI chrome (header/nameplate/panel) so those stay readable
+   while the bay itself flashes red. Matches the roughly 0.67Hz cadence of
+   the 3D scene's own alarm pulse. */
+.hg-alarm-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(ellipse at center, rgba(255, 42, 31, 0) 35%, rgba(255, 42, 31, 0.55) 100%);
+  animation: hg-alarm-pulse 1.5s ease-in-out infinite;
+}
+@keyframes hg-alarm-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hg-alarm-flash {
+    animation: none;
+    opacity: 0.35;
+  }
 }
 
 /* ---------- top bar (same recipe as the approach screen's) ---------- */
@@ -73,6 +126,54 @@
   flex: none;
 }
 
+/* ---------- nameplate ---------- */
+.hg-nameplate {
+  position: absolute;
+  z-index: 2;
+  left: clamp(12px, 2.4vw, 32px);
+  bottom: calc(clamp(12px, 2.4vh, 32px) + env(safe-area-inset-bottom, 0px));
+  width: 280px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hg-nameplate small {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.hg-nameplate strong {
+  font-family: var(--display);
+  font-size: 32px;
+  line-height: 38px;
+  font-weight: 700;
+}
+.hg-nameplate-role {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.hg-chip {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid currentColor;
+}
+.hg-chip.is-ok {
+  color: var(--teal);
+}
+.hg-chip.is-locked {
+  color: var(--warn);
+}
+
 /* ---------- loadout panel ---------- */
 .hg-panel {
   position: absolute;
@@ -83,14 +184,53 @@
   width: min(296px, calc(100% - 20px));
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
   overflow-y: auto;
 }
-/* lighter than the shared Panel default — the pilot behind it is the point
-   of this screen, the panel should feel like glass over it, not a wall */
+/* lighter than the shared Panel default — the bay behind it is the point of
+   this screen, the panel should feel like glass over it, not a wall */
 .hg .hg-panel {
   background: rgba(8, 13, 30, 0.58);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+  /* a ship's terminal, not a rounded SaaS card - clipped corners (top-right,
+     bottom-left) instead of fully rounded */
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+}
+
+/* a brief sweep of light across the panel on a tab switch - remounted via
+   key={tab} in HangarScreen.js so it replays each time, not a loop */
+.hg-scan {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hg-scan::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 45%;
+  top: -45%;
+  background: linear-gradient(to bottom, transparent, rgba(94, 234, 212, 0.16), transparent);
+  animation: hg-scan-sweep 0.55s ease-out;
+}
+@keyframes hg-scan-sweep {
+  from {
+    top: -45%;
+  }
+  to {
+    top: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hg-scan::before {
+    animation: none;
+    display: none;
+  }
 }
 
 /* ---------- tabs ---------- */
@@ -124,19 +264,26 @@
   gap: 10px;
   flex: 1;
   min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .hg-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
   text-align: left;
-  border-radius: 14px;
+  border-radius: 4px;
+  /* chamfered top-right/bottom-left - the top-left/bottom-right stay square
+     so the equipped/selected corner brackets below have a real corner to
+     sit on */
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
   border: 1px solid var(--glass-edge);
   background: rgba(10, 18, 44, 0.5);
   color: var(--ink);
-  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color 0.18s ease, background 0.18s ease;
 }
 .hg-card:hover {
   border-color: rgba(190, 210, 255, 0.4);
@@ -144,19 +291,35 @@
 .hg-card--equipped {
   border-color: rgba(94, 234, 212, 0.55);
   background: rgba(94, 234, 212, 0.08);
-  animation: hg-neon-pulse 2.4s ease-in-out infinite;
 }
 .hg-card--selected {
   border-color: rgba(94, 234, 212, 0.55);
-  animation: hg-neon-pulse 2.4s ease-in-out infinite;
 }
-@keyframes hg-neon-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.25), 0 0 20px rgba(94, 234, 212, 0.08);
-  }
-  50% {
-    box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.45), 0 0 28px rgba(94, 234, 212, 0.18);
-  }
+/* a HUD/reticle corner-bracket highlight instead of a pulsing border glow -
+   top-left and bottom-right only, matching the card's own square corners */
+.hg-card--equipped::before,
+.hg-card--equipped::after,
+.hg-card--selected::before,
+.hg-card--selected::after {
+  content: "";
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  pointer-events: none;
+}
+.hg-card--equipped::before,
+.hg-card--selected::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--teal);
+  border-left: 2px solid var(--teal);
+}
+.hg-card--equipped::after,
+.hg-card--selected::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--teal);
+  border-right: 2px solid var(--teal);
 }
 .hg-card--locked {
   border-color: rgba(251, 191, 36, 0.35);
@@ -316,17 +479,17 @@
   color: var(--teal);
 }
 
-.hg-error {
-  margin: 10px 0 0;
-  font-size: 12.5px;
-  color: #fb7185;
-}
-
 .hg-actions {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-top: 14px;
+}
+
+.hg-error {
+  margin: 0;
+  font-size: 12.5px;
+  color: #fb7185;
 }
 
 .hg-sr-only {
@@ -341,7 +504,17 @@
   border: 0;
 }
 
-/* ---------- toast ---------- */
+/* ---------- hint / toast ---------- */
+.hg-hint {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-120%);
+  font-size: 12px;
+  color: var(--ink-dim);
+  pointer-events: none;
+}
 .hg-toast {
   position: absolute;
   z-index: 80;
@@ -365,11 +538,23 @@
 }
 
 /* ---------- small screens ---------- */
-@media (max-width: 720px) {
-  .hg-crumb-now {
-    font-size: 15px;
+@media (max-width: 900px) {
+  .hg {
+    overflow: auto;
+  }
+  .hg-nameplate {
+    top: calc(40vh - 90px);
+    bottom: auto;
+    left: 12px;
+    width: auto;
+    padding: 12px 14px;
+  }
+  .hg-nameplate strong {
+    font-size: 24px;
+    line-height: 28px;
   }
   .hg-panel {
+    position: fixed;
     top: auto;
     bottom: 0;
     left: 0;
@@ -377,6 +562,16 @@
     width: 100%;
     max-height: 58dvh;
     border-radius: 18px 18px 0 0;
+    clip-path: none;
+    margin: 0;
+  }
+  .hg-hint {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  .hg-crumb-now {
+    font-size: 15px;
   }
 }
 
@@ -385,9 +580,7 @@
   .hg-toast {
     transition-duration: 0.01s;
   }
-  .hg-card--skeleton,
-  .hg-card--equipped,
-  .hg-card--selected {
+  .hg-card--skeleton {
     animation: none;
   }
 }

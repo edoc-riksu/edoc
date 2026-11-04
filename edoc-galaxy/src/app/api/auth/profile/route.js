@@ -10,7 +10,7 @@ import { normalizeCallsign, isValidCallsign, AUTH_MESSAGES } from "../../../../l
 // not a real target size (resizing happens client-side before upload).
 const MAX_AVATAR_LENGTH = 300_000;
 
-const EXPLORERS = new Set(["vega", "taro"]);
+const EXPLORERS = new Set(["vega", "kael", "taro", "mira"]);
 const SUITS = new Set(["base", "starfarer"]);
 
 export async function PATCH(request) {

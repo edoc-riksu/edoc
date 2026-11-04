@@ -1,0 +1,330 @@
+/* Module list and module detail (plan Days 29-31). */
+
+.ml-wrap {
+  width: min(720px, 100%);
+  display: grid;
+  gap: 16px;
+}
+.ml-wrap--detail {
+  width: min(960px, 100%);
+}
+
+.ml-crumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+.ml-crumb-link {
+  color: var(--ink-soft);
+}
+.ml-crumb-link:hover {
+  color: var(--teal);
+}
+.ml-crumb-now {
+  color: var(--ink);
+}
+.ml-slash {
+  opacity: 0.5;
+}
+
+.ml-header {
+  text-align: center;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin: 8px 0 4px;
+}
+.ml-title {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 700;
+}
+.ml-subtitle {
+  color: var(--ink-dim);
+}
+.ml-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.ml-stats strong {
+  color: var(--teal);
+  font-variant-numeric: tabular-nums;
+}
+.ml-stats-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--ink-dim);
+}
+
+/* Module list cards: a full-card "stretched link" (.ml-card-overlay) opens
+   the module, with the Continue button as its own, separately clickable
+   control layered above it - two destinations, one row, no nested <a>s. */
+.ml-list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.ml-card-wrap {
+  position: relative;
+}
+.ml-card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 14px;
+}
+.ml-card-overlay:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+.ml-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-edge);
+  background: var(--glass);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.ml-card-wrap:has(.ml-card-overlay:hover) .ml-card,
+.ml-card-wrap:has(.ml-card-overlay:focus-visible) .ml-card {
+  border-color: rgba(94, 234, 212, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(2, 6, 22, 0.4);
+}
+.ml-card.is-locked {
+  opacity: 0.75;
+}
+.ml-card.is-complete {
+  border-color: rgba(94, 234, 212, 0.3);
+}
+.ml-card-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  position: relative;
+  overflow: hidden;
+  background: rgba(94, 234, 212, 0.1);
+  border: 1px solid var(--glass-edge);
+}
+.ml-card-icon-canvas,
+.ml-card-icon-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ml-card-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.ml-card-title {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 600;
+}
+.ml-card-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ml-card-continue {
+  position: relative;
+  z-index: 2;
+}
+.ml-card-count {
+  color: var(--ink-dim);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ml-card-chevron {
+  color: var(--ink-dim);
+  flex-shrink: 0;
+}
+
+.ml-locked-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--warn);
+}
+
+/* Module detail: hero/progress panel beside the encounter list, stacking
+   to one column once there isn't room for both side by side. */
+.ml-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.ml-hero {
+  display: grid;
+  gap: 8px;
+}
+.ml-hero-art {
+  height: 150px;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(120% 140% at 30% 20%, rgba(94, 234, 212, 0.35), transparent 60%),
+    radial-gradient(90% 120% at 80% 90%, rgba(120, 150, 210, 0.35), transparent 65%),
+    linear-gradient(160deg, var(--night), rgba(23, 42, 72, 0.9));
+  border: 1px solid var(--glass-edge);
+}
+.ml-hero-art-canvas,
+.ml-hero-art-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.ml-hero-title {
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 700;
+}
+.ml-hero-stats {
+  font-variant-numeric: tabular-nums;
+}
+.ml-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(120, 150, 210, 0.16);
+  overflow: hidden;
+}
+.ml-bar-fill {
+  height: 100%;
+  background: var(--teal);
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+.ml-hero-resume {
+  margin-top: 6px;
+}
+
+.ml-enc-panel {
+  min-width: 0;
+}
+.ml-enc-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.ml-enc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-edge);
+  background: var(--glass);
+}
+.ml-enc-row.is-current {
+  border-color: rgba(94, 234, 212, 0.55);
+  background: rgba(94, 234, 212, 0.06);
+}
+.ml-enc-status {
+  flex-shrink: 0;
+  color: var(--ink-dim);
+}
+.ml-enc-status.is-solved {
+  color: var(--teal);
+}
+.ml-enc-status.is-progress {
+  color: var(--warn);
+}
+.ml-enc-order {
+  min-width: 20px;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+.ml-enc-main {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.ml-enc-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.ml-tag {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-edge);
+  background: rgba(120, 150, 210, 0.1);
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.ml-dots {
+  display: inline-flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.ml-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(120, 150, 210, 0.25);
+}
+.ml-dot.is-filled {
+  background: var(--teal);
+}
+
+@media (max-width: 760px) {
+  .ml-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .ml-card {
+    flex-wrap: wrap;
+  }
+  .ml-card-count {
+    order: 1;
+  }
+  .ml-dots {
+    display: none;
+  }
+  .ml-card-icon {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ml-card {
+    transition: none;
+  }
+  .ml-card-wrap:has(.ml-card-overlay:hover) .ml-card,
+  .ml-card-wrap:has(.ml-card-overlay:focus-visible) .ml-card {
+    transform: none;
+  }
+}
