@@ -12,5 +12,5 @@ export default async function CoursePage({ params }) {
   const { id } = await params;
   const a = await summarizeApproach(id);
   if (!a) notFound();
-  return <CourseScreen planetId={id} captions={a.course} next={`/planet/${id}/approach`} />;
+  return <CourseScreen planetId={id} captions={a.course} next={`/planet/${id}/modules`} />;
 }

@@ -351,3 +351,25 @@
     animation: none;
   }
 }
+
+.ui-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.ui-ring-track {
+  stroke: rgba(120, 150, 210, 0.18);
+}
+.ui-ring-fill {
+  stroke: var(--teal);
+  transition: stroke-dashoffset 0.4s ease;
+}
+.ui-ring-label {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--teal);
+}

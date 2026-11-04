@@ -9,6 +9,7 @@ import useResizable from "../../ui/useResizable";
 import { runCode, submitCode, getResumeState } from "../../lib/executionApi";
 import { runWithInput } from "../../lib/pyDebugRunner";
 import { setSoundEnabled, sfx } from "../../galaxy/audio";
+import { loadEncounterCode, saveEncounterCode } from "../../lib/encounterResume";
 import DefeatDialog from "./DefeatDialog";
 import "./console.css";
 
@@ -19,7 +20,7 @@ const HINT_TIERS = ["Nudge", "Clue", "Walkthrough"];
 function getSoundPreference() {
   if (typeof window === "undefined") return true;
   try {
-    const raw = localStorage.getItem("edoc_galaxy_settings");
+    const raw = localStorage.getItem("edoc-galaxy-settings");
     if (raw) return JSON.parse(raw).sound !== false;
   } catch { }
   return true;
@@ -77,7 +78,7 @@ function TestRow({ label, passed }) {
  * never touching the backend or the score.
  */
 export default function CodeConsole({ encounter, hull, onHullChange, onPass, onExit, say, index = 0, total = 1, language = "Python" }) {
-  const [code, setCode] = useState(encounter.starterCode || "");
+  const [code, setCode] = useState(() => loadEncounterCode(encounter.id) ?? encounter.starterCode ?? "");
   const [busy, setBusy] = useState(null); // null | "run" | "submit"
   const [result, setResult] = useState(null);
   const [solved, setSolved] = useState(false);
@@ -138,9 +139,11 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   const mainSplit = useResizable({ axis: "x", initial: 38, min: 25, max: 55 });
   const workspaceSplit = useResizable({ axis: "y", initial: 60, min: 30, max: 80 });
 
-  // A fresh encounter (after clearing this one) always starts clean.
+  // A fresh encounter (after clearing this one) always starts clean, but a
+  // saved in-progress buffer for this same encounter (e.g. after a reload)
+  // takes priority over the starter code.
   useEffect(() => {
-    setCode(encounter.starterCode || "");
+    setCode(loadEncounterCode(encounter.id) ?? encounter.starterCode ?? "");
     setResult(null);
     setSolved(false);
     setAttempts(1);
@@ -174,6 +177,15 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
       cancelled = true;
     };
   }, [encounter.id]);
+
+  // Debounced so a reload mid-typing doesn't lose work, without writing to
+  // localStorage on every keystroke.
+  const codeSaveTimer = useRef(null);
+  useEffect(() => {
+    clearTimeout(codeSaveTimer.current);
+    codeSaveTimer.current = setTimeout(() => saveEncounterCode(encounter.id, code), 400);
+    return () => clearTimeout(codeSaveTimer.current);
+  }, [encounter.id, code]);
 
   // Hints unlock one at a time — asking for a later tier before an
   // earlier one isn't allowed.

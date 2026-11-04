@@ -9,18 +9,20 @@ import Panel from "../../ui/Panel";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile } from "../../lib/authService";
 import { setSoundEnabled } from "../../galaxy/audio";
-import HangarScene from "./HangarScene";
-import SuitCard from "./SuitCard";
 import ExplorerPortrait from "./ExplorerPortrait";
+import SuitCard from "./SuitCard";
+import { createHangarScene } from "./hangarBayScene";
 import { getCardVisualState, getEquipButtonState, getUnlockDetail } from "./hangarLogic";
 import "./hangar.css";
 
-// Taglines are flavour copy, not game data — the two explorers are cosmetic
-// only, with no real stats or abilities behind them, so nothing here is
-// presented as a tracked number (see profile.js's same rule for real stats).
+// Taglines are flavour copy, not game data — explorers are cosmetic only,
+// with no real stats or abilities behind them, so nothing here is presented
+// as a tracked number (see profile.js's same rule for real stats).
 const EXPLORERS = [
-  { id: "vega", name: "Male", tagline: "Steady hands, quick to adapt." },
-  { id: "taro", name: "Female", tagline: "Sharp focus, calm under pressure." }
+  { id: "vega", name: "Vega", tagline: "Steady hands, quick to adapt." },
+  { id: "kael", name: "Kael", tagline: "Cool under fire, methodical by habit." },
+  { id: "taro", name: "Taro", tagline: "Sharp focus, calm under pressure." },
+  { id: "mira", name: "Mira", tagline: "Restless curiosity, fast on the comms." }
 ];
 
 const SUITS = [
@@ -51,6 +53,8 @@ export default function HangarScreen() {
 
   const tabRefs = useRef([]);
   const cardRefs = useRef([]);
+  const canvasRef = useRef(null);
+  const sceneRef = useRef(null);
 
   useEffect(() => {
     if (!user) return;
@@ -81,7 +85,13 @@ export default function HangarScreen() {
           setModuleStats({ done: doneCount, total: modules.length });
         }
       } catch {
-        if (!cancelled) setStarfarerUnlocked(false);
+        // Falls back to "locked" rather than leaving moduleStats null
+        // forever - otherwise the unlock note shows a loading state
+        // indefinitely instead of recovering.
+        if (!cancelled) {
+          setStarfarerUnlocked(false);
+          setModuleStats({ done: 0, total: 0 });
+        }
       }
     }
     checkUnlock();
@@ -93,7 +103,7 @@ export default function HangarScreen() {
   const say = useCallback((message) => {
     setToast(message);
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(""), 2600);
+    toastTimer.current = setTimeout(() => setToast(""), 3200);
   }, []);
 
   const continueTo = useCallback(() => router.push(safeReturnTo(searchParams.get("returnTo"), "/")), [router, searchParams]);
@@ -107,31 +117,50 @@ export default function HangarScreen() {
     return () => window.removeEventListener("keydown", onKey);
   }, [goBack]);
 
+  // Reduced motion, read once at mount - the hangar bay's arcs/sparks/
+  // flicker all gate on this same flag passed into the scene.
+  const [calm, setCalm] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("edoc-galaxy-settings") || "null");
+      setCalm(saved?.motion === "reduced");
+    } catch {
+      setCalm(false);
+    }
+  }, []);
+
+  // Mount the 3D scene once; tear it down on unmount. Suit swaps afterward
+  // go through sceneRef.current.setSuit, not a remount.
+  useEffect(() => {
+    if (!canvasRef.current) return undefined;
+    let api = null;
+    try {
+      api = createHangarScene(canvasRef.current, { onStatus: say, starfarer: draftSuit === "starfarer", reducedMotion: calm });
+      sceneRef.current = api;
+    } catch {
+      say("This view could not load. Everything else on the screen still works.");
+    }
+    return () => {
+      api?.dispose();
+      sceneRef.current = null;
+    };
+    // Deliberately mount-once: suit changes go through the imperative API
+    // below, not a scene rebuild.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calm]);
+
+  useEffect(() => {
+    sceneRef.current?.setSuit(draftSuit === "starfarer");
+  }, [draftSuit]);
+
   if (!user) return null;
 
+  const previewedExplorer = EXPLORERS.find((e) => e.id === draftExplorer) || EXPLORERS[0];
+  const previewedSuit = SUITS.find((s) => s.id === draftSuit);
   const previewLocked = draftSuit === "starfarer" && !starfarerUnlocked;
   const previewMatchesEquipped = draftExplorer === (user.explorer || "vega") && draftSuit === (user.suit || "base");
   const equipState = getEquipButtonState({ previewLocked, previewMatchesEquipped });
   const unlockDetail = getUnlockDetail(moduleStats);
-
-  const handleEquip = async () => {
-    if (equipState.disabled) return;
-    setBusy(true);
-    setError("");
-    const prevUser = user;
-    setUser({ ...user, explorer: draftExplorer, suit: draftSuit }); // optimistic
-    const result = await updateProfile({ explorer: draftExplorer, suit: draftSuit });
-    setBusy(false);
-    if (result.ok) {
-      setUser(result.data.user);
-      const suitName = SUITS.find((s) => s.id === draftSuit)?.name || "Loadout";
-      say(`${suitName} equipped`);
-      if (onboarding) continueTo();
-    } else {
-      setUser(prevUser); // revert
-      setError(result.data?.fields?.suit || result.data?.fields?.explorer || "Couldn't save your loadout.");
-    }
-  };
 
   const loadingSuits = tab === "suit" && moduleStats === null;
   const tileIcon = tab === "explorer" ? User : Shirt;
@@ -168,8 +197,6 @@ export default function HangarScreen() {
     const next = (currentIndex + dir + items.length) % items.length;
     items[next]?.onSelect();
   };
-  const previewedExplorer = EXPLORERS.find((e) => e.id === draftExplorer);
-  const previewedSuit = SUITS.find((s) => s.id === draftSuit);
 
   const handleTabKeyDown = (e, index) => {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
@@ -190,22 +217,36 @@ export default function HangarScreen() {
     cardRefs.current[next]?.focus();
   };
 
+  const handleEquip = async () => {
+    if (equipState.disabled) return;
+    setBusy(true);
+    setError("");
+    const prevUser = user;
+    setUser({ ...user, explorer: draftExplorer, suit: draftSuit }); // optimistic
+    const result = await updateProfile({ explorer: draftExplorer, suit: draftSuit });
+    setBusy(false);
+    if (result.ok) {
+      setUser(result.data.user);
+      const suitName = SUITS.find((s) => s.id === draftSuit)?.name || "Loadout";
+      say(`${suitName} equipped`);
+      if (onboarding) continueTo();
+    } else {
+      setUser(prevUser); // revert
+      setError(result.data?.fields?.suit || result.data?.fields?.explorer || "Couldn't save your loadout.");
+    }
+  };
+
   return (
     <div className="hg">
-      <div className="hg-scene">
-        <HangarScene
-          explorer={draftExplorer}
-          suit={draftSuit}
-          onPilotPick={() => {
-            setDraftExplorer(draftExplorer === "vega" ? "taro" : "vega");
-            setTab("explorer");
-          }}
-          onSuitPick={(suitId) => {
-            setDraftSuit(suitId);
-            setTab("suit");
-          }}
-        />
-      </div>
+      <canvas
+        ref={canvasRef}
+        className="hg-scene"
+        role="img"
+        aria-label="3D hangar bay with the selected explorer standing on the glow podium. Drag to turn them."
+      />
+      <div className="hg-vignette" aria-hidden="true" />
+      <div className="hg-grain" aria-hidden="true" />
+      <div className="hg-alarm-flash" aria-hidden="true" />
 
       <header className="hg-top">
         <div className="hg-crumb">
@@ -223,6 +264,15 @@ export default function HangarScreen() {
         </div>
       </header>
 
+      <div className="hg-nameplate" aria-live="polite">
+        <small>Crew member</small>
+        <strong>{previewedExplorer.name}</strong>
+        <span className="hg-nameplate-role">{previewedExplorer.tagline}</span>
+        <span className={`hg-chip ${draftSuit === "starfarer" && previewLocked ? "is-locked" : "is-ok"}`}>
+          {draftSuit === "starfarer" && previewLocked ? "Previewing Starfarer, locked" : `${SUITS.find((s) => s.id === draftSuit)?.name || "Base suit"} equipped`}
+        </span>
+      </div>
+
       <Panel
         as="section"
         size="md"
@@ -231,6 +281,7 @@ export default function HangarScreen() {
         title={tab === "explorer" ? "Explorer" : "Suit"}
         aria-label="Loadout"
       >
+        <div className="hg-scan" key={tab} aria-hidden="true" />
         <div className="hg-tabs" role="tablist" aria-label="Loadout category">
           {["explorer", "suit"].map((t, i) => (
             <button
@@ -330,6 +381,9 @@ export default function HangarScreen() {
 
       <div className={`hg-toast ${toast ? "is-on" : ""}`} role="status">
         {toast}
+      </div>
+      <div className="hg-hint" aria-hidden="true">
+        Drag to turn
       </div>
     </div>
   );
