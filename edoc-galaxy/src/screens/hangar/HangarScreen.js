@@ -30,6 +30,15 @@ const SUITS = [
   { id: "starfarer", name: "Starfarer set" }
 ];
 
+// Which 3D podium model (hangarBayScene.js's setAvatar) matches each
+// explorer - see public/art/ORIGIN.md for where these come from.
+const AVATAR_MODEL = {
+  vega: "/art/hangar/models/avatar-male.glb",
+  kael: "/art/hangar/models/avatar-kael.glb",
+  taro: "/art/hangar/models/avatar-taro.glb",
+  mira: "/art/hangar/models/avatar-female.glb"
+};
+
 function safeReturnTo(value, fallback = "/") {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return fallback;
   return value;
@@ -135,7 +144,12 @@ export default function HangarScreen() {
     if (!canvasRef.current) return undefined;
     let api = null;
     try {
-      api = createHangarScene(canvasRef.current, { onStatus: say, starfarer: draftSuit === "starfarer", reducedMotion: calm });
+      api = createHangarScene(canvasRef.current, {
+        onStatus: say,
+        starfarer: draftSuit === "starfarer",
+        reducedMotion: calm,
+        avatarUrl: AVATAR_MODEL[draftExplorer] || AVATAR_MODEL.vega
+      });
       sceneRef.current = api;
     } catch {
       say("This view could not load. Everything else on the screen still works.");
@@ -152,6 +166,10 @@ export default function HangarScreen() {
   useEffect(() => {
     sceneRef.current?.setSuit(draftSuit === "starfarer");
   }, [draftSuit]);
+
+  useEffect(() => {
+    sceneRef.current?.setAvatar(AVATAR_MODEL[draftExplorer] || AVATAR_MODEL.vega);
+  }, [draftExplorer]);
 
   if (!user) return null;
 
