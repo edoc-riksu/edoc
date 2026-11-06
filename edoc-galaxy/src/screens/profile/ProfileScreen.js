@@ -7,6 +7,7 @@ import { Camera, Check, CornerDownRight, LogOut, Pencil, Rocket, Shirt, UserRoun
 import AppShell from "../../shell/AppShell";
 import Button from "../../ui/Button";
 import Panel from "../../ui/Panel";
+import ExplorerPortrait from "../hangar/ExplorerPortrait";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile } from "../../lib/authService";
 import { resizeImageToDataUrl } from "../../lib/avatarImage";
@@ -50,6 +51,7 @@ export default function ProfileScreen() {
   const fileInputRef = useRef(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [avatarError, setAvatarError] = useState("");
+  const [avatarFlipped, setAvatarFlipped] = useState(false);
 
   const [editingCallsign, setEditingCallsign] = useState(false);
   const [callsignDraft, setCallsignDraft] = useState("");
@@ -179,18 +181,36 @@ export default function ProfileScreen() {
     >
       <div className="profile-grid">
         <Panel as="section" size="lg" className="profile-identity">
-          <button
-            type="button"
-            className={`profile-avatar ${avatarBusy ? "is-busy" : ""}`}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={avatarBusy}
-            aria-label="Change profile photo"
-          >
-            {user.avatar ? <img src={user.avatar} alt="" className="profile-avatar-img" /> : <UserRound size={40} aria-hidden="true" />}
-            <span className="profile-avatar-edit" aria-hidden="true">
+          <div className="profile-avatar-wrap">
+            <button
+              type="button"
+              className={`profile-avatar ${avatarFlipped ? "is-flipped" : ""} ${avatarBusy ? "is-busy" : ""}`}
+              onClick={() => setAvatarFlipped((v) => !v)}
+              disabled={avatarBusy}
+              aria-label={avatarFlipped ? "Showing your photo. Click to show your explorer." : "Showing your explorer. Click to show your photo."}
+            >
+              <span className="profile-avatar-flip" aria-hidden="true">
+                <span className="profile-avatar-face profile-avatar-face--front">
+                  <ExplorerPortrait explorer={user.explorer || "vega"} size={84} />
+                </span>
+                <span className="profile-avatar-face profile-avatar-face--back">
+                  {user.avatar ? <img src={user.avatar} alt="" className="profile-avatar-img" /> : <UserRound size={40} aria-hidden="true" />}
+                </span>
+              </span>
+            </button>
+            <button
+              type="button"
+              className="profile-avatar-edit"
+              onClick={(ev) => {
+                ev.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+              disabled={avatarBusy}
+              aria-label="Change profile photo"
+            >
               <Camera size={13} />
-            </span>
-          </button>
+            </button>
+          </div>
           <input ref={fileInputRef} type="file" accept="image/*" className="profile-avatar-input" onChange={handleAvatarChange} />
           {avatarError && (
             <p className="profile-field-error" role="alert">

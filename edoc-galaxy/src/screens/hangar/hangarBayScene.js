@@ -1,8 +1,8 @@
 /* eslint-disable */
 /* edoc hangar bay: real-time 3D scene (three.js, ported from the inventory-bay
    mockup's r128 vanilla-JS version to this project's three.js 0.187 via npm).
-   createHangarScene(canvas, { onStatus, starfarer, reducedMotion }) ->
-   { setSuit, dispose }
+   createHangarScene(canvas, { onStatus, starfarer, reducedMotion, avatarUrl }) ->
+   { setSuit, setAvatar, dispose }
 
    Two API changes from the original r128 version, both required - not a
    style choice - because they were removed/changed in modern three.js:
@@ -24,6 +24,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 export function createHangarScene(canvas, opts) {
 opts = opts || {};
@@ -130,10 +131,10 @@ var mats={
   haz:M({map:hazMap, metalness:0.4, roughness:0.6}),
   hull:M({map:hullMap, metalness:0.35, roughness:0.42, envMapIntensity:0.6}),
   glass:new THREE.MeshPhysicalMaterial({color:0x0a1422, metalness:0.1, roughness:0.06, clearcoat:1, clearcoatRoughness:0.05, envMapIntensity:1.2}),
-  teal:new THREE.MeshStandardMaterial({color:0x000000, emissive:0x3dd6c4, emissiveIntensity:2.2}),
-  tealDim:new THREE.MeshStandardMaterial({color:0x000000, emissive:0x3dd6c4, emissiveIntensity:0.9}),
-  amber:new THREE.MeshStandardMaterial({color:0x000000, emissive:0xffa133, emissiveIntensity:2.4}),
-  warm:new THREE.MeshStandardMaterial({color:0x000000, emissive:0xffd9a8, emissiveIntensity:2.6}),
+  teal:new THREE.MeshStandardMaterial({color:0x000000, emissive:0x2ecc63, emissiveIntensity:1.3}),
+  tealDim:new THREE.MeshStandardMaterial({color:0x000000, emissive:0x2ecc63, emissiveIntensity:0.55}),
+  amber:new THREE.MeshStandardMaterial({color:0x000000, emissive:0xff3b1f, emissiveIntensity:2.4}),
+  warm:new THREE.MeshStandardMaterial({color:0x000000, emissive:0xff5533, emissiveIntensity:2.6}),
   redLamp:new THREE.MeshStandardMaterial({color:0x000000, emissive:0xff2a1f, emissiveIntensity:2.5})
 };
 
@@ -198,7 +199,7 @@ var fin=wing(0.9,0.6); fin.rotation.set(0,0,Math.PI/2+0.35); fin.position.set(-1
   var g=new THREE.Mesh(new THREE.CircleGeometry(0.15,24), i? mats.dark : mats.tealDim); g.position.set(-2.21,-0.05,z); g.rotation.y=-Math.PI/2; ship.add(g); });
 var leg1=cyl(0.05,0.05,0.7,mats.steel,0.9,-0.6,0.4,ship,10); leg1.rotation.x=0.2;
 var leg2=cyl(0.05,0.05,0.35,mats.steel,-0.8,-0.55,-0.45,ship,10); leg2.rotation.z=1.0;
-var engineLight=new THREE.PointLight(0x3dd6c4,0.9,3.5,2); engineLight.position.set(-2.5,-0.05,0.3); ship.add(engineLight);
+var engineLight=new THREE.PointLight(0x2ecc63,0.9,3.5,2); engineLight.position.set(-2.5,-0.05,0.3); ship.add(engineLight);
 /* debris around ship */
 for(var d=0;d<14;d++){ var db=box(0.1+R()*0.5,0.03+R()*0.06,0.1+R()*0.4,R()>.5?mats.hull:mats.dark,1.8+R()*4,0.03,-5.5+R()*3.5); db.rotation.set(R()*0.2,R()*3,R()*0.2); }
 
@@ -255,7 +256,7 @@ var lamp=new THREE.Group(); lamp.position.set(-2.4,6,0.6); scene.add(lamp);
 cyl(0.01,0.01,1.5,mats.rubber,0,-0.75,0,lamp,6);
 var shade=new THREE.Mesh(new THREE.ConeGeometry(0.22,0.22,24,1,true),M({color:0x3a414c,metalness:0.7,roughness:0.4,side:THREE.DoubleSide})); shade.position.y=-1.55; lamp.add(shade);
 var bulb=new THREE.Mesh(new THREE.SphereGeometry(0.07,16,8),mats.warm.clone()); bulb.position.y=-1.64; lamp.add(bulb);
-var lampLight=new THREE.PointLight(0xffc98f,1.3,7,2); lampLight.position.y=-1.7; lampLight.castShadow=true; lampLight.shadow.mapSize.set(512,512); lampLight.shadow.bias=-0.003; lamp.add(lampLight);
+var lampLight=new THREE.PointLight(0xff4433,1.3,7,2); lampLight.position.y=-1.7; lampLight.castShadow=true; lampLight.shadow.mapSize.set(512,512); lampLight.shadow.bias=-0.003; lamp.add(lampLight);
 
 /* ---------- extra damage: tools, cut wires, arc, alarm ---------- */
 var tipObjs=[];
@@ -300,7 +301,7 @@ var arcA=new THREE.Vector3(-3.7,2.65,-6.55), arcB=new THREE.Vector3(-2.75,2.0,-6
 var burn=new THREE.Mesh(new THREE.PlaneGeometry(1.8,1.6),new THREE.MeshStandardMaterial({map:scorchT,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2})); burn.position.set(-3.2,2.35,-6.69); scene.add(burn);
 var ARC_N=16, arcLines=[];
 for(var al=0;al<3;al++){ var ag=new THREE.BufferGeometry(); ag.setAttribute('position',new THREE.BufferAttribute(new Float32Array(ARC_N*3),3)); var line=new THREE.Line(ag,new THREE.LineBasicMaterial({color:al?0x7fc8ff:0xffffff,transparent:true,opacity:al?0.7:1,blending:THREE.AdditiveBlending,depthWrite:false})); line.visible=false; scene.add(line); arcLines.push(line); }
-var arcLight=new THREE.PointLight(0x9fd4ff,0,6,2); arcLight.position.set(-3.2,2.35,-6.1); scene.add(arcLight);
+var arcLight=new THREE.PointLight(0x2ecc63,0,6,2); arcLight.position.set(-3.2,2.35,-6.1); scene.add(arcLight);
 var arcOn=0, arcNext=0.8;
 function updateArc(){ arcLines.forEach(function(line,li){ var a=line.geometry.attributes.position.array; for(var k=0;k<ARC_N;k++){ var t=k/(ARC_N-1), env=Math.sin(Math.PI*t)*(0.16+li*0.03); a[k*3]=arcA.x+(arcB.x-arcA.x)*t+(Math.random()-0.5)*env; a[k*3+1]=arcA.y+(arcB.y-arcA.y)*t+(Math.random()-0.5)*env; a[k*3+2]=arcA.z+0.02*li; } line.geometry.attributes.position.needsUpdate=true; }); }
 tipObjs.push({obj:new THREE.Object3D(),group:null,fixed:arcB.clone().add(new THREE.Vector3(0,0,0.1))});
@@ -417,7 +418,7 @@ var flap=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.36,0.03),mats.hull); flap.p
   var tip=new THREE.Mesh(new THREE.SphereGeometry(0.012,6,4),mats.amber); tip.position.copy(end); ship.add(tip);
   if(i%2===0) tipObjs.push({obj:tip,group:null});
 });
-var hatchLight=new THREE.PointLight(0xffa64d,0.6,2.5,2); hatchLight.position.set(0.35,0.0,1.1); ship.add(hatchLight);
+var hatchLight=new THREE.PointLight(0xff5533,0.6,2.5,2); hatchLight.position.set(0.35,0.0,1.1); ship.add(hatchLight);
 
 /* ---------- podium ---------- */
 var pod=new THREE.Group(); scene.add(pod);
@@ -427,7 +428,7 @@ var ring=new THREE.Mesh(new THREE.TorusGeometry(1.24,0.025,12,120),mats.teal); r
 var inner=new THREE.Group(); inner.position.y=0.345; pod.add(inner);
 for(var k=0;k<24;k++){ var a=k/24*Math.PI*2; var seg=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.01,0.04),mats.tealDim); seg.position.set(Math.cos(a)*0.85,0,Math.sin(a)*0.85); seg.rotation.y=-a; inner.add(seg); }
 for(var k2=0;k2<16;k2++){ var a2=k2/16*Math.PI*2; var dot=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.03,0.02),mats.amber); dot.position.set(Math.cos(a2)*1.37,0.12,Math.sin(a2)*1.37); dot.rotation.y=-a2+Math.PI/2; pod.add(dot); }
-var podGlow=new THREE.PointLight(0x3dd6c4,0.7,3.5,2); podGlow.position.set(0,0.7,-0.4); scene.add(podGlow);
+var podGlow=new THREE.PointLight(0x2ecc63,0.25,3.5,2); podGlow.position.set(0,0.7,-0.4); scene.add(podGlow);
 var PODIUM_TOP=0.34;
 
 /* a small red warning beacon right beside the podium, in plain view */
@@ -451,17 +452,55 @@ var collar=new THREE.Mesh(new THREE.TorusGeometry(0.11,0.03,10,32),trimMat); col
 var head=new THREE.Mesh(new THREE.SphereGeometry(0.115,32,16),skinMat); head.scale.set(1,1.18,1.05); head.position.y=1.72; head.castShadow=true; mannequin.add(head);
 var stripeL=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.2,0.16),trimMat); stripeL.position.set(-0.19,1.32,0); mannequin.add(stripeL); var stripeR=stripeL.clone(); stripeR.position.x=0.19; mannequin.add(stripeR);
 mannequin.traverse(function(o){ if(o.isMesh){o.castShadow=true;o.receiveShadow=true;} });
-function setSuit(star){ suitMat.color.set(star?0x1e2a55:0xb7bdc8); trimMat.color.set(star?0xffb547:0x3dd6c4); trimMat.emissive.set(star?0x3a2405:0x0d3a35); }
+
+/* real pilot models (public/art/hangar/models/avatar-male.glb,
+   avatar-female.glb) - each a single baked mesh/material, no rig, so
+   "suit" is a colour tint on that one material rather than swapping
+   separate suit/trim meshes like the mannequin does. setAvatar(url) swaps
+   the loaded model (used when the previewed explorer's gender changes) -
+   the older model is disposed once the new one is in, not before, so a
+   slow load never leaves the podium empty. Falls back to the primitive
+   mannequin above if a file is missing or fails to load. */
+var gltfLoader=new GLTFLoader();
+var avatarModel=null, avatarTintMat=null, avatarUrl=null, avatarLoadToken=0, currentStarfarer=!!opts.starfarer;
+function disposeObject3D(root){
+  root.traverse(function(o){
+    if(o.geometry) o.geometry.dispose();
+    var ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+    ms.forEach(function(mt){ for(var k in mt){ if(mt[k] && mt[k].isTexture) mt[k].dispose(); } mt.dispose(); });
+  });
+}
+var sceneDisposed=false;
+function setAvatar(url){
+  if(!url || url===avatarUrl) return;
+  avatarUrl=url;
+  var token=++avatarLoadToken;
+  gltfLoader.load(url, function(gltf){
+    if(sceneDisposed || token!==avatarLoadToken) return; // scene torn down, or a newer swap started before this one finished
+    var model=gltf.scene, tintMat=null;
+    model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; if(o.material) tintMat=o.material; } });
+    var old=avatarModel;
+    avatarRoot.add(model);
+    avatarModel=model; avatarTintMat=tintMat;
+    mannequin.visible=false;
+    applySuitTint(currentStarfarer);
+    if(old){ avatarRoot.remove(old); disposeObject3D(old); }
+  }, undefined, function(){ say && say("Pilot model failed to load - showing placeholder."); });
+}
+
+function applySuitTint(star){ if(avatarTintMat) avatarTintMat.color.set(star?0xb89368:0x9a9a9a); }
+function setSuit(star){ currentStarfarer=star; suitMat.color.set(star?0x1e2a55:0xb7bdc8); trimMat.color.set(star?0xffb547:0x3dd6c4); trimMat.emissive.set(star?0x3a2405:0x0d3a35); applySuitTint(star); }
 setSuit(!!opts.starfarer);
+setAvatar(opts.avatarUrl || "/art/hangar/models/avatar-male.glb");
 
 /* ---------- lighting ---------- */
-scene.add(new THREE.HemisphereLight(0x8fa6c8,0x0a0c10,0.18));
-var key=new THREE.SpotLight(0xffd6b0,1.5,22,0.36,0.7,1.2); key.position.set(-3.6,5.4,4.6); key.target.position.set(0,1.0,0); scene.add(key); scene.add(key.target);
+scene.add(new THREE.HemisphereLight(0x5a2626,0x0a0c10,0.12));
+var key=new THREE.SpotLight(0xff4d33,0.6,22,0.36,0.7,1.2); key.position.set(-3.6,5.4,4.6); key.target.position.set(0,1.0,0); scene.add(key); scene.add(key.target);
 key.castShadow=true; key.shadow.mapSize.set(2048,2048); key.shadow.bias=-0.0004; key.shadow.camera.near=1; key.shadow.camera.far=20;
-var rim=new THREE.SpotLight(0x3dd6c4,2.6,12,0.5,0.8,1.5); rim.position.set(1.8,3.4,-2.8); rim.target.position.set(0,1.1,0); scene.add(rim); scene.add(rim.target);
-var fill=new THREE.PointLight(0x6f8cff,0.35,14,2); fill.position.set(3,2.2,4.5); scene.add(fill);
-var stripL=new THREE.PointLight(0x3dd6c4,0.6,6,2); stripL.position.set(-8.2,0.4,-1); scene.add(stripL);
-var shipKey=new THREE.SpotLight(0xcfe4ff,1.2,14,0.5,0.7,1.5); shipKey.position.set(2.5,5.6,-1); shipKey.target=ship; scene.add(shipKey);
+var rim=new THREE.SpotLight(0x2ecc63,0.8,12,0.5,0.8,1.5); rim.position.set(1.8,3.4,-2.8); rim.target.position.set(0,1.1,0); scene.add(rim); scene.add(rim.target);
+var fill=new THREE.PointLight(0xff3322,0.25,14,2); fill.position.set(3,2.2,4.5); scene.add(fill);
+var stripL=new THREE.PointLight(0x2ecc63,0.6,6,2); stripL.position.set(-8.2,0.4,-1); scene.add(stripL);
+var shipKey=new THREE.SpotLight(0xff5a3c,1.0,14,0.5,0.7,1.5); shipKey.position.set(2.5,5.6,-1); shipKey.target=ship; scene.add(shipKey);
 
 /* ---------- particles ---------- */
 var DUST=500, dustGeo=new THREE.BufferGeometry(), dustPos=new Float32Array(DUST*3);
@@ -475,7 +514,7 @@ for(var j=0;j<SP;j++){ spVel.push(new THREE.Vector3()); spLife[j]=0; spPos[j*3+1
 spGeo.setAttribute('position',new THREE.BufferAttribute(spPos,3));
 var sparks=new THREE.Points(spGeo,new THREE.PointsMaterial({color:0xffb35a,size:0.045,transparent:true,opacity:1,depthWrite:false,blending:THREE.AdditiveBlending}));
 scene.add(sparks);
-var sparkLight=new THREE.PointLight(0xffa64d,0,4,2); sparkLight.position.copy(sparkOrigin).add(new THREE.Vector3(0.3,0,0)); scene.add(sparkLight);
+var sparkLight=new THREE.PointLight(0xff5533,0,4,2); sparkLight.position.copy(sparkOrigin).add(new THREE.Vector3(0.3,0,0)); scene.add(sparkLight);
 var nextBurst=1.2;
 var _o=new THREE.Vector3();
 function burst(){ var srcs=[{fixed:sparkOrigin,wall:true}].concat(tipObjs); var src=srcs[Math.floor(R()*srcs.length)];
@@ -562,6 +601,7 @@ function loop(){
 raf=requestAnimationFrame(loop);
 
 function dispose(){
+  sceneDisposed=true;
   cancelAnimationFrame(raf); ro.disconnect();
   window.removeEventListener('pointermove',onMove); window.removeEventListener('pointerup',onUp); canvas.removeEventListener('pointerdown',onDown);
   scene.traverse(function(o){
@@ -572,5 +612,5 @@ function dispose(){
   envRT.dispose(); composer.dispose(); renderer.dispose();
 }
 
-return { setSuit: setSuit, dispose: dispose };
+return { setSuit: setSuit, setAvatar: setAvatar, dispose: dispose };
 }

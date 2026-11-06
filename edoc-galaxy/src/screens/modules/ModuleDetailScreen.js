@@ -27,8 +27,8 @@ function DifficultyDots({ difficulty }) {
   );
 }
 
-/** A short "what this module teaches" line, built from its own encounters' concepts - no invented copy. */
-function descriptionFor(encounters) {
+/** The module's own distinct concepts, in first-seen order - no invented copy. */
+function conceptNamesFor(encounters) {
   const seen = new Set();
   const names = [];
   for (const e of encounters || []) {
@@ -38,6 +38,12 @@ function descriptionFor(encounters) {
       names.push(conceptFor(c).name);
     }
   }
+  return names;
+}
+
+/** A short "what this module teaches" line, built from its own encounters' concepts - no invented copy. */
+function descriptionFor(encounters) {
+  const names = conceptNamesFor(encounters);
   if (names.length === 0) return "Practice encounters for this module.";
   return `Practice encounters covering ${names.join(", ")}.`;
 }
@@ -109,6 +115,13 @@ function ModuleDetailGate({ planetId, planetName, slug }) {
   const encounterMeta = new Map((progress?.encounters || []).map((e) => [e.id, e]));
   const nextUp = (progress?.encounters || []).find((e) => !e.solved);
   const pct = progress ? Math.round((progress.solvedCount / Math.max(1, progress.totalCount)) * 100) : 0;
+  const done = progress && !nextUp && progress.totalCount > 0;
+  const ctaTarget = done ? mod?.encounters?.[0] : nextUp;
+  const ctaLabel = done
+    ? "Replay module"
+    : progress?.solvedCount === 0
+      ? `Start: Encounter ${(nextUp?.order ?? 0) + 1}`
+      : `Continue: Encounter ${(nextUp?.order ?? 0) + 1}`;
 
   return (
     <AppShell
@@ -144,27 +157,63 @@ function ModuleDetailGate({ planetId, planetName, slug }) {
             <Panel as="section" size="lg" className="ml-hero">
               <div className="ml-hero-art" aria-hidden="true">
                 <ModuleHeroArt slug={slug} className="ml-hero-art-canvas" />
+                <div className="ml-hero-fade" />
               </div>
-              <p className="t-label">Module {mod.order + 1}</p>
+              <p className="t-label ml-hero-kicker">Module {mod.order + 1}</p>
               <h1 className="ml-hero-title">{mod.title}</h1>
               <p className="t-body">{descriptionFor(progress.encounters)}</p>
+              {conceptNamesFor(progress.encounters).length > 0 && (
+                <ul className="ml-concepts" aria-label="Concepts covered">
+                  {conceptNamesFor(progress.encounters).map((c) => (
+                    <li key={c}>{c}</li>
+                  ))}
+                </ul>
+              )}
               {mod.locked && (
                 <p className="ml-locked-note">
                   <Lock size={13} aria-hidden="true" /> Shown as locked until the module before it is finished — every encounter here is
                   still playable right now.
                 </p>
               )}
-              <p className="ml-hero-stats t-small t-muted">
-                {progress.solvedCount} of {progress.totalCount} encounters · {pct}%
-              </p>
-              <div className="ml-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-                <div className="ml-bar-fill" style={{ width: `${pct}%` }} />
+              <div className="ml-progress">
+                <p className="ml-hero-stats t-small t-muted">
+                  <strong>{progress.solvedCount}</strong> of {progress.totalCount} encounters cleared
+                  <span className="ml-percent">{pct}%</span>
+                </p>
+                <div
+                  className="ml-segments"
+                  role="progressbar"
+                  aria-valuenow={progress.solvedCount}
+                  aria-valuemin={0}
+                  aria-valuemax={progress.totalCount}
+                  aria-label={`${progress.solvedCount} of ${progress.totalCount} encounters cleared`}
+                >
+                  {progress.encounters.map((e) => (
+                    <span
+                      key={e.id}
+                      className="ml-seg"
+                      data-status={e.solved ? "cleared" : e.attempts > 0 ? "in-progress" : "not-started"}
+                    />
+                  ))}
+                </div>
               </div>
               {nextUp && (
-                <Button className="ml-hero-resume" icon={Play} href={`/planet/${planetId}/encounter/${nextUp.id}`}>
-                  Resume: Encounter {nextUp.order + 1}
+                <div className="ml-nextup">
+                  <span className="ml-nextup-label">Next up</span>
+                  <span className="ml-nextup-title">
+                    <span className="ml-nextup-num">{String(nextUp.order + 1).padStart(2, "0")}</span> {nextUp.title}
+                  </span>
+                  <span className="ml-tag">{conceptFor(nextUp.concepts?.[0]).name}</span>
+                </div>
+              )}
+              {ctaTarget && (
+                <Button className="ml-hero-resume" icon={Play} href={`/planet/${planetId}/encounter/${ctaTarget.id}`}>
+                  {ctaLabel}
                 </Button>
               )}
+              <Link href={`/planet/${planetId}/modules`} className="ml-hero-secondary">
+                All {planetName} modules
+              </Link>
             </Panel>
 
             <Panel as="section" size="lg" title="Encounters" className="ml-enc-panel">
@@ -179,6 +228,7 @@ function ModuleDetailGate({ planetId, planetName, slug }) {
                     const inProgress = !solved && attempts > 0;
                     const isNextUp = nextUp?.id === e.id;
                     const StatusIcon = solved ? CheckCircle2 : inProgress ? CircleDot : Circle;
+                    const statusText = solved ? "Cleared" : inProgress ? `In progress · attempt ${attempts}` : "Not started";
                     return (
                       <li key={e.id}>
                         <div className={`ml-enc-row ${solved ? "is-solved" : ""} ${isNextUp ? "is-current" : ""}`}>
@@ -189,11 +239,9 @@ function ModuleDetailGate({ planetId, planetName, slug }) {
                               {e.title}
                               <span className="ml-tag">{conceptFor(e.concepts?.[0]).name}</span>
                             </span>
-                            {inProgress && (
-                              <span className="t-small t-muted">
-                                In progress · attempt {attempts}
-                              </span>
-                            )}
+                            <span className={`t-small t-muted ml-enc-statustext ${solved ? "is-solved" : inProgress ? "is-progress" : ""}`}>
+                              {statusText}
+                            </span>
                           </span>
                           <DifficultyDots difficulty={e.difficulty} />
                           <Button
