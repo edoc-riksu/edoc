@@ -3,17 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Camera, Check, CornerDownRight, LogOut, Pencil, Rocket, Shirt, UserRound, X } from "lucide-react";
+import { Camera, Check, LogOut, Pencil, Rocket, Shirt, UserRound, X } from "lucide-react";
 import AppShell from "../../shell/AppShell";
 import Button from "../../ui/Button";
 import Panel from "../../ui/Panel";
-import ExplorerPortrait from "../hangar/ExplorerPortrait";
+import AvatarBust from "./AvatarBust";
+import ExitDialog from "./ExitDialog";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile } from "../../lib/authService";
 import { resizeImageToDataUrl } from "../../lib/avatarImage";
 import { normalizeCallsign, isValidCallsign, AUTH_MESSAGES } from "../../lib/authValidation";
 import { conceptFor } from "../../data/concepts";
-import { findContinueTarget } from "../../lib/moduleResume";
 import "./profile.css";
 
 // Every module here is on the Python planet so far (v1's one playable
@@ -30,12 +30,29 @@ const STATS = [
   { label: "Hints used", key: "hintsUsed" }
 ];
 
+// The rest of the planned Python curriculum (plan Day 29's surface map
+// names them the same way) - shown as 0-progress rows, by name only, until
+// those modules are real. No invented progress for topics that don't exist.
+const PLANNED_TOPICS = ["Conditions", "Loops", "Strings", "Lists", "Tuples", "Dictionaries", "Sets", "Functions", "Errors & Exceptions"];
+
 function formatStat(key, stats) {
   if (!key || !stats) return "—";
   const value = stats[key];
   if (value === null || value === undefined) return "—";
   if (key === "firstAttemptRate") return `${Math.round(value * 100)}%`;
   return String(value);
+}
+
+/** A concept's mastery as filled-of-5 dots, scaled from its real solved/total. */
+function MasteryDots({ solved, total, max = 5 }) {
+  const filled = total > 0 ? Math.min(max, Math.round((solved / total) * max)) : 0;
+  return (
+    <span className="profile-mastery-dots" aria-hidden="true">
+      {Array.from({ length: max }, (_, i) => (
+        <span key={i} className={`profile-mastery-dot ${i < filled ? "is-filled" : ""}`} />
+      ))}
+    </span>
+  );
 }
 
 function pilotSince(createdAt) {
@@ -60,6 +77,7 @@ export default function ProfileScreen() {
 
   const [stats, setStats] = useState(null);
   const [moduleProgress, setModuleProgress] = useState(null); // null = loading, [] = none
+  const [confirmExit, setConfirmExit] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -100,7 +118,6 @@ export default function ProfileScreen() {
   if (!user) return null;
   const since = pilotSince(user.createdAt);
   const concepts = stats?.concepts || [];
-  const continueTarget = moduleProgress && findContinueTarget(moduleProgress);
 
   const handleAvatarChange = async (ev) => {
     const file = ev.target.files?.[0];
@@ -160,9 +177,12 @@ export default function ProfileScreen() {
     else if (ev.key === "Escape") cancelEditCallsign();
   };
 
-  const handleSignOut = async () => {
+  const handleSignOutClick = () => {
     if (signingOut) return;
-    if (!window.confirm("Sign out of edoc? Your progress is saved to your account.")) return;
+    setConfirmExit(true);
+  };
+
+  const confirmSignOut = async () => {
     setSigningOut(true);
     await signOut();
     router.push("/signin");
@@ -175,7 +195,7 @@ export default function ProfileScreen() {
         <>
           <Button variant="secondary" iconOnly icon={Shirt} href="/hangar" aria-label="Open the Lobby" />
           <Button variant="secondary" iconOnly icon={Rocket} href="/" aria-label="Back to the galaxy" />
-          <Button variant="secondary" iconOnly icon={LogOut} aria-label="Sign out" disabled={signingOut} onClick={handleSignOut} />
+          <Button variant="secondary" iconOnly icon={LogOut} aria-label="Sign out" disabled={signingOut} onClick={handleSignOutClick} />
         </>
       }
     >
@@ -191,7 +211,7 @@ export default function ProfileScreen() {
             >
               <span className="profile-avatar-flip" aria-hidden="true">
                 <span className="profile-avatar-face profile-avatar-face--front">
-                  <ExplorerPortrait explorer={user.explorer || "vega"} size={84} />
+                  <AvatarBust explorer={user.explorer || "vega"} width={150} height={256} />
                 </span>
                 <span className="profile-avatar-face profile-avatar-face--back">
                   {user.avatar ? <img src={user.avatar} alt="" className="profile-avatar-img" /> : <UserRound size={40} aria-hidden="true" />}
@@ -251,6 +271,7 @@ export default function ProfileScreen() {
             </p>
           )}
           {since && <p className="t-small t-muted">Pilot since {since}</p>}
+          <span className="profile-equipped">Equipped: {user.suit === "starfarer" ? "Starfarer suit" : "Base suit"}</span>
         </Panel>
 
         <div className="profile-stats">
@@ -265,41 +286,32 @@ export default function ProfileScreen() {
         <Panel as="section" size="lg" title="Python progress" className="profile-progress">
           {moduleProgress === null ? (
             <p className="t-body">Loading progress…</p>
-          ) : moduleProgress.length === 0 ? (
-            <p className="t-body">
-              Module-by-module progress shows here once modules and saved progress exist — tracked from day one, shown once it's real.
-            </p>
           ) : (
-            <>
-              {continueTarget && (
-                <div className="profile-continue">
-                  <span className="t-small t-muted">Continue: {continueTarget.encounterTitle}</span>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    icon={CornerDownRight}
-                    href={`/planet/${PROGRESS_PLANET_ID}/encounter/${continueTarget.encounterId}`}
-                  >
-                    Resume
-                  </Button>
+            <div className="profile-progress-list">
+              {moduleProgress.map((m) => {
+                const pct = m.totalCount ? Math.round((m.solvedCount / m.totalCount) * 100) : 0;
+                return (
+                  <Link key={m.slug} href={`/planet/${PROGRESS_PLANET_ID}/modules/${m.slug}`} className="profile-progress-row">
+                    <span className="profile-progress-label">{m.title}</span>
+                    <span className="profile-progress-track">
+                      <span className="profile-progress-fill" style={{ width: `${pct}%` }} />
+                    </span>
+                    <span className="profile-progress-count">
+                      {m.solvedCount}/{m.totalCount}
+                    </span>
+                  </Link>
+                );
+              })}
+              {PLANNED_TOPICS.map((title) => (
+                <div key={title} className="profile-progress-row is-locked">
+                  <span className="profile-progress-label">{title}</span>
+                  <span className="profile-progress-track">
+                    <span className="profile-progress-fill" style={{ width: "0%" }} />
+                  </span>
+                  <span className="profile-progress-count">Soon</span>
                 </div>
-              )}
-              <ul className="profile-module-list">
-                {moduleProgress.map((m) => (
-                  <li key={m.slug}>
-                    <Link href={`/planet/${PROGRESS_PLANET_ID}/modules/${m.slug}`} className="profile-module-row">
-                      <span className="profile-module-title">
-                        {m.title}
-                        {m.complete && <Check size={13} aria-hidden="true" />}
-                      </span>
-                      <span className="profile-module-count">
-                        {m.solvedCount} / {m.totalCount}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </>
+              ))}
+            </div>
           )}
         </Panel>
 
@@ -312,8 +324,13 @@ export default function ProfileScreen() {
                 const info = conceptFor(c.concept);
                 const mastered = c.total > 0 && c.solved === c.total;
                 return (
-                  <span key={c.concept} className={`profile-concept-chip ${mastered ? "is-mastered" : ""}`}>
-                    {info.name} · {c.solved}/{c.total}
+                  <span
+                    key={c.concept}
+                    className={`profile-concept-chip ${mastered ? "is-mastered" : ""}`}
+                    aria-label={`${info.name}: ${c.solved} of ${c.total} solved`}
+                  >
+                    <span className="profile-concept-name">{info.name}</span>
+                    <MasteryDots solved={c.solved} total={c.total} />
                   </span>
                 );
               })}
@@ -323,6 +340,7 @@ export default function ProfileScreen() {
           )}
         </Panel>
       </div>
+      {confirmExit && <ExitDialog onStay={() => setConfirmExit(false)} onExit={confirmSignOut} exiting={signingOut} />}
     </AppShell>
   );
 }

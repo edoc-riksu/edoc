@@ -3,10 +3,9 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Lock, Play, Rocket, UserRound } from "lucide-react";
+import { ChevronRight, Lock, Rocket, UserRound } from "lucide-react";
 import AppShell from "../../shell/AppShell";
 import Button from "../../ui/Button";
-import Panel from "../../ui/Panel";
 import Segmented from "../../ui/Segmented";
 import { AuthProvider, useAuth } from "../../context/AuthContext";
 import { conceptFor } from "../../data/concepts";
@@ -50,11 +49,11 @@ const SURFACE_MARKERS = [
 ];
 
 /**
- * Plan Day 29: the module list for one planet. Each card is the module's
- * entry point into Day 30's encounter list (the module detail screen).
- * `locked` is display-only progression (see getModuleLockState's own
- * comment) - every card still links through, since practice is never
- * locked.
+ * Plan Day 29: the module list for one planet - an illustrated surface map,
+ * one pin per topic. Selecting a real topic opens its own encounter list
+ * (Day 30's module detail screen) rather than showing anything inline here,
+ * so this screen stays just the map (plus a List view of the same pins) and
+ * the shared AppShell header - no extra title/stats chrome of its own.
  *
  * Wraps itself in AuthProvider/Suspense/Gate, same convention as
  * hangar/page.js and profile/page.js, since this screen (unlike those)
@@ -76,7 +75,6 @@ function ModuleListGate({ planetId, planetName }) {
   const router = useRouter();
   const [modules, setModules] = useState(null); // null = loading
   const [progress, setProgress] = useState(null); // slug -> progress
-  const [selectedSlug, setSelectedSlug] = useState(null);
   const [view, setView] = useState("map");
 
   useEffect(() => {
@@ -112,35 +110,36 @@ function ModuleListGate({ planetId, planetName }) {
 
   if (loading || !user) return null;
 
-  // One summary per real module - the flight map's "uncharted" slots (built
-  // from the planet's planned module count) are filled in separately below,
-  // since they have no slug/progress of their own.
+  // One summary per real module - the surface map's "coming soon" pins are
+  // the rest of SURFACE_MARKERS, since they have no slug/progress of their own.
   const summaries = (modules || []).map((m) => {
     const p = progress?.[m.slug];
     const cleared = p?.solvedCount ?? 0;
     const total = p?.totalCount ?? m.encounterCount ?? 0;
-    const next = p?.encounters?.find((e) => !e.solved);
     return {
       slug: m.slug,
       order: m.order,
       title: m.title,
       concepts: p ? conceptNamesFor(p.encounters) : [],
       cleared,
-      total,
-      next: next ? { id: next.id, order: next.order, title: next.title } : null
+      total
     };
   });
 
-  const totalEnc = summaries.reduce((s, m) => s + m.total, 0);
-  const clearedEnc = summaries.reduce((s, m) => s + m.cleared, 0);
-  const charted = totalEnc ? Math.round((clearedEnc / totalEnc) * 100) : 0;
-
-  // Current = first module that isn't finished (where the ship sits).
+  // Current = first module that isn't finished (gets the "Continue" tag).
   const current = summaries.find((m) => m.cleared < m.total) ?? summaries[summaries.length - 1];
-  const selected = summaries.find((m) => m.slug === selectedSlug) ?? current;
 
-  const selPct = selected && selected.total ? Math.round((selected.cleared / selected.total) * 100) : 0;
-  const selDone = !!selected && selected.total > 0 && selected.cleared >= selected.total;
+  const viewToggle = (
+    <Segmented
+      label="View"
+      value={view}
+      onChange={setView}
+      options={[
+        { value: "map", label: "Map" },
+        { value: "list", label: "List" }
+      ]}
+    />
+  );
 
   return (
     <AppShell
@@ -153,319 +152,197 @@ function ModuleListGate({ planetId, planetName }) {
       }
     >
       <div className="ml-wrap ml-wrap--map">
-        <nav className="ml-crumb" aria-label="Where you are">
-          <Link href="/" className="ml-crumb-link">
-            Galaxy
-          </Link>
-          <span className="ml-slash" aria-hidden="true">
-            /
-          </span>
-          <span className="ml-crumb-now">{planetName} modules</span>
-        </nav>
-
-        <div className="mm-intro">
-          <header className="ml-header mm-header">
-            <p className="t-label mm-kicker">Surface map</p>
-            <h1 className="ml-title">{planetName} modules</h1>
-            <p className="ml-subtitle">Practice is always open. Pick any module.</p>
-          </header>
-          {summaries.length > 0 && (
-            <dl className="mm-stats">
-              <div>
-                <dt>Modules</dt>
-                <dd>{summaries.length}</dd>
-              </div>
-              <div>
-                <dt>Encounters cleared</dt>
-                <dd>
-                  <strong>{clearedEnc}</strong> / {totalEnc}
-                </dd>
-              </div>
-              <div>
-                <dt>Charted</dt>
-                <dd>{charted}%</dd>
-              </div>
-            </dl>
-          )}
-        </div>
-
         {modules === null ? (
           <p className="t-body">Loading modules…</p>
         ) : summaries.length === 0 ? (
           <p className="t-body">No modules yet for {planetName}.</p>
         ) : (
-          <>
-            <section className="mm-stage-wrap" aria-label={`${planetName} surface`}>
-              <div className="mm-view-toggle">
-                <Segmented
-                  label="View"
-                  value={view}
-                  onChange={setView}
-                  options={[
-                    { value: "map", label: "Map" },
-                    { value: "list", label: "List" }
-                  ]}
-                />
-              </div>
+          <section className="mm-stage-wrap" aria-label={`${planetName} surface`}>
+            {view === "list" && <div className="mm-view-toggle">{viewToggle}</div>}
 
-              {view === "map" ? (
-                <div className="mm-stage">
-                  <img src="/art/modules/python-surface.jpg" alt="" className="mm-stage-art" draggable="false" />
-                  <div className="mm-stage-fx" aria-hidden="true">
-                    <span className="mm-fx-lanterns" />
-                    <span className="mm-fx-falls" />
-                    <span className="mm-fx-falls-sm" />
-                    <span className="mm-fx-mist" />
-                    <span className="mm-fx-crystal" />
-                    <span className="mm-fx-house" />
-                    <span className="mm-fx-pad" />
-                    {Array.from({ length: 10 }, (_, i) => (
-                      <i
-                        key={i}
-                        className="mm-firefly"
-                        style={{ "--i": i, left: `${2 + ((i * 37) % 30)}%`, top: `${30 + ((i * 23) % 55)}%` }}
-                      />
-                    ))}
-                  </div>
+            {view === "map" ? (
+              <div className="mm-stage">
+                <img src="/art/modules/python-surface.jpg" alt="" className="mm-stage-art" draggable="false" />
+                <div className="mm-stage-fx" aria-hidden="true">
+                  <span className="mm-fx-lanterns" />
+                  <span className="mm-fx-falls" />
+                  <span className="mm-fx-falls-sm" />
+                  <span className="mm-fx-mist" />
+                  <span className="mm-fx-crystal" />
+                  <span className="mm-fx-house" />
+                  <span className="mm-fx-pad" />
+                  {Array.from({ length: 10 }, (_, i) => (
+                    <i
+                      key={i}
+                      className="mm-firefly"
+                      style={{ "--i": i, left: `${2 + ((i * 37) % 30)}%`, top: `${30 + ((i * 23) % 55)}%` }}
+                    />
+                  ))}
+                </div>
 
-                  <ul className="mm-pins">
-                    {SURFACE_MARKERS.map((mk) => {
-                      const mod = summaries.find((s) => s.slug === mk.slug);
-                      const style = {
-                        left: `${(mk.x / ART_W) * 100}%`,
-                        top: `${(mk.y / ART_H) * 100}%`,
-                        width: `${(mk.w / ART_W) * 100}%`
-                      };
+                <div className="mm-view-toggle mm-view-toggle--stage">{viewToggle}</div>
 
-                      if (!mod) {
-                        return (
-                          <li key={mk.slug} className="mm-pin-slot" style={style}>
-                            <div className="mm-pin mm-pin--locked" data-tail={mk.tail}>
-                              <span className="mm-pin-ring mm-pin-ring--locked" aria-hidden="true">
-                                <Lock size={14} />
-                              </span>
-                              <span className="mm-pin-text">
-                                <span className="mm-pin-title">{mk.title}</span>
-                                <span className="mm-pin-meta">Coming soon</span>
-                              </span>
-                            </div>
-                          </li>
-                        );
-                      }
+                <ul className="mm-pins">
+                  {SURFACE_MARKERS.map((mk) => {
+                    const mod = summaries.find((s) => s.slug === mk.slug);
+                    const style = {
+                      left: `${(mk.x / ART_W) * 100}%`,
+                      top: `${(mk.y / ART_H) * 100}%`,
+                      width: `${(mk.w / ART_W) * 100}%`
+                    };
 
-                      const pct = mod.total ? Math.round((mod.cleared / mod.total) * 100) : 0;
-                      const done = mod.total > 0 && mod.cleared >= mod.total;
-                      const isSel = mod.slug === selected?.slug;
-                      const isCur = mod.slug === current?.slug;
-                      const enc = progress?.[mod.slug]?.encounters || [];
-
+                    if (!mod) {
                       return (
                         <li key={mk.slug} className="mm-pin-slot" style={style}>
-                          <button
-                            type="button"
-                            className="mm-pin"
-                            data-tail={mk.tail}
-                            data-state={done ? "complete" : isCur ? "progress" : "new"}
-                            aria-pressed={isSel}
-                            aria-label={`${mod.title}, ${pct}% complete${isCur ? ", continue here" : ""}. ${mk.place}.`}
-                            onClick={() => setSelectedSlug(mod.slug)}
-                          >
-                            {isCur && <span className="mm-pin-continue">Continue</span>}
-                            <span className="mm-pin-ring">
-                              <svg viewBox="0 0 44 44" aria-hidden="true">
-                                <circle cx="22" cy="22" r="18" className="mm-ring-track" />
-                                <circle
-                                  cx="22"
-                                  cy="22"
-                                  r="18"
-                                  className="mm-ring-fill"
-                                  pathLength={100}
-                                  style={{ strokeDasharray: `${done ? 100 : pct} 100` }}
-                                />
-                              </svg>
-                              {done && (
-                                <svg viewBox="0 0 24 24" className="mm-pin-check" aria-hidden="true">
-                                  <path
-                                    d="M6 12.5 10 16.5 18 8"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.6"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              )}
+                          <div className="mm-pin mm-pin--locked" data-tail={mk.tail}>
+                            <span className="mm-pin-ring mm-pin-ring--locked" aria-hidden="true">
+                              <Lock size={14} />
                             </span>
                             <span className="mm-pin-text">
-                              <span className="mm-pin-title">{mod.title}</span>
-                              <span className="mm-pin-meta">{pct}%</span>
+                              <span className="mm-pin-title">{mk.title}</span>
+                              <span className="mm-pin-meta">Coming soon</span>
                             </span>
-                          </button>
-                          {enc.length > 0 && (
-                            <div className="mm-peek" aria-hidden="true">
-                              <p className="mm-peek-place">
-                                {mk.place} · Module {pad2(mod.order + 1)}
-                              </p>
-                              <ul>
-                                {enc.slice(0, 4).map((e) => (
-                                  <li key={e.id}>
-                                    <span data-status={e.solved ? "cleared" : e.attempts > 0 ? "in-progress" : "not-started"} />
-                                    {e.title}
-                                  </li>
-                                ))}
-                              </ul>
-                              {enc.length > 4 && <p className="mm-peek-more">+{enc.length - 4} more encounters</p>}
-                            </div>
-                          )}
+                          </div>
                         </li>
                       );
-                    })}
-                  </ul>
-                </div>
-              ) : (
-                <div className="mm-list">
-                  <ol>
-                    {SURFACE_MARKERS.map((mk) => {
-                      const mod = summaries.find((s) => s.slug === mk.slug);
-                      if (!mod) {
-                        return (
-                          <li key={mk.slug}>
-                            <div className="mm-list-row mm-list-row--locked">
-                              <span className="mm-pin-ring mm-pin-ring--locked" aria-hidden="true">
-                                <Lock size={16} />
-                              </span>
-                              <span className="mm-list-main">
-                                <span className="mm-list-title">{mk.title}</span>
-                                <span className="mm-list-sub">{mk.place} · Coming soon</span>
-                              </span>
-                            </div>
-                          </li>
-                        );
-                      }
-                      const pct = mod.total ? Math.round((mod.cleared / mod.total) * 100) : 0;
-                      const done = mod.total > 0 && mod.cleared >= mod.total;
-                      const isCur = mod.slug === current?.slug;
-                      return (
-                        <li key={mk.slug}>
-                          <button
-                            type="button"
-                            className="mm-list-row"
-                            aria-pressed={mod.slug === selected?.slug}
-                            onClick={() => setSelectedSlug(mod.slug)}
-                          >
-                            <span className="mm-pin-ring" aria-hidden="true">
-                              <svg viewBox="0 0 44 44">
-                                <circle cx="22" cy="22" r="18" className="mm-ring-track" />
-                                <circle
-                                  cx="22"
-                                  cy="22"
-                                  r="18"
-                                  className="mm-ring-fill"
-                                  pathLength={100}
-                                  style={{ strokeDasharray: `${done ? 100 : pct} 100` }}
+                    }
+
+                    const pct = mod.total ? Math.round((mod.cleared / mod.total) * 100) : 0;
+                    const done = mod.total > 0 && mod.cleared >= mod.total;
+                    const isCur = mod.slug === current?.slug;
+                    const enc = progress?.[mod.slug]?.encounters || [];
+
+                    return (
+                      <li key={mk.slug} className="mm-pin-slot" style={style}>
+                        <Link
+                          href={`/planet/${planetId}/modules/${mod.slug}`}
+                          className="mm-pin"
+                          data-tail={mk.tail}
+                          data-state={done ? "complete" : isCur ? "progress" : "new"}
+                          aria-label={`${mod.title}, ${pct}% complete${isCur ? ", continue here" : ""}. ${mk.place}.`}
+                        >
+                          {isCur && <span className="mm-pin-continue">Continue</span>}
+                          <span className="mm-pin-ring">
+                            <svg viewBox="0 0 44 44" aria-hidden="true">
+                              <circle cx="22" cy="22" r="18" className="mm-ring-track" />
+                              <circle
+                                cx="22"
+                                cy="22"
+                                r="18"
+                                className="mm-ring-fill"
+                                pathLength={100}
+                                style={{ strokeDasharray: `${done ? 100 : pct} 100` }}
+                              />
+                            </svg>
+                            {done && (
+                              <svg viewBox="0 0 24 24" className="mm-pin-check" aria-hidden="true">
+                                <path
+                                  d="M6 12.5 10 16.5 18 8"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.6"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
                                 />
                               </svg>
-                              {done && (
-                                <svg viewBox="0 0 24 24" className="mm-pin-check" aria-hidden="true">
-                                  <path
-                                    d="M6 12.5 10 16.5 18 8"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.6"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              )}
+                            )}
+                          </span>
+                          <span className="mm-pin-text">
+                            <span className="mm-pin-title">{mod.title}</span>
+                            <span className="mm-pin-meta">{pct}%</span>
+                          </span>
+                        </Link>
+                        {enc.length > 0 && (
+                          <div className="mm-peek" aria-hidden="true">
+                            <p className="mm-peek-place">
+                              {mk.place} · Module {pad2(mod.order + 1)}
+                            </p>
+                            <ul>
+                              {enc.slice(0, 4).map((e) => (
+                                <li key={e.id}>
+                                  <span data-status={e.solved ? "cleared" : e.attempts > 0 ? "in-progress" : "not-started"} />
+                                  {e.title}
+                                </li>
+                              ))}
+                            </ul>
+                            {enc.length > 4 && <p className="mm-peek-more">+{enc.length - 4} more encounters</p>}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : (
+              <div className="mm-list">
+                <ol>
+                  {SURFACE_MARKERS.map((mk) => {
+                    const mod = summaries.find((s) => s.slug === mk.slug);
+                    if (!mod) {
+                      return (
+                        <li key={mk.slug}>
+                          <div className="mm-list-row mm-list-row--locked">
+                            <span className="mm-pin-ring mm-pin-ring--locked" aria-hidden="true">
+                              <Lock size={16} />
                             </span>
                             <span className="mm-list-main">
-                              <span className="mm-list-title">
-                                {mod.title}
-                                {isCur && <span className="mm-pin-continue mm-pin-continue--inline">Continue</span>}
-                              </span>
-                              <span className="mm-list-sub">{mod.concepts.slice(0, 4).join(" · ") || mk.place}</span>
+                              <span className="mm-list-title">{mk.title}</span>
+                              <span className="mm-list-sub">{mk.place} · Coming soon</span>
                             </span>
-                            <span className="mm-list-pct">
-                              {mod.cleared}/{mod.total}
-                            </span>
-                            <ChevronRight size={16} aria-hidden="true" />
-                          </button>
+                          </div>
                         </li>
                       );
-                    })}
-                  </ol>
-                </div>
-              )}
-            </section>
-
-            {selected && (
-              <Panel as="section" size="lg" className="mm-card" aria-live="polite" aria-label={`Selected module: ${selected.title}`}>
-                <div className="mm-card-main">
-                  <p className="t-label mm-hero-kicker">
-                    Module {selected.order + 1}
-                    {selected.slug === current?.slug ? " · you are here" : ""}
-                  </p>
-                  <h2 className="ml-hero-title">{selected.title}</h2>
-                  {selected.concepts.length > 0 && (
-                    <>
-                      <p className="t-body">Practice encounters covering {selected.concepts.join(", ")}.</p>
-                      <ul className="ml-concepts" aria-label="Concepts">
-                        {selected.concepts.map((c) => (
-                          <li key={c}>{c}</li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                </div>
-
-                <div className="mm-card-progress">
-                  <p className="ml-hero-stats t-small t-muted">
-                    <strong>{selected.cleared}</strong> of {selected.total} encounters
-                    <span className="ml-percent">{selPct}%</span>
-                  </p>
-                  <div
-                    className="ml-segments"
-                    role="progressbar"
-                    aria-valuemin={0}
-                    aria-valuemax={selected.total}
-                    aria-valuenow={selected.cleared}
-                    aria-label={`${selected.cleared} of ${selected.total} encounters cleared`}
-                  >
-                    {Array.from({ length: selected.total }, (_, k) => (
-                      <span
-                        key={k}
-                        className="ml-seg"
-                        data-status={k < selected.cleared ? "cleared" : k === selected.cleared && !selDone ? "in-progress" : "not-started"}
-                      />
-                    ))}
-                  </div>
-                  {selected.next && !selDone && (
-                    <p className="mm-nextup-line">
-                      Next up: <span className="mm-mono">{pad2(selected.next.order + 1)}</span> {selected.next.title}
-                    </p>
-                  )}
-                </div>
-
-                <div className="mm-card-actions">
-                  <Button
-                    className="mm-cta"
-                    icon={Play}
-                    href={
-                      selected.next && !selDone
-                        ? `/planet/${planetId}/encounter/${selected.next.id}`
-                        : `/planet/${planetId}/modules/${selected.slug}`
                     }
-                  >
-                    {selDone ? "Replay" : selected.cleared === 0 ? "Start" : "Continue"}
-                  </Button>
-                  <Link className="mm-secondary" href={`/planet/${planetId}/modules/${selected.slug}`}>
-                    View module
-                    <ChevronRight size={14} aria-hidden="true" />
-                  </Link>
-                </div>
-              </Panel>
+                    const pct = mod.total ? Math.round((mod.cleared / mod.total) * 100) : 0;
+                    const done = mod.total > 0 && mod.cleared >= mod.total;
+                    const isCur = mod.slug === current?.slug;
+                    return (
+                      <li key={mk.slug}>
+                        <Link href={`/planet/${planetId}/modules/${mod.slug}`} className="mm-list-row">
+                          <span className="mm-pin-ring" aria-hidden="true">
+                            <svg viewBox="0 0 44 44">
+                              <circle cx="22" cy="22" r="18" className="mm-ring-track" />
+                              <circle
+                                cx="22"
+                                cy="22"
+                                r="18"
+                                className="mm-ring-fill"
+                                pathLength={100}
+                                style={{ strokeDasharray: `${done ? 100 : pct} 100` }}
+                              />
+                            </svg>
+                            {done && (
+                              <svg viewBox="0 0 24 24" className="mm-pin-check" aria-hidden="true">
+                                <path
+                                  d="M6 12.5 10 16.5 18 8"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.6"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            )}
+                          </span>
+                          <span className="mm-list-main">
+                            <span className="mm-list-title">
+                              {mod.title}
+                              {isCur && <span className="mm-pin-continue mm-pin-continue--inline">Continue</span>}
+                            </span>
+                            <span className="mm-list-sub">{mod.concepts.slice(0, 4).join(" · ") || mk.place}</span>
+                          </span>
+                          <span className="mm-list-pct">
+                            {mod.cleared}/{mod.total}
+                          </span>
+                          <ChevronRight size={16} aria-hidden="true" />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
             )}
-          </>
+          </section>
         )}
       </div>
     </AppShell>
