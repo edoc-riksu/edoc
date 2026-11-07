@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from pathlib import Path
 
 from app.schemas.encounter import DIFFICULTY_RANK, Encounter
@@ -77,12 +78,17 @@ class EncounterService:
         )
 
     def _latest_path(self, encounter_id: str) -> Path:
-        matches = list(self._encounters_dir.glob(f"*/{encounter_id}/v*.json"))
+        matches = [
+            p
+            for p in self._encounters_dir.glob(f"*/{encounter_id}/v*.json")
+            if re.fullmatch(r"v\d+", p.stem)
+        ]
         if not matches:
             raise EncounterNotFoundError(encounter_id)
 
-        # Highest version file wins, e.g. v2.json over v1.json.
-        return sorted(matches, key=lambda p: p.stem)[-1]
+        # Highest version file wins, e.g. v2.json over v1.json. Compare the
+        # numbers, not the text: as text "v10" sorts before "v2".
+        return max(matches, key=lambda p: int(p.stem[1:]))
 
     def _read_raw(self, encounter_id: str) -> dict:
         raw = json.loads(self._latest_path(encounter_id).read_text(encoding="utf-8"))
