@@ -88,7 +88,7 @@ function ModuleListGate({ planetId, planetName }) {
   const [modules, setModules] = useState(null); // null = loading
   const [progress, setProgress] = useState(null); // slug -> progress
   const [view, setView] = useState("map");
-  const [still, setStill] = useState(false); // the pilot chose reduced motion in the app's settings, or a data saver is on: keep the still picture
+  const [still, setStill] = useState(false); // only a data saver keeps the still picture; the background otherwise always plays
   const [vp, setVp] = useState({ W: 1376, H: 768 }); // the window, which the full-screen map fills
 
   useEffect(() => {
@@ -99,13 +99,10 @@ function ModuleListGate({ planetId, planetName }) {
   }, []);
 
   useEffect(() => {
-    // The slow background loop plays unless the app's own motion setting says reduced (or data saver is on). The computer's
-    // "reduce motion" switch is not used: on many Windows PCs it is off by default and froze the background for everyone.
-    let calm = false;
-    try {
-      calm = JSON.parse(localStorage.getItem("edoc-galaxy-settings") || "null")?.motion === "reduced";
-    } catch {}
-    setStill(calm || !!navigator.connection?.saveData);
+    // The background loop is part of the screen and always plays. It is not tied to the app's motion setting (the galaxy screen
+    // saves "reduced" there by itself whenever the computer's reduce-motion switch is on, which froze it for everyone) or to the
+    // computer's own switch. Only a data saver keeps the still picture.
+    setStill(!!navigator.connection?.saveData);
   }, []);
 
   useEffect(() => {
@@ -146,18 +143,16 @@ function ModuleListGate({ planetId, planetName }) {
   const portrait = vp.W / vp.H < 1.25; // too narrow to show the whole video: the crop would push the side pins off or onto each other
   const pinSpot = (mk, i) => {
     const { W, H } = vp;
-    const scale = Math.max(0.78, W / 1376); // pin text scales with the window width, so the pin box does too
     if (portrait) {
       const step = Math.min(70, (H - 250) / (SURFACE_MARKERS.length - 1));
-      return { x: i % 2 ? W * 0.72 : W * 0.28, y: H - 56 - i * step, w: Math.min(mk.w * scale, W * 0.46) };
+      return { x: i % 2 ? W - 112 : 112, y: H - 56 - i * step };
     }
     const k = Math.max(W / VIDEO_W, H / VIDEO_H);
     const ax = VIDEO_SPOTS[mk.slug][0];
     const ay = VIDEO_SPOTS[mk.slug][1];
-    const w = mk.w * scale;
     const x = (W - VIDEO_W * k) / 2 + ax * VIDEO_W * k;
     const y = (H - VIDEO_H * k) / 2 + ay * VIDEO_H * k;
-    return { x: Math.min(W - w / 2 - 12, Math.max(w / 2 + 12, x)), y: Math.min(H - 28, Math.max(150, y)), w };
+    return { x: Math.min(W - 112, Math.max(112, x)), y: Math.min(H - 28, Math.max(150, y)) };
   };
 
   // One summary per real module - the surface map's "coming soon" pins are
@@ -254,7 +249,7 @@ function ModuleListGate({ planetId, planetName }) {
                   {SURFACE_MARKERS.map((mk, i) => {
                     const mod = summaries.find((s) => s.slug === mk.slug);
                     const spot = pinSpot(mk, i);
-                    const style = { left: spot.x, top: spot.y, width: spot.w, transform: "translate(-50%, -100%)" };
+                    const style = { left: spot.x, top: spot.y, width: "max-content", transform: "translate(-50%, -100%)" };
 
                     if (!mod) {
                       return (
