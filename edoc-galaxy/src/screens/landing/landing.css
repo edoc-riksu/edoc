@@ -106,8 +106,9 @@
   }
 }
 
-/* the landing fades to black as it hands over, and the surface fades in from the same black */
-.ld.is-leaving::after {
+/* the landing fades to black as it hands over, and the surface fades in from the same black; stepping outside fades the same way */
+.ld.is-leaving::after,
+.sf.is-leaving::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -164,6 +165,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .ld.is-leaving::after,
+  .sf.is-leaving::after,
   .sf {
     animation: none;
   }
