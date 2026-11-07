@@ -405,6 +405,86 @@ export const APPROACH = {
           "n = int(input())\nprint('Prime' if n > 1 and all(n % d for d in range(2, int(n ** 0.5) + 1)) else 'Not prime')"
       },
       {
+        id: "py-012",
+        title: "Reverse a Number",
+        blurb:
+          "Read one integer, which may be negative. Print its digits in reverse order, keeping the minus sign at the front if the number is negative.",
+        concept: {
+          id: "arithmetic",
+          name: "arithmetic",
+          note: "Calculate with numbers using operators like + - * / and %."
+        },
+        rock: 10,
+        starterCode:
+          "# Read one integer (it may be negative).\n# Print its digits in reverse order. Keep the minus sign at the front.\n\n# Write your code here\n",
+        example: "Input: 123 → Output: 321",
+        constraints: [
+          "Keep the minus sign at the front of the answer, not the end",
+          "Zeros at the end of the input disappear from the front of the output"
+        ],
+        tests: [
+          {
+            description: "Input 123 should produce 321",
+            input: "123",
+            expectedOutput: "321"
+          },
+          {
+            description: "Input -450 should produce -54",
+            input: "-450",
+            expectedOutput: "-54"
+          }
+        ],
+        hints: [
+          "Deal with the minus sign separately from the digits: note whether the number is negative, then reverse only the number without its sign.",
+          "Take digits off the end with % 10 and // 10, and build the answer with result = result * 10 + digit. Because you are building a number, zeros that end up at the front vanish by themselves. Put the minus sign back at the end.",
+          "n = int(input())\nsign = -1 if n < 0 else 1\nn = abs(n)\nresult = 0\nwhile n > 0:\n    result = result * 10 + n % 10\n    n //= 10\nprint(sign * result)"
+        ],
+        explanation:
+          "Pull digits off the end with n % 10 and n // 10, building the reversed number as you go with result = result * 10 + digit. Track the sign separately and multiply it back in at the end — building a number instead of text also makes trailing zeros vanish from the front on their own.",
+        solution:
+          "n = int(input())\nsign = -1 if n < 0 else 1\nn = abs(n)\nresult = 0\nwhile n > 0:\n    result = result * 10 + n % 10\n    n //= 10\nprint(sign * result)"
+      },
+      {
+        id: "py-013",
+        title: "Palindrome Check",
+        blurb:
+          "Read one word made of lowercase letters. Print Yes if it reads the same forwards and backwards, otherwise print No.",
+        concept: {
+          id: "conditionals",
+          name: "conditionals",
+          note: "Choose an action based on a condition."
+        },
+        rock: 11,
+        starterCode:
+          "# Read one word (lowercase letters only).\n# Print Yes if it is the same forwards and backwards, otherwise No.\n\n# Write your code here\n",
+        example: "Input: level → Output: Yes",
+        constraints: [
+          "Every pair of letters, counting in from both ends, has to match",
+          "A single-letter word counts as a palindrome"
+        ],
+        tests: [
+          {
+            description: "Input level should produce Yes",
+            input: "level",
+            expectedOutput: "Yes"
+          },
+          {
+            description: "Input plane should produce No",
+            input: "plane",
+            expectedOutput: "No"
+          }
+        ],
+        hints: [
+          "Compare the word with itself from the other end: the first letter has to match the last, the second has to match the second from the end, and so on.",
+          "Keep two positions, one at the front and one at the back, and move them towards each other in a loop. Stop when they meet or cross. If any pair of letters differs, the word is not a palindrome.",
+          "word = input()\nleft = 0\nright = len(word) - 1\nsame = True\nwhile left < right:\n    if word[left] != word[right]:\n        same = False\n    left += 1\n    right -= 1\nprint(\"Yes\" if same else \"No\")"
+        ],
+        explanation:
+          "Compare characters from both ends moving inward until they meet — checking only the first and last letter isn't enough, every pair has to match for the word to be a palindrome.",
+        solution:
+          "word = input()\nleft = 0\nright = len(word) - 1\nsame = True\nwhile left < right:\n    if word[left] != word[right]:\n        same = False\n    left += 1\n    right -= 1\nprint(\"Yes\" if same else \"No\")"
+      },
+      {
         id: "py-011",
         title: "Second Largest",
         blurb:
@@ -414,7 +494,7 @@ export const APPROACH = {
           name: "conditionals",
           note: "Choose an action based on a condition."
         },
-        rock: 10,
+        rock: 12,
         starterCode:
           "# The first line is N, the count of numbers.\n# The second line holds N integers separated by spaces.\n# Print the largest value that is smaller than the maximum,\n# or \"None\" if there isn't one.\n\n# Write your code here\n",
         example: "Input: 4, then 5 9 9 3 → Output: 5",
