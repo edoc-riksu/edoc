@@ -298,6 +298,101 @@
   user-select: none;
 }
 
+/* the map is the video, filling the whole window behind the top bar; the Map | List switch sits just under the bar */
+.mm-stage--full {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: auto;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+}
+.mm-stage--full::after { /* a little shade at the top and bottom keeps the bar and the lowest pins readable */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(3, 10, 14, 0.55), rgba(3, 10, 14, 0) 20%, rgba(3, 10, 14, 0) 78%, rgba(3, 10, 14, 0.45));
+  pointer-events: none;
+}
+.mm-stage--full .mm-pins {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.mm-stage--full .mm-view-toggle--stage {
+  top: clamp(64px, 11vh, 92px);
+  right: clamp(14px, 2.6vw, 34px);
+}
+.mm-stage--full .mm-pin-slot { /* each pin is as wide as its own text, at a fixed comfortable size whatever the screen */
+  width: max-content;
+}
+.mm-stage--full .mm-pin {
+  width: max-content;
+  height: auto;
+  min-height: 0;
+  gap: 9px;
+  padding: 7px 14px 7px 9px;
+  border-width: 1px;
+  border-radius: 10px;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.5);
+}
+.mm-stage--full .mm-pin:hover,
+.mm-stage--full .mm-pin:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.55), 0 0 14px rgba(94, 234, 212, 0.35);
+}
+.mm-stage--full .mm-pin[data-tail="down"]::after {
+  width: 9px;
+  height: 9px;
+  min-width: 0;
+  min-height: 0;
+  bottom: -5px;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+}
+.mm-stage--full .mm-pin-ring {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+}
+.mm-stage--full .mm-pin-title {
+  font-size: 14px;
+  line-height: 1.25;
+}
+.mm-stage--full .mm-pin-meta {
+  font-size: 12px;
+  line-height: 1.25;
+}
+.mm-stage--full .mm-pin--locked { /* over a bright picture, locked pins get a darker glass and brighter text so they stay readable */
+  opacity: 1;
+  background: rgba(8, 16, 28, 0.72);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+.mm-stage--full .mm-pin--locked .mm-pin-title {
+  color: var(--ink);
+}
+.mm-stage--full .mm-pin--locked .mm-pin-meta {
+  color: rgba(214, 224, 240, 0.78);
+}
+.mm-stage--full .mm-pin-continue {
+  right: 8px;
+  top: -10px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 9px;
+}
+.mm-stage--full .mm-pin-slot:has(.mm-pin[data-tail="down"]) .mm-peek {
+  bottom: calc(100% + 12px);
+}
+@media (max-aspect-ratio: 5/4) {
+  .mm-stage--full .mm-stage-art {
+    object-position: 62% 50%; /* tall or near-square window: keep the waterfall and crystal mountain in view */
+  }
+}
+
 /* ambient life on the painting, positioned in % of the 1376 x 712 art */
 .mm-stage-fx > * {
   position: absolute;
