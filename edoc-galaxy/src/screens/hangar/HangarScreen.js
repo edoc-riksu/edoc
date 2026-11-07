@@ -39,6 +39,24 @@ const AVATAR_MODEL = {
   mira: "/art/hangar/models/avatar-female.glb"
 };
 
+// Explorers with their own Starfarer-suit model (suit baked into the art
+// itself, not a runtime tint) - swapped in instead of AVATAR_MODEL above
+// whenever the Starfarer suit is previewed/equipped. Others fall back to
+// hangarBayScene.js's skin-masked tint until they get one too.
+const AVATAR_MODEL_STARFARER = {
+  vega: "/art/hangar/models/avatar-male-starfarer.glb",
+  kael: "/art/hangar/models/avatar-kael-starfarer.glb",
+  taro: "/art/hangar/models/avatar-taro-starfarer.glb",
+  mira: "/art/hangar/models/avatar-female-starfarer.glb"
+};
+
+function avatarFor(explorerId, suitId) {
+  if (suitId === "starfarer" && AVATAR_MODEL_STARFARER[explorerId]) {
+    return { url: AVATAR_MODEL_STARFARER[explorerId], preSuited: true };
+  }
+  return { url: AVATAR_MODEL[explorerId] || AVATAR_MODEL.vega, preSuited: false };
+}
+
 function safeReturnTo(value, fallback = "/") {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return fallback;
   return value;
@@ -54,7 +72,7 @@ export default function HangarScreen() {
   const [draftExplorer, setDraftExplorer] = useState("vega");
   const [draftSuit, setDraftSuit] = useState("base");
   const [starfarerUnlocked, setStarfarerUnlocked] = useState(false);
-  const [moduleStats, setModuleStats] = useState(null); // {done, total}
+  const [unlockChecked, setUnlockChecked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
@@ -78,28 +96,26 @@ export default function HangarScreen() {
     } catch {}
   }, []);
 
+  // Starfarer is gated on clearing Python Basics specifically, not "any
+  // module" - checked by slug so this stays correct once more planets/
+  // modules exist.
   useEffect(() => {
     let cancelled = false;
     async function checkUnlock() {
       try {
-        const modulesRes = await fetch("/api/modules?planet=python", { cache: "no-store" });
-        const modulesData = await modulesRes.json().catch(() => null);
-        const modules = modulesData?.modules || [];
-        const results = await Promise.all(
-          modules.map((m) => fetch(`/api/modules/${m.slug}/progress`, { cache: "no-store" }).then((r) => r.json()).catch(() => null))
-        );
+        const res = await fetch("/api/modules/python-basics/progress", { cache: "no-store" });
+        const data = await res.json().catch(() => null);
         if (!cancelled) {
-          const doneCount = results.filter((r) => r?.progress?.complete).length;
-          setStarfarerUnlocked(doneCount > 0);
-          setModuleStats({ done: doneCount, total: modules.length });
+          setStarfarerUnlocked(!!data?.progress?.complete);
+          setUnlockChecked(true);
         }
       } catch {
-        // Falls back to "locked" rather than leaving moduleStats null
+        // Falls back to "locked" rather than leaving the check pending
         // forever - otherwise the unlock note shows a loading state
         // indefinitely instead of recovering.
         if (!cancelled) {
           setStarfarerUnlocked(false);
-          setModuleStats({ done: 0, total: 0 });
+          setUnlockChecked(true);
         }
       }
     }
@@ -144,11 +160,13 @@ export default function HangarScreen() {
     if (!canvasRef.current) return undefined;
     let api = null;
     try {
+      const initialAvatar = avatarFor(draftExplorer, draftSuit);
       api = createHangarScene(canvasRef.current, {
         onStatus: say,
         starfarer: draftSuit === "starfarer",
         reducedMotion: calm,
-        avatarUrl: AVATAR_MODEL[draftExplorer] || AVATAR_MODEL.vega
+        avatarUrl: initialAvatar.url,
+        avatarPreSuited: initialAvatar.preSuited
       });
       sceneRef.current = api;
     } catch {
@@ -158,8 +176,8 @@ export default function HangarScreen() {
       api?.dispose();
       sceneRef.current = null;
     };
-    // Deliberately mount-once: suit changes go through the imperative API
-    // below, not a scene rebuild.
+    // Deliberately mount-once: suit/explorer changes go through the
+    // imperative API below, not a scene rebuild.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [calm]);
 
@@ -168,8 +186,9 @@ export default function HangarScreen() {
   }, [draftSuit]);
 
   useEffect(() => {
-    sceneRef.current?.setAvatar(AVATAR_MODEL[draftExplorer] || AVATAR_MODEL.vega);
-  }, [draftExplorer]);
+    const { url, preSuited } = avatarFor(draftExplorer, draftSuit);
+    sceneRef.current?.setAvatar(url, { preSuited });
+  }, [draftExplorer, draftSuit]);
 
   if (!user) return null;
 
@@ -178,9 +197,9 @@ export default function HangarScreen() {
   const previewLocked = draftSuit === "starfarer" && !starfarerUnlocked;
   const previewMatchesEquipped = draftExplorer === (user.explorer || "vega") && draftSuit === (user.suit || "base");
   const equipState = getEquipButtonState({ previewLocked, previewMatchesEquipped });
-  const unlockDetail = getUnlockDetail(moduleStats);
+  const unlockDetail = getUnlockDetail();
 
-  const loadingSuits = tab === "suit" && moduleStats === null;
+  const loadingSuits = tab === "suit" && !unlockChecked;
   const tileIcon = tab === "explorer" ? User : Shirt;
 
   const items =
