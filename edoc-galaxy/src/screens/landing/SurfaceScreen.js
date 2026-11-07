@@ -13,6 +13,7 @@ import "../approach/approach.css";
 import "./landing.css";
 
 const SETTINGS_KEY = "edoc-galaxy-settings";
+const FADE_MS = 380; // the fade to black between the surface and the module map
 
 const WORDS = [
   { eyebrow: "Touchdown", title: (n) => `Welcome to ${n}`, blurb: (n) => `A smooth landing. The ship is in one piece, and ${n} is waiting outside.`, ship: "Ship in good shape." },
@@ -27,6 +28,7 @@ export default function SurfaceScreen({ planetId, planetName, hull }) {
   const w = WORDS[sev];
   const [reduced, setReduced] = useState(false);
   const [lit, setLit] = useState(false);
+  const [leaving, setLeaving] = useState(false); // fading out on the way to the module map
   const [toast, setToast] = useState("");
   const timer = useRef(null);
 
@@ -44,10 +46,13 @@ export default function SurfaceScreen({ planetId, planetName, hull }) {
     timer.current = setTimeout(() => setToast(""), 2800);
   }, []);
   const back = useCallback(() => router.push("/"), [router]);
+  // Step outside: a short fade to black (none when motion is reduced), then the module map for this planet.
   const out = useCallback(() => {
+    if (leaving) return;
     sfx.select();
-    say("Exploring the surface isn't connected yet. It comes with a later build.");
-  }, [say]);
+    setLeaving(true);
+    setTimeout(() => router.push(`/planet/${planetId}/modules`), reduced ? 0 : FADE_MS);
+  }, [leaving, reduced, router, planetId]);
 
   useEffect(() => {
     const onKey = (ev) => {
@@ -60,7 +65,7 @@ export default function SurfaceScreen({ planetId, planetName, hull }) {
   }, [back, out]);
 
   return (
-    <div className="ap sf">
+    <div className={`ap sf ${leaving ? "is-leaving" : ""}`}>
       <div className="ap-scene">
         <SurfaceScene severity={sev} calm={reduced} onHover={(o) => { setLit(o); if (o) sfx.hover(); }} onPick={() => { sfx.select(); say(`${w.ship} Hull at ${Math.round(hull)}%.`); }} />
       </div>
