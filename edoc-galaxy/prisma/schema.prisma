@@ -100,6 +100,10 @@ model Attempt {
   scoreTotal  Int
   runtimeMs   Int
   hintsUsed   Int      @default(0) @db.SmallInt
+  // Wall-clock time spent on this attempt, from when the encounter opened
+  // to Submit (CodeConsole.js's startedAtRef) — powers the profile's
+  // "Time coding" stat. Sent by the client, like hintsUsed/runtimeMs.
+  elapsedMs   Int      @default(0)
   createdAt   DateTime @default(now())
 
   @@index([userId, encounterId])

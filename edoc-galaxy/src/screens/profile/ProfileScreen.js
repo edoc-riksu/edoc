@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Camera, Check, LogOut, Pencil, Rocket, Shirt, UserRound, X } from "lucide-react";
+import { Camera, Check, LogOut, Pencil, Rocket, Shirt, UserRound, Volume2, VolumeX, X } from "lucide-react";
 import AppShell from "../../shell/AppShell";
 import Button from "../../ui/Button";
 import Panel from "../../ui/Panel";
 import AvatarBust from "./AvatarBust";
 import ExitDialog from "./ExitDialog";
 import { useAuth } from "../../context/AuthContext";
+import { setSoundEnabled } from "../../galaxy/audio";
 import { updateProfile } from "../../lib/authService";
 import { resizeImageToDataUrl } from "../../lib/avatarImage";
 import { normalizeCallsign, isValidCallsign, AUTH_MESSAGES } from "../../lib/authValidation";
@@ -20,15 +21,35 @@ import "./profile.css";
 // planet) - module rows link into its module list once more planets land.
 const PROGRESS_PLANET_ID = "python";
 
-// Time coding still isn't tracked anywhere (no schema field, no API) — real
-// numbers only for what the backend actually records, rather than a
-// fabricated value for the rest.
+// Same key/shape every other screen (Galaxy, Approach, Hangar...) reads and
+// writes - this is the one place in the app a signed-in pilot was missing a
+// way to flip it.
+const SETTINGS_KEY = "edoc-galaxy-settings";
+
+function loadSoundSetting() {
+  try {
+    return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null")?.sound !== false;
+  } catch {
+    return true;
+  }
+}
+
 const STATS = [
   { label: "Encounters solved", key: "encountersSolved" },
   { label: "First-attempt rate", key: "firstAttemptRate" },
-  { label: "Time coding", key: null },
+  { label: "Time coding", key: "timeCodingMs" },
   { label: "Hints used", key: "hintsUsed" }
 ];
+
+/** "45m", "2h 5m", "2h" — whole minutes, dropping the hours part at zero. */
+function formatDuration(ms) {
+  const minutes = Math.round(ms / 60000);
+  if (minutes < 1) return ms > 0 ? "<1m" : "0m";
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder === 0 ? `${hours}h` : `${hours}h ${remainder}m`;
+}
 
 // The rest of the planned Python curriculum (plan Day 29's surface map
 // names them the same way) - shown as 0-progress rows, by name only, until
@@ -40,6 +61,7 @@ function formatStat(key, stats) {
   const value = stats[key];
   if (value === null || value === undefined) return "—";
   if (key === "firstAttemptRate") return `${Math.round(value * 100)}%`;
+  if (key === "timeCodingMs") return formatDuration(value);
   return String(value);
 }
 
@@ -78,6 +100,21 @@ export default function ProfileScreen() {
   const [stats, setStats] = useState(null);
   const [moduleProgress, setModuleProgress] = useState(null); // null = loading, [] = none
   const [confirmExit, setConfirmExit] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+
+  useEffect(() => {
+    setSoundOn(loadSoundSetting());
+  }, []);
+
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setSoundEnabled(next);
+    try {
+      const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") || {};
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...saved, sound: next }));
+    } catch { }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -193,6 +230,14 @@ export default function ProfileScreen() {
       section="PILOT PROFILE"
       tools={
         <>
+          <Button
+            variant="secondary"
+            iconOnly
+            icon={soundOn ? Volume2 : VolumeX}
+            pressed={soundOn}
+            aria-label={soundOn ? "Mute sound" : "Turn sound on"}
+            onClick={toggleSound}
+          />
           <Button variant="secondary" iconOnly icon={Shirt} href="/hangar" aria-label="Open the Lobby" />
           <Button variant="secondary" iconOnly icon={Rocket} href="/" aria-label="Back to the galaxy" />
           <Button variant="secondary" iconOnly icon={LogOut} aria-label="Sign out" disabled={signingOut} onClick={handleSignOutClick} />
