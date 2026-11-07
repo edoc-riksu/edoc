@@ -4,9 +4,8 @@
  * node-environment vitest setup (no jsdom/@testing-library dependency).
  */
 
-export function getUnlockDetail(moduleStats) {
-  if (!moduleStats) return "finish a module";
-  return `finish a module (${moduleStats.done} of ${moduleStats.total} modules done)`;
+export function getUnlockDetail() {
+  return "clear the Python Basics module";
 }
 
 /** Priority: locked beats equipped beats previewed beats available — a

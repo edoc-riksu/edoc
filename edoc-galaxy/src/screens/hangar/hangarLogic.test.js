@@ -2,12 +2,8 @@ import { describe, expect, it } from "vitest";
 import { getCardVisualState, getEquipButtonState, getUnlockDetail } from "./hangarLogic";
 
 describe("getUnlockDetail", () => {
-  it("falls back before module stats load", () => {
-    expect(getUnlockDetail(null)).toBe("finish a module");
-  });
-
-  it("reports progress once module stats load", () => {
-    expect(getUnlockDetail({ done: 2, total: 6 })).toBe("finish a module (2 of 6 modules done)");
+  it("names Python Basics as the unlock condition", () => {
+    expect(getUnlockDetail()).toBe("clear the Python Basics module");
   });
 });
 

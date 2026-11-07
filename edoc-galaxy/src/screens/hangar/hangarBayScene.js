@@ -454,15 +454,67 @@ var stripeL=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.2,0.16),trimMat); stripe
 mannequin.traverse(function(o){ if(o.isMesh){o.castShadow=true;o.receiveShadow=true;} });
 
 /* real pilot models (public/art/hangar/models/avatar-male.glb,
-   avatar-female.glb) - each a single baked mesh/material, no rig, so
-   "suit" is a colour tint on that one material rather than swapping
-   separate suit/trim meshes like the mannequin does. setAvatar(url) swaps
-   the loaded model (used when the previewed explorer's gender changes) -
-   the older model is disposed once the new one is in, not before, so a
-   slow load never leaves the podium empty. Falls back to the primitive
-   mannequin above if a file is missing or fails to load. */
+   avatar-female.glb) - each a single baked mesh/material covering the
+   whole body (skin and suit share one texture), no rig, so a plain
+   material.color tint would darken the face along with the suit. Instead,
+   buildSuitMask() samples the model's own baked texture once per model,
+   classifies each pixel as skin or not with a standard RGB skin-detection
+   rule, and bakes that into a same-UV-space mask texture. A small shader
+   patch (onBeforeCompile) then blends the suit tint in only where the
+   mask says "not skin", leaving the face at its original baked colour.
+   setAvatar(url) swaps the loaded model (used when the previewed
+   explorer's gender changes) - the older model is disposed once the new
+   one is in, not before, so a slow load never leaves the podium empty.
+   Falls back to the primitive mannequin above if a file is missing or
+   fails to load. */
 var gltfLoader=new GLTFLoader();
-var avatarModel=null, avatarTintMat=null, avatarUrl=null, avatarLoadToken=0, currentStarfarer=!!opts.starfarer;
+var avatarModel=null, avatarTintMat=null, avatarUrl=null, avatarLoadToken=0, currentStarfarer=!!opts.starfarer, avatarPreSuited=false;
+var maskCache={};
+function isSkinPixel(r,g,b){
+  // Peer et al.'s simple RGB rule - holds up across skin tones in flat lighting.
+  var mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+  return r>95 && g>40 && b>20 && (mx-mn)>15 && Math.abs(r-g)>15 && r>g && r>b;
+}
+function buildSuitMask(map, key){
+  if(maskCache[key]) return maskCache[key];
+  var img=map && map.image;
+  console.log('[suit-mask]', key, 'image:', img, 'width:', img && img.width);
+  if(!img || !img.width){ console.warn('[suit-mask] no decoded image yet, skipping mask for', key); return null; }
+  try {
+    var SIZE=256, c=cvs(SIZE,SIZE), g=c.getContext('2d');
+    g.drawImage(img,0,0,SIZE,SIZE);
+    var data=g.getImageData(0,0,SIZE,SIZE).data;
+    var mask=new Uint8Array(SIZE*SIZE), skinCount=0;
+    for(var i=0,p=0;i<data.length;i+=4,p++){ var skin=isSkinPixel(data[i],data[i+1],data[i+2]); if(skin) skinCount++; mask[p]=skin?0:255; }
+    console.log('[suit-mask]', key, 'skin pixels:', skinCount, '/', SIZE*SIZE, '(' + ((skinCount/(SIZE*SIZE)*100).toFixed(1)) + '%)');
+    var maskTex=new THREE.DataTexture(mask,SIZE,SIZE,THREE.RedFormat,THREE.UnsignedByteType);
+    maskTex.flipY=false; maskTex.wrapS=maskTex.wrapT=THREE.ClampToEdgeWrapping;
+    maskTex.minFilter=THREE.LinearFilter; maskTex.magFilter=THREE.LinearFilter;
+    maskTex.needsUpdate=true;
+    maskCache[key]=maskTex;
+    return maskTex;
+  } catch(e){
+    console.error('[suit-mask] failed to build mask for', key, e);
+    return null;
+  }
+}
+function wireSuitShader(mat, maskTex){
+  mat.onBeforeCompile=function(shader){
+    shader.uniforms.uSuitMask={ value: maskTex };
+    shader.uniforms.uSuitTint={ value: new THREE.Color(0xffffff) };
+    shader.uniforms.uSuitAmount={ value: 0 };
+    shader.uniforms.uSkinDarken={ value: 1 };
+    shader.fragmentShader='uniform sampler2D uSuitMask;\nuniform vec3 uSuitTint;\nuniform float uSuitAmount;\nuniform float uSkinDarken;\n'+shader.fragmentShader;
+    shader.fragmentShader=shader.fragmentShader.replace(
+      '#include <map_fragment>',
+      '#include <map_fragment>\n#ifdef USE_MAP\n  float suitMaskV = texture2D( uSuitMask, vMapUv ).r;\n  diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * uSuitTint, suitMaskV * uSuitAmount );\n  diffuseColor.rgb *= mix( 1.0, uSkinDarken, 1.0 - suitMaskV );\n#endif'
+    );
+    mat.userData.suitShader=shader;
+    console.log('[suit-mask] onBeforeCompile fired, shader wired');
+    applySuitTint(currentStarfarer); // re-apply now that the masked path is actually live
+  };
+  mat.needsUpdate=true;
+}
 function disposeObject3D(root){
   root.traverse(function(o){
     if(o.geometry) o.geometry.dispose();
@@ -471,9 +523,10 @@ function disposeObject3D(root){
   });
 }
 var sceneDisposed=false;
-function setAvatar(url){
+function setAvatar(url, avatarOpts){
   if(!url || url===avatarUrl) return;
   avatarUrl=url;
+  var preSuited=!!(avatarOpts && avatarOpts.preSuited);
   var token=++avatarLoadToken;
   gltfLoader.load(url, function(gltf){
     if(sceneDisposed || token!==avatarLoadToken) return; // scene torn down, or a newer swap started before this one finished
@@ -481,17 +534,47 @@ function setAvatar(url){
     model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; if(o.material) tintMat=o.material; } });
     var old=avatarModel;
     avatarRoot.add(model);
-    avatarModel=model; avatarTintMat=tintMat;
+    avatarModel=model; avatarTintMat=tintMat; avatarPreSuited=preSuited;
     mannequin.visible=false;
+    // The mask/shader is wired for every model, pre-suited or not - it's
+    // also how the face-brightness match below is applied consistently.
+    // Pre-suited models just get uSuitAmount=0 so their baked suit colour
+    // is never recoloured, only the face brightness is touched.
+    if(tintMat && tintMat.map){
+      var maskTex=buildSuitMask(tintMat.map, url);
+      if(maskTex) wireSuitShader(tintMat, maskTex);
+    }
     applySuitTint(currentStarfarer);
     if(old){ avatarRoot.remove(old); disposeObject3D(old); }
   }, undefined, function(){ say && say("Pilot model failed to load - showing placeholder."); });
 }
 
-function applySuitTint(star){ if(avatarTintMat) avatarTintMat.color.set(star?0xb89368:0x9a9a9a); }
-function setSuit(star){ currentStarfarer=star; suitMat.color.set(star?0x1e2a55:0xb7bdc8); trimMat.color.set(star?0xffb547:0x3dd6c4); trimMat.emissive.set(star?0x3a2405:0x0d3a35); applySuitTint(star); }
+function applySuitTint(star){
+  if(!avatarTintMat) return;
+  var shader=avatarTintMat.userData && avatarTintMat.userData.suitShader;
+  if(shader){
+    // mask-driven path: material.color must stay neutral so the only
+    // tint is the masked (skin-excluding) one applied in the shader patch.
+    avatarTintMat.color.set(0xffffff);
+    shader.uniforms.uSuitTint.value.set(star?0x1e2a55:0x6b7580);
+    // Pre-suited models already have the right suit colour baked into
+    // their own texture - amount 0 leaves it alone either way.
+    shader.uniforms.uSuitAmount.value=avatarPreSuited?0:(star?0.6:0.45);
+    // Same face brightness for every suit and every character (including
+    // a fully pre-suited model) so no pilot's face changes when they
+    // change outfits or models.
+    shader.uniforms.uSkinDarken.value=0.82;
+  } else if(avatarPreSuited){
+    avatarTintMat.color.set(0xffffff); // baked art, no runtime recolour
+  } else {
+    // mask not ready yet (texture still decoding) or no map to mask -
+    // whole-body fallback, same as before this fix existed.
+    avatarTintMat.color.set(star?0xb89368:0x7a7a7a);
+  }
+}
+function setSuit(star){ currentStarfarer=star; suitMat.color.set(star?0x1e2a55:0x6b7580); trimMat.color.set(star?0xffb547:0x3dd6c4); trimMat.emissive.set(star?0x3a2405:0x0d3a35); applySuitTint(star); }
 setSuit(!!opts.starfarer);
-setAvatar(opts.avatarUrl || "/art/hangar/models/avatar-male.glb");
+setAvatar(opts.avatarUrl || "/art/hangar/models/avatar-male.glb", { preSuited: !!opts.avatarPreSuited });
 
 /* ---------- lighting ---------- */
 scene.add(new THREE.HemisphereLight(0x5a2626,0x0a0c10,0.12));
@@ -610,6 +693,7 @@ function dispose(){
     ms.forEach(function(mt){ for (var k in mt){ if (mt[k] && mt[k].isTexture) mt[k].dispose(); } mt.dispose(); });
   });
   envRT.dispose(); composer.dispose(); renderer.dispose();
+  for(var mk in maskCache){ maskCache[mk].dispose(); }
 }
 
 return { setSuit: setSuit, setAvatar: setAvatar, dispose: dispose };
