@@ -324,9 +324,9 @@
   top: clamp(64px, 11vh, 92px);
   right: clamp(14px, 2.6vw, 34px);
 }
-@media (max-aspect-ratio: 17/20) {
+@media (max-aspect-ratio: 5/4) {
   .mm-stage--full .mm-stage-art {
-    object-position: 62% 50%; /* upright phone: keep the waterfall and crystal mountain in view */
+    object-position: 62% 50%; /* tall or near-square window: keep the waterfall and crystal mountain in view */
   }
 }
 

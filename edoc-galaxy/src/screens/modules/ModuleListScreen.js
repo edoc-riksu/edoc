@@ -31,20 +31,20 @@ const pad2 = (n) => String(n).padStart(2, "0");
    one exists (today, only "python-basics" does) - the rest render as locked
    "coming soon" pins, by name only, until those modules are real. */
 const SURFACE_MARKERS = [
-  { slug: "python-basics", title: "Python Basics", w: 214, tail: "down", place: "Landing pad" },
-  { slug: "strings", title: "Strings", w: 160, tail: "down", place: "Old library ruins" },
-  { slug: "functions", title: "Functions", w: 176, tail: "down", place: "Lantern tree market" },
-  { slug: "loops", title: "Loops", w: 185, tail: "down", place: "Falls bridge" },
-  { slug: "sets", title: "Sets", w: 217, tail: "down", place: "Crystal summit" },
-  { slug: "lists", title: "Lists", w: 243, tail: "down", place: "Cliffside stores" },
-  { slug: "dictionaries", title: "Dictionaries", w: 214, tail: "down", place: "Archive halls" },
-  { slug: "conditions", title: "Conditions", w: 196, tail: "down", place: "Terrace steps" },
-  { slug: "tuples", title: "Tuples", w: 186, tail: "down", place: "Lower platform" },
-  { slug: "errors", title: "Errors & Exceptions", w: 276, tail: "down", place: "Pipe works" }
+  { slug: "python-basics", title: "Python Basics", w: 214, tail: "down", place: "Mushroom clearing" },
+  { slug: "strings", title: "Strings", w: 160, tail: "down", place: "Ruined arch" },
+  { slug: "functions", title: "Functions", w: 176, tail: "down", place: "Lantern trees" },
+  { slug: "loops", title: "Loops", w: 185, tail: "down", place: "Waterfall pool" },
+  { slug: "sets", title: "Sets", w: 217, tail: "down", place: "Crystal mountain" },
+  { slug: "lists", title: "Lists", w: 243, tail: "down", place: "Mossy cliff" },
+  { slug: "dictionaries", title: "Dictionaries", w: 214, tail: "down", place: "Giant tree" },
+  { slug: "conditions", title: "Conditions", w: 196, tail: "down", place: "Fern ledge" },
+  { slug: "tuples", title: "Tuples", w: 186, tail: "down", place: "Toadstool bank" },
+  { slug: "errors", title: "Errors & Exceptions", w: 276, tail: "down", place: "Cliff edge" }
 ];
 
 /* The map is the full-screen looping video. Where each pin's tail touches it, as shares across and down the video (1920 x 1080),
-   at the place its name says: the arch is the old library ruins, the lantern trees are the market, the falls are the bridge. */
+   at the place its name says (each name is something you can see in the video: the arch, the lantern trees, the waterfall pool, the crystal mountain). */
 const VIDEO_W = 1920;
 const VIDEO_H = 1080;
 const VIDEO_SPOTS = {
@@ -88,7 +88,7 @@ function ModuleListGate({ planetId, planetName }) {
   const [modules, setModules] = useState(null); // null = loading
   const [progress, setProgress] = useState(null); // slug -> progress
   const [view, setView] = useState("map");
-  const [still, setStill] = useState(false); // reduced motion or data saver: keep the still picture instead of the video
+  const [still, setStill] = useState(false); // the pilot chose reduced motion in the app's settings, or a data saver is on: keep the still picture
   const [vp, setVp] = useState({ W: 1376, H: 768 }); // the window, which the full-screen map fills
 
   useEffect(() => {
@@ -99,7 +99,13 @@ function ModuleListGate({ planetId, planetName }) {
   }, []);
 
   useEffect(() => {
-    setStill(!!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || !!navigator.connection?.saveData);
+    // The slow background loop plays unless the app's own motion setting says reduced (or data saver is on). The computer's
+    // "reduce motion" switch is not used: on many Windows PCs it is off by default and froze the background for everyone.
+    let calm = false;
+    try {
+      calm = JSON.parse(localStorage.getItem("edoc-galaxy-settings") || "null")?.motion === "reduced";
+    } catch {}
+    setStill(calm || !!navigator.connection?.saveData);
   }, []);
 
   useEffect(() => {
@@ -136,8 +142,8 @@ function ModuleListGate({ planetId, planetName }) {
   if (loading || !user) return null;
 
   // Where a pin stands on screen, in pixels. The video fills the window, cropped to fit, so each pin stays on its spot whatever the
-  // window shape; on a phone held upright the pins zig-zag up the screen instead.
-  const portrait = vp.W / vp.H < 0.85;
+  // window shape; in a tall or near-square window (a phone, a half-width browser) the pins zig-zag up the screen instead.
+  const portrait = vp.W / vp.H < 1.25; // too narrow to show the whole video: the crop would push the side pins off or onto each other
   const pinSpot = (mk, i) => {
     const { W, H } = vp;
     const scale = Math.max(0.78, W / 1376); // pin text scales with the window width, so the pin box does too
