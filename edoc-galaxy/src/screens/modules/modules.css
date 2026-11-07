@@ -298,6 +298,38 @@
   user-select: none;
 }
 
+/* the map is the video, filling the whole window behind the top bar; the Map | List switch sits just under the bar */
+.mm-stage--full {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: auto;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+}
+.mm-stage--full::after { /* a little shade at the top and bottom keeps the bar and the lowest pins readable */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(3, 10, 14, 0.55), rgba(3, 10, 14, 0) 20%, rgba(3, 10, 14, 0) 78%, rgba(3, 10, 14, 0.45));
+  pointer-events: none;
+}
+.mm-stage--full .mm-pins {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.mm-stage--full .mm-view-toggle--stage {
+  top: clamp(64px, 11vh, 92px);
+  right: clamp(14px, 2.6vw, 34px);
+}
+@media (max-aspect-ratio: 17/20) {
+  .mm-stage--full .mm-stage-art {
+    object-position: 62% 50%; /* upright phone: keep the waterfall and crystal mountain in view */
+  }
+}
+
 /* ambient life on the painting, positioned in % of the 1376 x 712 art */
 .mm-stage-fx > * {
   position: absolute;
