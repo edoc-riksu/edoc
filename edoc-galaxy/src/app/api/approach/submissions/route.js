@@ -110,6 +110,7 @@ export const POST = withErrorLogging(async function POST(request) {
                     scoreTotal: result.score.total,
                     runtimeMs: result.execution.runtime_ms,
                     hintsUsed,
+                    elapsedMs: elapsedMs ?? 0,
                 },
             });
         } catch (error) {

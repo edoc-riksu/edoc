@@ -15,6 +15,7 @@ import "./console.css";
 
 const HULL_DAMAGE = 20;
 const HULL_REPAIR = 15;
+const HINT_COST = 10;
 const HINT_TIERS = ["Nudge", "Clue", "Walkthrough"];
 
 function getSoundPreference() {
@@ -188,10 +189,18 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   }, [encounter.id, code]);
 
   // Hints unlock one at a time — asking for a later tier before an
-  // earlier one isn't allowed.
+  // earlier one isn't allowed. Bolt draws on the ship's own hull to power
+  // each hint, same resource a failed submit damages, so running the
+  // hull out from hints alone loses the encounter the same way.
   const revealHint = (i) => {
     if (defeat || hintsRevealed !== i) return;
     setHintsRevealed(i + 1);
+    sfx.tick();
+    const nextHull = Math.max(0, hull - HINT_COST);
+    onHullChange(nextHull);
+    if (nextHull <= 0) {
+      setDefeat({ concept: encounter.concept?.name || "this exercise", reason: "Bolt's hints drained the last of your hull." });
+    }
   };
 
   const handleReset = () => {
@@ -599,7 +608,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
                   <p className="cs-bolt-tier-text">{encounter.hints?.[i]}</p>
                 ) : canReveal ? (
                   <button type="button" className="cs-bolt-reveal" onClick={() => revealHint(i)}>
-                    Reveal {tier.toLowerCase()}
+                    Reveal {tier.toLowerCase()} (&minus;{HINT_COST} hull)
                   </button>
                 ) : (
                   <p className="cs-bolt-tier-locked">
@@ -609,7 +618,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
               </div>
             );
           })}
-          <p className="cs-bolt-footer">Hints used: {hintsRevealed} of 3</p>
+          <p className="cs-bolt-footer">Hints used: {hintsRevealed} of 3 · &minus;{HINT_COST} hull each</p>
         </div>
       )}
 
