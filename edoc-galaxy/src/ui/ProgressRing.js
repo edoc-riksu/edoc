@@ -32,7 +32,16 @@ export default function ProgressRing({ value = 0, size = 48, complete = false })
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </svg>
-      <span className="ui-ring-label">{complete ? <Check size={Math.round(size * 0.4)} aria-hidden="true" /> : `${pct}%`}</span>
+      <span className="ui-ring-label">
+        {complete ? (
+          <>
+            <Check size={Math.round(size * 0.4)} aria-hidden="true" />
+            <span className="ui-sr-only">Complete</span>
+          </>
+        ) : (
+          `${pct}%`
+        )}
+      </span>
     </div>
   );
 }

@@ -12,6 +12,7 @@
 
 const HULL_PREFIX = "edoc_galaxy_hull_";
 const CODE_PREFIX = "edoc_galaxy_code_";
+const DEFEAT_PREFIX = "edoc_galaxy_defeat_";
 
 function readNumber(key) {
   if (typeof window === "undefined") return null;
@@ -55,5 +56,32 @@ export function saveEncounterCode(encounterId, code) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(CODE_PREFIX + encounterId, code);
+  } catch { }
+}
+
+// A hull-out mid-encounter locks the console behind the defeat dialog
+// until Rematch is clicked. Without this, reloading at exactly 0 hull
+// would drop the player back into a normal, unlocked console.
+export function loadDefeat(encounterId) {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(DEFEAT_PREFIX + encounterId);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveDefeat(encounterId, defeat) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(DEFEAT_PREFIX + encounterId, JSON.stringify(defeat));
+  } catch { }
+}
+
+export function clearDefeat(encounterId) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(DEFEAT_PREFIX + encounterId);
   } catch { }
 }

@@ -1,5 +1,5 @@
 "use client";
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import PasswordField from "../../components/auth/PasswordField";
@@ -13,6 +13,7 @@ function ResetPasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const confirmationRef = useRef(null);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -24,9 +25,13 @@ function ResetPasswordForm() {
     setDone(true);
   };
 
+  useEffect(() => {
+    if (done) confirmationRef.current?.focus();
+  }, [done]);
+
   if (done) {
     return (
-      <div>
+      <div role="status" ref={confirmationRef} tabIndex={-1}>
         <p className="gx-auth-sub">Your password has been updated.</p>
         <p className="gx-auth-helper">Preview only — nothing was actually changed on an account yet.</p>
         <p className="gx-auth-foot">

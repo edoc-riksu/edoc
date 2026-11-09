@@ -9,7 +9,7 @@ import useResizable from "../../ui/useResizable";
 import { runCode, submitCode, getResumeState } from "../../lib/executionApi";
 import { runWithInput } from "../../lib/pyDebugRunner";
 import { setSoundEnabled, sfx } from "../../galaxy/audio";
-import { loadEncounterCode, saveEncounterCode } from "../../lib/encounterResume";
+import { loadEncounterCode, saveEncounterCode, loadDefeat, saveDefeat, clearDefeat } from "../../lib/encounterResume";
 import DefeatDialog from "./DefeatDialog";
 import "./console.css";
 
@@ -86,6 +86,9 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   const [attempts, setAttempts] = useState(0);
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [bolt, setBolt] = useState(false);
+  // Starts null (not read from storage) so the first client render matches
+  // the server-rendered HTML; the mount effect below restores a persisted
+  // defeat state right after, avoiding a hydration mismatch on reload.
   const [defeat, setDefeat] = useState(null); // null | { concept, reason }
   const [activeTab, setActiveTab] = useState("tests"); // "tests" | "debug" | "editorial"
   const [debugInput, setDebugInput] = useState("");
@@ -150,7 +153,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     setAttempts(1);
     setHintsRevealed(0);
     setBolt(false);
-    setDefeat(null);
+    setDefeat(loadDefeat(encounter.id));
     setActiveTab("tests");
     setDebugInput("");
     setDebugResult(null);
@@ -199,7 +202,9 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     const nextHull = Math.max(0, hull - HINT_COST);
     onHullChange(nextHull);
     if (nextHull <= 0) {
-      setDefeat({ concept: encounter.concept?.name || "this exercise", reason: "Bolt's hints drained the last of your hull." });
+      const next = { concept: encounter.concept?.name || "this exercise", reason: "Bolt's hints drained the last of your hull." };
+      setDefeat(next);
+      saveDefeat(encounter.id, next);
     }
   };
 
@@ -211,6 +216,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
 
   const handleRematch = () => {
     setDefeat(null);
+    clearDefeat(encounter.id);
     setCode(encounter.starterCode || "");
     setResult(null);
     setSolved(false);
@@ -227,7 +233,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
   // Free to use while working — sample tests only, with real stdout/
   // stderr, and never touches hull or attempts (contract: a run result
   // must never be used to award anything).
-  const handleRunDebug = async () => {
+  const handleRun = async () => {
     if (busy || defeat) return;
     clearTimeout(writingTimerRef.current);
     setIsWriting(false);
@@ -289,7 +295,9 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
     const nextHull = Math.max(0, hull - HULL_DAMAGE);
     onHullChange(nextHull);
     if (nextHull <= 0) {
-      setDefeat({ concept: encounter.concept?.name || "this exercise", reason: verdictMessage });
+      const next = { concept: encounter.concept?.name || "this exercise", reason: verdictMessage };
+      setDefeat(next);
+      saveDefeat(encounter.id, next);
     }
   };
 
@@ -374,7 +382,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
               language="python"
               value={code}
               onChange={setCode}
-              onRunShortcut={handleRunDebug}
+              onRunShortcut={handleRun}
               onSubmitShortcut={handleSubmit}
               onWritingChange={handleWritingChange}
               disabled={!!defeat}
@@ -385,7 +393,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
               </Button>
               <div className="cs-run-wrap">
                 <div className="cs-run-btn-group">
-                  <Button variant="secondary" loading={busy === "run"} disabled={!!busy || !!defeat} onClick={handleRunDebug}>
+                  <Button variant="secondary" loading={busy === "run"} disabled={!!busy || !!defeat} onClick={handleRun}>
                     Run
                   </Button>
                   <span className="cs-run-hint">Ctrl+Enter</span>
@@ -408,16 +416,18 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
 
           <div className="cs-tests">
             <div className="cs-panel-tabs" role="tablist">
-              <button type="button" role="tab" aria-selected={activeTab === "tests"} className={`cs-panel-tab ${activeTab === "tests" ? "is-active" : ""}`} onClick={() => setActiveTab("tests")}>
+              <button id="cs-tab-tests" type="button" role="tab" aria-selected={activeTab === "tests"} aria-controls="cs-panel-body" className={`cs-panel-tab ${activeTab === "tests" ? "is-active" : ""}`} onClick={() => setActiveTab("tests")}>
                 Tests
               </button>
-              <button type="button" role="tab" aria-selected={activeTab === "debug"} className={`cs-panel-tab ${activeTab === "debug" ? "is-active" : ""}`} onClick={() => setActiveTab("debug")}>
+              <button id="cs-tab-debug" type="button" role="tab" aria-selected={activeTab === "debug"} aria-controls="cs-panel-body" className={`cs-panel-tab ${activeTab === "debug" ? "is-active" : ""}`} onClick={() => setActiveTab("debug")}>
                 <Terminal size={13} aria-hidden="true" /> Debug console
               </button>
               <button
+                id="cs-tab-editorial"
                 type="button"
                 role="tab"
                 aria-selected={activeTab === "editorial"}
+                aria-controls="cs-panel-body"
                 className={`cs-panel-tab ${activeTab === "editorial" ? "is-active" : ""}`}
                 onClick={() => solved && setActiveTab("editorial")}
                 disabled={!solved}
@@ -427,7 +437,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
             </div>
 
             {result?.kind === "submit" && result.status === "pass" && (
-              <div className="cs-accepted-banner">
+              <div className="cs-accepted-banner" role="status">
                 <CheckCircle2 size={16} aria-hidden="true" />
                 <span>Accepted — hull repaired.</span>
                 <Button size="sm" onClick={onPass} autoFocus>
@@ -437,7 +447,7 @@ export default function CodeConsole({ encounter, hull, onHullChange, onPass, onE
               </div>
             )}
 
-            <div className="cs-panel-body">
+            <div className="cs-panel-body" role="tabpanel" id="cs-panel-body" aria-labelledby={`cs-tab-${activeTab}`}>
               {activeTab === "tests" && (
                 <>
                   {(result?.kind === "run" || result?.kind === "submit") && (
