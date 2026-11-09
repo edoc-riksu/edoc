@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import Link from "next/link";
 
 /**
@@ -10,8 +11,11 @@ import Link from "next/link";
  *
  * It is a plain component (no "use client"), so server pages can render it
  * too. Pass event handlers only from client components.
+ *
+ * Forwards its ref to the underlying <a>/<button> - callers do rely on this
+ * (e.g. ApproachScreen.js focuses the Engage button after picking the rock).
  */
-export default function Button({
+const Button = forwardRef(function Button({
   variant = "primary",
   size = "md",
   icon: Icon,
@@ -25,7 +29,7 @@ export default function Button({
   type = "button",
   disabled,
   ...rest
-}) {
+}, ref) {
   const cls = [
     "ui-btn",
     `ui-btn--${variant}`,
@@ -47,7 +51,7 @@ export default function Button({
 
   if (href && !disabled) {
     return (
-      <Link href={href} className={cls} {...rest}>
+      <Link href={href} className={cls} ref={ref} {...rest}>
         {inner}
       </Link>
     );
@@ -60,9 +64,12 @@ export default function Button({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       aria-pressed={pressed}
+      ref={ref}
       {...rest}
     >
       {inner}
     </button>
   );
-}
+});
+
+export default Button;

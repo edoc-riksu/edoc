@@ -106,21 +106,15 @@ function SigninForm() {
           required
         />
 
-        <div>
-          <PasswordField
-            id={FIELD_IDS.password}
-            ref={passwordRef}
-            label="Password"
-            value={values.password}
-            onChange={(e) => setField("password", e.target.value)}
-            autoComplete="current-password"
-          />
-          {credentialsError && (
-            <p role="alert" className="gx-auth-error">
-              {credentialsError}
-            </p>
-          )}
-        </div>
+        <PasswordField
+          id={FIELD_IDS.password}
+          ref={passwordRef}
+          label="Password"
+          value={values.password}
+          onChange={(e) => setField("password", e.target.value)}
+          autoComplete="current-password"
+          error={credentialsError}
+        />
 
         <div className="gx-auth-row">
           <label htmlFor="signin-remember" style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--ink-soft)" }}>

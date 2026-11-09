@@ -696,6 +696,12 @@
   .cs {
     animation: none;
   }
+  .cs-quiet-indicator {
+    animation: none;
+  }
+  .cs.is-writing {
+    transition: none;
+  }
 }
 
 /* ---------- silent-while-coding rule (product spec) ---------- */

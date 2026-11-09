@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import TextField from "../../components/auth/TextField";
 
@@ -8,11 +8,16 @@ import TextField from "../../components/auth/TextField";
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const confirmationRef = useRef(null);
 
   const handleSubmit = (event) => {
     event.preventDefault();
     if (email) setSubmitted(true);
   };
+
+  useEffect(() => {
+    if (submitted) confirmationRef.current?.focus();
+  }, [submitted]);
 
   return (
     <div className="gx-auth">
@@ -24,7 +29,7 @@ export default function ForgotPasswordPage() {
         </p>
 
         {submitted ? (
-          <div>
+          <div role="status" ref={confirmationRef} tabIndex={-1}>
             <p className="gx-auth-sub">
               If an account exists for <strong style={{ color: "var(--ink)" }}>{email}</strong>, a reset link is on its way.
             </p>
