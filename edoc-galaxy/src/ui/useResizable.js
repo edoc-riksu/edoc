@@ -59,6 +59,9 @@ export default function useResizable({ axis = "x", initial = 50, min = 20, max =
       onKeyDown,
       role: "separator",
       "aria-orientation": axis === "x" ? "vertical" : "horizontal",
+      "aria-valuenow": Math.round(pct),
+      "aria-valuemin": min,
+      "aria-valuemax": max,
       tabIndex: 0
     }
   };

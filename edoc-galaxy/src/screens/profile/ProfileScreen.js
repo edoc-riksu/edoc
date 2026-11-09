@@ -294,6 +294,8 @@ export default function ProfileScreen() {
                 autoFocus
                 disabled={callsignBusy}
                 aria-label="Callsign"
+                aria-invalid={callsignError ? "true" : undefined}
+                aria-describedby={callsignError ? "profile-callsign-error" : undefined}
               />
               <button type="button" className="profile-callsign-btn" onClick={saveCallsign} disabled={callsignBusy} aria-label="Save callsign">
                 <Check size={15} />
@@ -303,15 +305,15 @@ export default function ProfileScreen() {
               </button>
             </div>
           ) : (
-            <h1 className="profile-callsign">
+            <h2 className="profile-callsign">
               {user.callsign}
               <button type="button" className="profile-callsign-pencil" onClick={startEditCallsign} aria-label="Edit callsign">
                 <Pencil size={14} />
               </button>
-            </h1>
+            </h2>
           )}
           {callsignError && (
-            <p className="profile-field-error" role="alert">
+            <p id="profile-callsign-error" className="profile-field-error" role="alert">
               {callsignError}
             </p>
           )}

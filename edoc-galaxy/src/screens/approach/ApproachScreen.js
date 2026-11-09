@@ -20,11 +20,20 @@ const SETTINGS_KEY = "edoc-galaxy-settings";
 
 const encounterUrl = (planetId, id) => `/planet/${planetId}/encounter/${id}`;
 
-function loadSettings() {
+function osPrefersReducedMotion() {
   try {
-    return { sound: true, motion: "full", ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") || {}) };
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   } catch {
-    return { sound: true, motion: "full" };
+    return false;
+  }
+}
+
+function loadSettings() {
+  const fallbackMotion = osPrefersReducedMotion() ? "reduced" : "full";
+  try {
+    return { sound: true, motion: fallbackMotion, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") || {}) };
+  } catch {
+    return { sound: true, motion: fallbackMotion };
   }
 }
 
