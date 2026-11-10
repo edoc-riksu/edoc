@@ -1,14 +1,14 @@
 // Seeds the module/encounter index from Backend 1's real encounter
-// files (../backend/encounters/<language>/<id>/v1.json) - never from
+// files (../backend/encounters/<language>/<id>/v<n>.json, highest version) - never from
 // made-up data, so the index can't drift from what the execution
 // service actually serves. Safe to re-run: upserts everything.
 //
 // Usage: DATABASE_URL=... node scripts/seed.mjs
 
-import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
+import { inPlayOrder, loadEncounters } from "../src/lib/server/encounterFiles.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ENCOUNTERS_ROOT = join(__dirname, "..", "..", "backend", "encounters");
@@ -17,21 +17,11 @@ const ENCOUNTERS_ROOT = join(__dirname, "..", "..", "backend", "encounters");
 // the first two months). Add more entries here as other languages land.
 const LANGUAGE_TO_PLANET = { python: "python" };
 
-function loadEncounters(language) {
-  const dir = join(ENCOUNTERS_ROOT, language);
-  return readdirSync(dir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => {
-      const raw = readFileSync(join(dir, entry.name, "v1.json"), "utf8");
-      return JSON.parse(raw);
-    });
-}
-
 async function main() {
   const db = new PrismaClient();
   try {
     for (const [language, planetId] of Object.entries(LANGUAGE_TO_PLANET)) {
-      const encounters = loadEncounters(language);
+      const encounters = loadEncounters(ENCOUNTERS_ROOT, language);
       const byModule = new Map();
       for (const e of encounters) {
         if (!byModule.has(e.module)) byModule.set(e.module, []);
@@ -47,8 +37,7 @@ async function main() {
         });
         moduleOrder += 1;
 
-        moduleEncounters.sort((a, b) => a.id.localeCompare(b.id));
-        for (const [order, e] of moduleEncounters.entries()) {
+        for (const [order, e] of inPlayOrder(moduleEncounters).entries()) {
           await db.encounter.upsert({
             where: { id: e.id },
             update: {
