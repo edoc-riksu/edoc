@@ -1,0 +1,73 @@
+{
+  "id": "py-015",
+  "version": 1,
+  "language": "python",
+  "title": "Longest Increasing Run",
+  "difficulty": "hard",
+  "module": "python-basics",
+  "order": 15,
+  "concepts": ["loops", "conditionals", "input-output"],
+  "problem": "The first line of input is a positive integer N. The second line holds N integers separated by spaces. Print the length of the longest unbroken run of numbers where each one is strictly bigger than the one before it. For example, in 1 2 5 3 4 the longest run is 1 2 5, so the answer is 3. A single number is a run of length 1.",
+  "starter_code": "# The first line is N, the count of numbers.\n# The second line holds N integers separated by spaces.\n# Print the length of the longest strictly increasing run of neighbours.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "5\n1 2 5 3 4",
+        "expected_output": "3",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "4\n7 7 7 7",
+        "expected_output": "1",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1\n42",
+        "expected_output": "1",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "6\n3 1 2 3 4 5",
+        "expected_output": "5",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "7\n1 2 3 1 2 3 4",
+        "expected_output": "4",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "5\n-5 -3 -1 0 2",
+        "expected_output": "5",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "6\n1 2 2 3 4 5",
+        "expected_output": "4",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Look at each number next to the one before it, and keep a running length of the current climb.",
+    "2": "Loop from the second number on. If it is bigger than the one before it, the current run grows by one; otherwise a new run starts at length 1. Keep the best length seen and update it after every number, so a run that reaches the end still counts. Equal numbers end a run.",
+    "3": "input()\nv = list(map(int, input().split()))\nbest = cur = 1\nfor i in range(1, len(v)):\n    cur = cur + 1 if v[i] > v[i - 1] else 1\n    best = max(best, cur)\nprint(best)"
+  },
+
+  "failure_explanation": "The run must be strictly increasing and unbroken: two equal numbers in a row end it. Count numbers, not steps between them (a run of three numbers has length 3), update the best length after every number so a run that lasts to the end is counted, and compare the values as numbers so negative numbers work."
+}
