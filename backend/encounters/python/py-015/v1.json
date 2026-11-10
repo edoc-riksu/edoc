@@ -40,7 +40,7 @@
       },
       {
         "id": "hidden-3",
-        "input": "7\n1 2 3 1 2 3 4",
+        "input": "7\n2 3 4 5 1 2 1",
         "expected_output": "4",
         "points": 20
       },
