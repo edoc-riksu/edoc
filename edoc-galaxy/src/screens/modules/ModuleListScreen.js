@@ -27,38 +27,25 @@ function conceptNamesFor(encounters) {
 
 const pad2 = (n) => String(n).padStart(2, "0");
 
-/* One pin per topic on the surface (where each stands: VIDEO_SPOTS below). `slug` matches a real module's slug when
-   one exists (today, only "python-basics" does) - the rest render as locked
-   "coming soon" pins, by name only, until those modules are real. */
+/* One pin per topic on the surface art (public/art/modules/python-surface.jpg,
+   1376 x 712 - x/y/w are pixel coordinates on that exact image). `slug`
+   matches a real module's slug when one exists (today, only "python-basics"
+   does) - the rest render as locked "coming soon" pins, by name only, until
+   those modules are real. */
+const ART_W = 1376;
+const ART_H = 712;
 const SURFACE_MARKERS = [
-  { slug: "python-basics", title: "Python Basics", w: 214, tail: "down", place: "Mushroom clearing" },
-  { slug: "strings", title: "Strings", w: 160, tail: "down", place: "Ruined arch" },
-  { slug: "functions", title: "Functions", w: 176, tail: "down", place: "Lantern trees" },
-  { slug: "loops", title: "Loops", w: 185, tail: "down", place: "Waterfall pool" },
-  { slug: "sets", title: "Sets", w: 217, tail: "down", place: "Crystal mountain" },
-  { slug: "lists", title: "Lists", w: 243, tail: "down", place: "Mossy cliff" },
-  { slug: "dictionaries", title: "Dictionaries", w: 214, tail: "down", place: "Giant tree" },
-  { slug: "conditions", title: "Conditions", w: 196, tail: "down", place: "Fern ledge" },
-  { slug: "tuples", title: "Tuples", w: 186, tail: "down", place: "Toadstool bank" },
-  { slug: "errors", title: "Errors & Exceptions", w: 276, tail: "down", place: "Cliff edge" }
+  { slug: "python-basics", title: "Python Basics", x: 214, y: 433, w: 214, tail: "down", place: "Landing pad" },
+  { slug: "strings", title: "Strings", x: 348, y: 96, w: 160, tail: "left", place: "Old library ruins" },
+  { slug: "functions", title: "Functions", x: 563, y: 275, w: 176, tail: "left", place: "Lantern tree market" },
+  { slug: "loops", title: "Loops", x: 669, y: 416, w: 185, tail: "down", place: "Falls bridge" },
+  { slug: "sets", title: "Sets", x: 786, y: 71, w: 217, tail: "right", place: "Crystal summit" },
+  { slug: "lists", title: "Lists", x: 830, y: 281, w: 243, tail: "right", place: "Cliffside stores" },
+  { slug: "dictionaries", title: "Dictionaries", x: 78, y: 262, w: 214, tail: "up", place: "Archive halls" },
+  { slug: "conditions", title: "Conditions", x: 432, y: 556, w: 196, tail: "up", place: "Terrace steps" },
+  { slug: "tuples", title: "Tuples", x: 1070, y: 606, w: 186, tail: "up", place: "Lower platform" },
+  { slug: "errors", title: "Errors & Exceptions", x: 1040, y: 176, w: 276, tail: "down", place: "Pipe works" }
 ];
-
-/* The map is the full-screen looping video. Where each pin's tail touches it, as shares across and down the video (1920 x 1080),
-   at the place its name says (each name is something you can see in the video: the arch, the lantern trees, the waterfall pool, the crystal mountain). */
-const VIDEO_W = 1920;
-const VIDEO_H = 1080;
-const VIDEO_SPOTS = {
-  "python-basics": [0.2, 0.92],
-  strings: [0.3, 0.5],
-  functions: [0.84, 0.6],
-  loops: [0.62, 0.8],
-  sets: [0.66, 0.36],
-  lists: [0.45, 0.56],
-  dictionaries: [0.11, 0.5],
-  conditions: [0.35, 0.8],
-  tuples: [0.82, 0.88],
-  errors: [0.72, 0.5]
-};
 
 /**
  * Plan Day 29: the module list for one planet - an illustrated surface map,
@@ -88,22 +75,6 @@ function ModuleListGate({ planetId, planetName }) {
   const [modules, setModules] = useState(null); // null = loading
   const [progress, setProgress] = useState(null); // slug -> progress
   const [view, setView] = useState("map");
-  const [still, setStill] = useState(false); // only a data saver keeps the still picture; the background otherwise always plays
-  const [vp, setVp] = useState({ W: 1376, H: 768 }); // the window, which the full-screen map fills
-
-  useEffect(() => {
-    const fit = () => setVp({ W: window.innerWidth, H: window.innerHeight });
-    fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, []);
-
-  useEffect(() => {
-    // The background loop is part of the screen and always plays. It is not tied to the app's motion setting (the galaxy screen
-    // saves "reduced" there by itself whenever the computer's reduce-motion switch is on, which froze it for everyone) or to the
-    // computer's own switch. Only a data saver keeps the still picture.
-    setStill(!!navigator.connection?.saveData);
-  }, []);
 
   useEffect(() => {
     if (!loading && !user) router.replace(`/signin?returnTo=${encodeURIComponent(`/planet/${planetId}/modules`)}`);
@@ -137,23 +108,6 @@ function ModuleListGate({ planetId, planetName }) {
   }, [user, planetId]);
 
   if (loading || !user) return null;
-
-  // Where a pin stands on screen, in pixels. The video fills the window, cropped to fit, so each pin stays on its spot whatever the
-  // window shape; in a tall or near-square window (a phone, a half-width browser) the pins zig-zag up the screen instead.
-  const portrait = vp.W / vp.H < 1.25; // too narrow to show the whole video: the crop would push the side pins off or onto each other
-  const pinSpot = (mk, i) => {
-    const { W, H } = vp;
-    if (portrait) {
-      const step = Math.min(70, (H - 250) / (SURFACE_MARKERS.length - 1));
-      return { x: i % 2 ? W - 112 : 112, y: H - 56 - i * step };
-    }
-    const k = Math.max(W / VIDEO_W, H / VIDEO_H);
-    const ax = VIDEO_SPOTS[mk.slug][0];
-    const ay = VIDEO_SPOTS[mk.slug][1];
-    const x = (W - VIDEO_W * k) / 2 + ax * VIDEO_W * k;
-    const y = (H - VIDEO_H * k) / 2 + ay * VIDEO_H * k;
-    return { x: Math.min(W - 112, Math.max(112, x)), y: Math.min(H - 28, Math.max(150, y)) };
-  };
 
   // One summary per real module - the surface map's "coming soon" pins are
   // the rest of SURFACE_MARKERS, since they have no slug/progress of their own.
@@ -206,27 +160,9 @@ function ModuleListGate({ planetId, planetName }) {
             {view === "list" && <div className="mm-view-toggle">{viewToggle}</div>}
 
             {view === "map" ? (
-              <div className="mm-stage mm-stage--full">
-                {still ? (
-                  <img src="/art/modules/python-surface-poster.jpg" alt="" className="mm-stage-art" draggable="false" />
-                ) : (
-                  <video
-                    className="mm-stage-art"
-                    poster="/art/modules/python-surface-poster.jpg"
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="auto"
-                    aria-hidden="true"
-                    disablePictureInPicture
-                    tabIndex={-1}
-                  >
-                    <source src="/art/modules/python-surface.webm" type="video/webm" />
-                    <source src="/art/modules/python-surface.mp4" type="video/mp4" />
-                  </video>
-                )}
-                <div className="mm-stage-fx" aria-hidden="true" hidden>
+              <div className="mm-stage">
+                <img src="/art/modules/python-surface.jpg" alt="" className="mm-stage-art" draggable="false" />
+                <div className="mm-stage-fx" aria-hidden="true">
                   <span className="mm-fx-lanterns" />
                   <span className="mm-fx-falls" />
                   <span className="mm-fx-falls-sm" />
@@ -246,10 +182,13 @@ function ModuleListGate({ planetId, planetName }) {
                 <div className="mm-view-toggle mm-view-toggle--stage">{viewToggle}</div>
 
                 <ul className="mm-pins">
-                  {SURFACE_MARKERS.map((mk, i) => {
+                  {SURFACE_MARKERS.map((mk) => {
                     const mod = summaries.find((s) => s.slug === mk.slug);
-                    const spot = pinSpot(mk, i);
-                    const style = { left: spot.x, top: spot.y, width: "max-content", transform: "translate(-50%, -100%)" };
+                    const style = {
+                      left: `${(mk.x / ART_W) * 100}%`,
+                      top: `${(mk.y / ART_H) * 100}%`,
+                      width: `${(mk.w / ART_W) * 100}%`
+                    };
 
                     if (!mod) {
                       return (
