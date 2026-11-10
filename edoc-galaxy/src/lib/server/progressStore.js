@@ -1,4 +1,6 @@
 import { db } from "../db";
+import { completionSnapshot } from "./completion.mjs";
+import { masterySummary } from "./mastery";
 
 // Progress.sectorId is a planet id (e.g. "python" - matches Module.planetId
 // and the galaxy map's PLANETS ids in src/galaxy/layout.js). `level` is how
@@ -27,10 +29,36 @@ export async function recordAcceptedAttempt(userId, encounterId) {
   );
   const level = solvedEncounterIds.filter((a) => planetEncounterIds.has(a.encounterId)).length;
 
-  return db.progress.upsert({
+  const progress = await db.progress.upsert({
     where: { userId_sectorId: { userId, sectorId: planetId } },
     update: { level },
     create: { userId, sectorId: planetId, level }
+  });
+
+  await recordModuleCompletion(userId, encounter.module);
+  return progress;
+}
+
+/**
+ * Plan Day 29: once every encounter in the module is solved, save the
+ * certificate data for it (see the Completion model). Written once: a later
+ * call for an already-completed module leaves the first record untouched.
+ */
+export async function recordModuleCompletion(userId, module_) {
+  const encounters = await db.encounter.findMany({ where: { moduleId: module_.id }, select: { id: true } });
+  const encounterIds = encounters.map((e) => e.id);
+  const attempts = await db.attempt.findMany({
+    where: { userId, encounterId: { in: encounterIds } },
+    select: { encounterId: true, verdict: true, hintsUsed: true, elapsedMs: true, createdAt: true }
+  });
+
+  const snapshot = completionSnapshot(encounterIds, attempts);
+  if (!snapshot) return null;
+
+  return db.completion.upsert({
+    where: { userId_moduleSlug: { userId, moduleSlug: module_.slug } },
+    update: {},
+    create: { userId, moduleSlug: module_.slug, planetId: module_.planetId, ...snapshot }
   });
 }
 
@@ -186,7 +214,7 @@ export async function getConceptMastery(userId) {
 
 /** Real numbers for the pilot profile screen - plan Day 18. */
 export async function getProfileStats(userId) {
-  const [totalAttempts, allAttempts, solvedGroups, progress, concepts, hintsUsedSum, elapsedMsSum] = await Promise.all([
+  const [totalAttempts, allAttempts, solvedGroups, progress, concepts, hintsUsedSum, elapsedMsSum, modulesCompleted] = await Promise.all([
     db.attempt.count({ where: { userId } }),
     // Ordered oldest-first per encounter so the first entry seen for each
     // encounterId below is that encounter's actual first attempt.
@@ -195,7 +223,8 @@ export async function getProfileStats(userId) {
     db.progress.findMany({ where: { userId }, select: { sectorId: true, level: true } }),
     getConceptMastery(userId),
     db.attempt.aggregate({ where: { userId }, _sum: { hintsUsed: true } }),
-    db.attempt.aggregate({ where: { userId }, _sum: { elapsedMs: true } })
+    db.attempt.aggregate({ where: { userId }, _sum: { elapsedMs: true } }),
+    db.completion.count({ where: { userId } })
   ]);
 
   const encountersSolved = solvedGroups.length;
@@ -215,6 +244,9 @@ export async function getProfileStats(userId) {
     firstAttemptRate: attemptedCount === 0 ? null : Math.round((firstTryAccepted / attemptedCount) * 100) / 100,
     planets: progress.map((p) => ({ planetId: p.sectorId, level: p.level })),
     concepts,
+    // Plan Day 30: the same concepts grouped for dashboards.
+    mastery: masterySummary(concepts),
+    modulesCompleted,
     hintsUsed: hintsUsedSum._sum.hintsUsed ?? 0,
     timeCodingMs: elapsedMsSum._sum.elapsedMs ?? 0
   };

@@ -23,8 +23,34 @@ model User {
   updatedAt     DateTime   @updatedAt
   progress      Progress[]
   attempts      Attempt[]
+  completions   Completion[]
 
   @@map("users")
+}
+
+// One row per module a pilot has fully completed: the data behind a
+// certificate (plan Day 29; actually issuing certificates comes later).
+// Written once, when the last unsolved encounter of the module is first
+// ACCEPTED, and never updated after, so `completedAt` is when it was earned.
+// The figures are a snapshot of the attempts up to that moment (see
+// src/lib/server/completion.mjs). `moduleSlug` is a plain string, like
+// Attempt.encounterId, so a re-seed of the module index never deletes it.
+model Completion {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleSlug     String
+  planetId       String
+  encounterCount Int
+  attemptCount   Int
+  firstTryCount  Int
+  hintsUsed      Int
+  elapsedMs      Int
+  completedAt    DateTime
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, moduleSlug])
+  @@map("completions")
 }
 
 // One row per sector a pilot has made progress in. `sectorId` is the
