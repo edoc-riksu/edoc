@@ -68,5 +68,5 @@
     "2": "Python's max() function can take three arguments directly: max(a, b, c).",
     "3": "a, b, c = map(int, input().split()); print(max(a, b, c))"
   },
-  "failure_explanation": "Watch out for ties, where two or three numbers are equal, and for negative numbers, where a number just below zero is larger than one far below it. A chain of if/elif that assumes the first number read is the largest, or that starts the running largest at 0, will get these wrong."
+  "failure_explanation": "Watch out for ties (when two or more numbers are equal). Among negative numbers, the number closer to zero is larger, for example -4 is greater than -8. Don't assume the first number is the largest, and don't start the running largest at 0, because all three inputs could be negative."
 }
