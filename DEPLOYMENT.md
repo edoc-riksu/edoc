@@ -40,7 +40,7 @@ Per `CONTRIBUTING.md`: production deploys from a tagged release (`v0.3.0`-style)
 
 ## 5. Confirming it worked
 
-Once connected, `GET /api/health` (in `edoc-galaxy/src/app/api/health/`) on both the staging and production URLs should return `{"status":"ok", ...}`. If it returns a 500 with a missing-env-var message, an environment variable from step 2 is missing for that environment.
+Once connected, `GET /api/health` (in `edoc-galaxy/src/app/api/health/`) on both the staging and production URLs should return `{"status":"ok", ...}`. If it returns a 503 with `checks.env: "error"` and a missing-env-var message, an environment variable from step 2 is missing for that environment; `checks.database: "error"` means the database can't be reached (section 13).
 
 ## 6. Gotcha: a leftover Neon marketplace integration silently overrides `DATABASE_URL`
 
@@ -142,3 +142,79 @@ Then open the web app, run code in the console and submit once. If `/health` wor
 - Logs: `docker compose -f docker-compose.staging.yml logs -f backend`. Logs contain encounter id, verdict and runtime, never the player's code.
 - The service has no login and no rate limiting yet: anyone who can reach the URL can run code. Rate limits and cost controls are Backend 2's work (plan Day 37); until then keep the URL out of public places.
 - Production will be a second server and stack with its own `.env.staging`-style file, following the environments table in `CONTRIBUTING.md`.
+
+## 11. Backup and restore (plan Day 19)
+
+Neon keeps a history of every change to a branch for its history retention window (set per project in the Neon console; check it covers at least 1 day on staging and 7 days on production). A restore is a **new branch created from a past point in time**, so restoring never overwrites the live database.
+
+### Restore drill (run once per environment, and again after big schema changes)
+
+1. In the Neon console, open the project, then **Branches -> Create branch**. Parent: the live branch (e.g. staging's `main`). Choose **Past data**, pick a time a few minutes ago, and name it `restore-test-<date>`.
+2. Copy both **direct** (non-pooled) connection strings: the live branch's and the new branch's.
+3. From `edoc-galaxy/`, compare them (read-only on both):
+   ```bash
+   SOURCE_DATABASE_URL="<live direct url>" RESTORED_DATABASE_URL="<restore-test direct url>" \
+     node scripts/check-restore.mjs
+   ```
+   It prints row counts for `users`, `progress`, `attempts`, `modules` and `encounters` on both sides and the latest attempt time. A restore from a past point may have fewer rows than live (anything written since), never more and never a missing table. Add `--exact` when the restore point is "now" and the counts must match.
+4. Sign in to a preview deploy pointed at the restored branch with a known test account and check its profile numbers, if you want an end-to-end proof.
+5. Record the result in the table below, then delete the `restore-test-*` branch.
+
+| Date | Environment | Restore point | Result | By |
+| --- | --- | --- | --- | --- |
+| _not run yet_ | staging | | | |
+
+### Real restore (data was lost or damaged)
+
+1. Find the last good time (Vercel logs, the `attempts.createdAt` of the last good write).
+2. Create a branch from that point as in step 1, check it with `check-restore.mjs`, then point Vercel's `DATABASE_URL` for that environment at the restored branch's connection string and redeploy. Keep the damaged branch until the cause is understood.
+3. Anything written after the restore point is gone; say so in the team channel.
+
+## 12. Migrations that keep player data safe (plan Day 32)
+
+`node scripts/check-migration-safety.mjs` fails if a migration in `edoc-galaxy/prisma/migrations/` can lose or rewrite saved data: `DROP TABLE`/`COLUMN`, `TRUNCATE`, `DELETE`, `UPDATE ... SET`, `RENAME`, a column type change, `SET NOT NULL`, or a new `NOT NULL` column with no `DEFAULT`. CI enforces the same rule on every pull request through `npm test` (`src/lib/server/migrationSafety.test.js` checks every migration in the repo); run the script for a readable report before you push.
+
+Write migrations so they don't need any of these:
+
+- **Add, don't change.** New columns are nullable or have a `DEFAULT` (as `hintsUsed` and `elapsedMs` did). New tables are always fine.
+- **Rename or retype in steps.** Add the new column, deploy code that writes both and reads the new one, backfill, and only drop the old column in a later release.
+- **Never edit a migration that has been deployed.** Add a new one.
+
+If a destructive step is truly needed:
+
+1. Make a backup branch of production first (section 11, restore point "now").
+2. Add this line to the migration, with the reason and the backup branch name:
+   ```sql
+   -- migration-safety: reviewed old column unused since #NN, backup branch pre-drop-2026-11-10
+   ```
+   A bare marker with no reason does not pass.
+3. Get a second approval on the pull request and say so in the team channel before merging (`CONTRIBUTING.md`: database changes).
+
+Deploy order stays: `npm run db:migrate:deploy` against the environment (direct connection string), then the code that uses it.
+
+## 13. Health check and alerts (plan Day 34)
+
+`GET /api/health` checks the environment variables and runs `SELECT 1` against the database (3 s limit) on every request; it is never cached.
+
+| Response | Meaning |
+| --- | --- |
+| `200 {"status":"ok","checks":{"env":"ok","database":"ok"},"databaseMs":...}` | Healthy |
+| `503`, `checks.env: "error"` | A required variable is missing (section 2); the message names it |
+| `503`, `checks.database: "error"` | The database didn't answer within 3 s. The real error is in the Vercel function logs, not the response |
+
+A slow `databaseMs` on the first call after idle is the compute waking up (section 7), not an outage.
+
+### Alerts to set up (once per environment)
+
+1. **Uptime monitor.** In a free uptime service (UptimeRobot, Better Stack or similar), add an HTTP monitor for `https://<site>/api/health`: every 5 minutes, alert when the status is not 200 **twice in a row** (one cold-start timeout is expected), notify the team email or channel.
+2. **Execution service.** A second monitor for `https://<EDOC_DOMAIN>/health` (section 10) with the same rule.
+3. **Vercel.** Turn on deployment failure notifications for the project (Settings -> Notifications) so a broken build is noticed.
+4. **Neon.** Turn on the project's usage emails so we hear before hitting the compute or storage limit.
+
+Record who owns each alert here:
+
+| Alert | Where | Notifies | Owner |
+| --- | --- | --- | --- |
+| Site health (staging) | _to set up_ | | Backend 2 |
+| Site health (production) | _to set up_ | | Backend 2 |
+| Execution service health | _to set up_ | | Backend 1 |
