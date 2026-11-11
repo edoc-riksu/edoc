@@ -478,15 +478,13 @@ function isSkinPixel(r,g,b){
 function buildSuitMask(map, key){
   if(maskCache[key]) return maskCache[key];
   var img=map && map.image;
-  console.log('[suit-mask]', key, 'image:', img, 'width:', img && img.width);
-  if(!img || !img.width){ console.warn('[suit-mask] no decoded image yet, skipping mask for', key); return null; }
+  if(!img || !img.width) return null;
   try {
     var SIZE=256, c=cvs(SIZE,SIZE), g=c.getContext('2d');
     g.drawImage(img,0,0,SIZE,SIZE);
     var data=g.getImageData(0,0,SIZE,SIZE).data;
-    var mask=new Uint8Array(SIZE*SIZE), skinCount=0;
-    for(var i=0,p=0;i<data.length;i+=4,p++){ var skin=isSkinPixel(data[i],data[i+1],data[i+2]); if(skin) skinCount++; mask[p]=skin?0:255; }
-    console.log('[suit-mask]', key, 'skin pixels:', skinCount, '/', SIZE*SIZE, '(' + ((skinCount/(SIZE*SIZE)*100).toFixed(1)) + '%)');
+    var mask=new Uint8Array(SIZE*SIZE);
+    for(var i=0,p=0;i<data.length;i+=4,p++){ mask[p]=isSkinPixel(data[i],data[i+1],data[i+2])?0:255; }
     var maskTex=new THREE.DataTexture(mask,SIZE,SIZE,THREE.RedFormat,THREE.UnsignedByteType);
     maskTex.flipY=false; maskTex.wrapS=maskTex.wrapT=THREE.ClampToEdgeWrapping;
     maskTex.minFilter=THREE.LinearFilter; maskTex.magFilter=THREE.LinearFilter;
@@ -510,7 +508,6 @@ function wireSuitShader(mat, maskTex){
       '#include <map_fragment>\n#ifdef USE_MAP\n  float suitMaskV = texture2D( uSuitMask, vMapUv ).r;\n  diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * uSuitTint, suitMaskV * uSuitAmount );\n  diffuseColor.rgb *= mix( 1.0, uSkinDarken, 1.0 - suitMaskV );\n#endif'
     );
     mat.userData.suitShader=shader;
-    console.log('[suit-mask] onBeforeCompile fired, shader wired');
     applySuitTint(currentStarfarer); // re-apply now that the masked path is actually live
   };
   mat.needsUpdate=true;

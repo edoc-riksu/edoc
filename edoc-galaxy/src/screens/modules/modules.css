@@ -9,7 +9,7 @@
   width: min(960px, 100%);
 }
 .ml-wrap--map {
-  width: min(1100px, 100%);
+  width: min(1480px, 80vw);
 }
 
 .ml-crumb {
