@@ -57,8 +57,8 @@ The owner is the natural reviewer, but nobody is locked out of any file.
 
 | Area | Owner |
 | --- | --- |
-| World: galaxy map, approach, landing, planet surface, parallax, animation | Iris (Frontend 1) |
-| Console: code editor, encounter screen, hull and damage, companion panel, profile, sign-in screens | Frontend 2 |
+| World: galaxy map, approach, landing, planet surface, parallax, animation | Jyothsna (Frontend 1) |
+| Console: code editor, encounter screen, hull and damage, companion panel, profile, sign-in screens | Ankith (Frontend 2) |
 | Running and scoring code: execution service, test harness, encounter API | Srija (Backend 1) |
-| Platform: accounts, saved progress, database, deployments, CI | Backend 2 |
-| Coordination: plan, testing, content pipeline | Coordinator |
+| Platform: accounts, saved progress, database, deployments, CI | Shashank (Backend 2) |
+| Coordination: plan, testing, content pipeline | Himanjali (Coordination) |
