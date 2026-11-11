@@ -1,0 +1,73 @@
+{
+  "id": "py-016",
+  "version": 2,
+  "language": "python",
+  "title": "Balanced Brackets",
+  "difficulty": "hard",
+  "module": "loops",
+  "order": 8,
+  "concepts": [
+    "conditionals",
+    "loops",
+    "input-output"
+  ],
+  "problem": "Given one line made only of the brackets ( ) [ ] { }, print \"Balanced\" if every opening bracket is closed by the matching kind of bracket in the right order, and \"Not balanced\" otherwise. For example, ([]{}) is balanced and (] is not.",
+  "starter_code": "# Read one line of brackets: ( ) [ ] { }\n# Print \"Balanced\" or \"Not balanced\".\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "([]{})",
+        "expected_output": "Balanced",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "(]",
+        "expected_output": "Not balanced",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "(((",
+        "expected_output": "Not balanced",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "())(",
+        "expected_output": "Not balanced",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "([)]",
+        "expected_output": "Not balanced",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "{[()()]}",
+        "expected_output": "Balanced",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "]",
+        "expected_output": "Not balanced",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Think about which opening bracket each closing bracket has to match, and in what order brackets close.",
+    "2": "Keep a list of the opening brackets that are not closed yet. For an opening bracket, append it. For a closing one, the list must not be empty and its last item must be the matching opener; then remove it. At the end the list must be empty. Counting brackets is not enough, because the order matters.",
+    "3": "pairs = {')': '(', ']': '[', '}': '{'}\nstack = []\nok = True\nfor c in input().strip():\n    if c in '([{':\n        stack.append(c)\n    elif not stack or stack.pop() != pairs[c]:\n        ok = False\n        break\nprint('Balanced' if ok and not stack else 'Not balanced')"
+  },
+  "failure_explanation": "Equal numbers of opening and closing brackets are not enough: each closing bracket must match the most recent opening bracket that is still open, and of the same kind. Handle a closing bracket when nothing is open (instead of crashing), check that nothing is left open at the end, and print the words exactly as shown."
+}

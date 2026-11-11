@@ -25,6 +25,17 @@ def test_every_encounter_uses_only_agreed_concepts(encounters_dir):
         assert set(encounter.concepts) <= known, f"{encounter.id} uses an unknown concept"
 
 
+def test_every_module_has_eight_to_ten_encounters(encounters_dir):
+    # Day 46: a module is one planet topic the player works through; fewer than
+    # 8 feels empty and more than 10 is too long. A new module needs 8 first.
+    counts = {}
+    for e in EncounterService(encounters_dir).list_encounters(strict=True):
+        counts[e.module] = counts.get(e.module, 0) + 1
+    assert len(counts) >= 2, "the planet needs at least two modules"
+    for module, count in counts.items():
+        assert 8 <= count <= 10, f"module {module} has {count} encounters, it needs 8 to 10"
+
+
 def test_order_is_unique_inside_each_module(encounters_dir):
     seen = {}
     for e in EncounterService(encounters_dir).list_encounters(strict=True):

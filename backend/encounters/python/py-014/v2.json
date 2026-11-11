@@ -1,0 +1,73 @@
+{
+  "id": "py-014",
+  "version": 2,
+  "language": "python",
+  "title": "Run-Length Encoding",
+  "difficulty": "hard",
+  "module": "loops",
+  "order": 6,
+  "concepts": [
+    "loops",
+    "conditionals",
+    "input-output"
+  ],
+  "problem": "Given one line of lowercase letters, compress it by writing each run of the same letter in a row as the letter followed by how many times it repeats. For example, aaabccdd becomes a3b1c2d2. A letter that comes back later starts a new run.",
+  "starter_code": "# Read one line of lowercase letters.\n# Print each run of repeated letters as the letter and its count,\n# e.g. aaabccdd -> a3b1c2d2.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "aaabccdd",
+        "expected_output": "a3b1c2d2",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "abc",
+        "expected_output": "a1b1c1",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "z",
+        "expected_output": "z1",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "aaaaaaaaaaaa",
+        "expected_output": "a12",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "abba",
+        "expected_output": "a1b2a1",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "aabbbaaaab",
+        "expected_output": "a2b3a4b1",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "xyzzzzzzzzzzz",
+        "expected_output": "x1y1z11",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Walk through the text keeping track of the current letter and how many times it has repeated in a row.",
+    "2": "Loop over the letters with a counter. When the letter changes, write out the previous letter and its count, then start a new count. Write out the last run after the loop ends. Counting each letter over the whole text (with a dictionary) is not the same thing: a letter can come back later in a new run.",
+    "3": "s = input().strip()\nout, i = '', 0\nwhile i < len(s):\n    j = i\n    while j < len(s) and s[j] == s[i]:\n        j += 1\n    out += s[i] + str(j - i)\n    i = j\nprint(out)"
+  },
+  "failure_explanation": "Count runs of the same letter in a row, not totals for the whole text: a letter that appears again later starts a new run. Write out the final run after the loop finishes, and write the full count even when it has more than one digit."
+}

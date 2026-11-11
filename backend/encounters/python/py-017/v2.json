@@ -1,0 +1,73 @@
+{
+  "id": "py-017",
+  "version": 2,
+  "language": "python",
+  "title": "Prime Factors",
+  "difficulty": "hard",
+  "module": "loops",
+  "order": 9,
+  "concepts": [
+    "arithmetic",
+    "loops",
+    "input-output"
+  ],
+  "problem": "Given an integer N (2 <= N <= 1000000000) on a single line of input, print its prime factors from smallest to largest, separated by spaces, repeating a factor as many times as it divides N. For example, 12 = 2 x 2 x 3, so the answer is 2 2 3. A prime number is its own only factor.",
+  "starter_code": "# Read an integer N.\n# Print its prime factors in increasing order, separated by spaces,\n# e.g. 12 -> 2 2 3.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "12",
+        "expected_output": "2 2 3",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "7",
+        "expected_output": "7",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "2",
+        "expected_output": "2",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "1024",
+        "expected_output": "2 2 2 2 2 2 2 2 2 2",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "49",
+        "expected_output": "7 7",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "9699690",
+        "expected_output": "2 3 5 7 11 13 17 19",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "999999937",
+        "expected_output": "999999937",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Try dividing by the smallest possible factor first, and keep dividing by it for as long as it goes in.",
+    "2": "Start d at 2. While d * d <= N: if N % d == 0, record d and set N = N // d (staying on the same d); otherwise move d up by one. When the loop ends, if N is still above 1, it is a prime factor too. Stopping at the square root keeps it fast even for the biggest N.",
+    "3": "n = int(input())\nfactors, d = [], 2\nwhile d * d <= n:\n    while n % d == 0:\n        factors.append(d)\n        n //= d\n    d += 1\nif n > 1:\n    factors.append(n)\nprint(*factors)"
+  },
+  "failure_explanation": "Divide out each factor as many times as it goes in, so repeated factors are all printed, smallest first. Only try divisors while d * d <= N, which keeps large inputs fast enough, and remember that whatever is left above 1 after the loop is a prime factor too. Use whole-number division (//), not /."
+}

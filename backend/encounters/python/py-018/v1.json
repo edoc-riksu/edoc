@@ -1,0 +1,73 @@
+{
+  "id": "py-018",
+  "version": 1,
+  "language": "python",
+  "title": "Count Divisors",
+  "difficulty": "medium",
+  "module": "loops",
+  "order": 1,
+  "concepts": [
+    "loops",
+    "arithmetic",
+    "input-output"
+  ],
+  "problem": "Read one positive integer N. Print how many positive whole numbers divide N exactly, with no remainder. Count both 1 and N itself. For example, 12 gives 6 (the divisors are 1, 2, 3, 4, 6 and 12) and 7 gives 2 (1 and 7).",
+  "starter_code": "# Read one positive integer N.\n# Print how many positive whole numbers divide N with no remainder.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "12",
+        "expected_output": "6",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "7",
+        "expected_output": "2",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1",
+        "expected_output": "1",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "36",
+        "expected_output": "9",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "97",
+        "expected_output": "2",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "100",
+        "expected_output": "9",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "64",
+        "expected_output": "7",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Think about which numbers could possibly divide N, and how you can test one candidate at a time.",
+    "2": "Loop through every candidate from 1 up to N itself, and count the ones that leave no remainder when they divide N. The % operator gives the remainder.",
+    "3": "n = int(input())\ncount = 0\nfor d in range(1, n + 1):\n    if n % d == 0:\n        count += 1\nprint(count)"
+  },
+  "failure_explanation": "Count every whole number from 1 up to and including N that leaves no remainder when it divides N. A common slip is to stop the loop one short, so N itself is missed, or to count only the divisors up to half of N. Also make sure each divisor is counted once, even when N is a perfect square."
+}
