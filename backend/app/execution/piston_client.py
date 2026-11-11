@@ -86,7 +86,11 @@ class PistonClient:
         try:
             body = response.json()
             run = body["run"]
-        except (ValueError, KeyError) as exc:
+            if not isinstance(run, dict):
+                raise TypeError(f"'run' is {type(run).__name__}, not an object")
+        except (ValueError, KeyError, TypeError) as exc:
+            # TypeError covers a body that is a list or string, or a "run" that
+            # is not an object; none of these may escape as an HTTP 500.
             logger.error("unexpected piston response shape: %s", exc)
             raise PistonUnavailableError("Unexpected Piston response shape") from exc
 
@@ -112,8 +116,8 @@ class PistonClient:
             status = ExecutionStatus.RUNTIME_ERROR
 
         return ExecutionResult(
-            stdout=run.get("stdout", ""),
-            stderr=run.get("stderr", ""),
+            stdout=run.get("stdout") or "",
+            stderr=run.get("stderr") or "",
             exit_code=exit_code,
             signal=signal,
             runtime_ms=runtime_ms,
