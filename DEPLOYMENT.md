@@ -111,7 +111,7 @@ Only Caddy is reachable from the internet. Piston and the backend have no publis
    cp staging.env.example .env.staging
    nano .env.staging     # set EDOC_DOMAIN and CORS_ALLOWED_ORIGINS
    ```
-   `CORS_ALLOWED_ORIGINS` must contain the exact web app URL(s), with no trailing slash. `CORS_ALLOWED_ORIGIN_REGEX` lets Vercel preview URLs call it; leave it empty to disallow previews.
+   `CORS_ALLOWED_ORIGINS` must contain the exact web app URL(s), with no trailing slash. `CORS_ALLOWED_ORIGIN_REGEX` lets Vercel preview URLs call it; leave it empty to disallow previews. `MAX_CONCURRENT_EXECUTIONS` (default 8) is how many code runs may be inside Piston at once; leave it unless the load test says otherwise.
 4. Start it:
    ```bash
    docker compose -f docker-compose.staging.yml --env-file .env.staging up -d --build

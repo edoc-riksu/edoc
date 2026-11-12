@@ -12,6 +12,10 @@ class Settings(BaseSettings):
 
     piston_base_url: str = "http://localhost:2000"
     piston_request_timeout_seconds: float = 15.0
+    # How many code runs may be in Piston at the same time, and how long a run
+    # waits for a free slot before failing with "Piston unavailable".
+    max_concurrent_executions: int = 8
+    execution_queue_wait_seconds: float = 20.0
 
     python_runtime_version: str = "3.10.0"
     default_timeout_ms: int = 2000
