@@ -1,0 +1,73 @@
+{
+  "id": "py-025",
+  "version": 1,
+  "language": "python",
+  "title": "Leap Year",
+  "difficulty": "medium",
+  "module": "conditions",
+  "order": 5,
+  "concepts": [
+    "conditionals",
+    "arithmetic",
+    "input-output"
+  ],
+  "problem": "Read a year. Print Leap if it is a leap year and Common if it is not. A year is a leap year if it is divisible by 4, except that years divisible by 100 are not, unless they are also divisible by 400. For example, 2024 gives Leap and 2023 gives Common.",
+  "starter_code": "# Read a year.\n# Print Leap or Common.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "2024",
+        "expected_output": "Leap",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "2023",
+        "expected_output": "Common",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1900",
+        "expected_output": "Common",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "2000",
+        "expected_output": "Leap",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "2200",
+        "expected_output": "Common",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "1996",
+        "expected_output": "Leap",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "2001",
+        "expected_output": "Common",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Think of the three rules as layers: a general rule, an exception to it, and an exception to that exception.",
+    "2": "Combine the tests with and / or: divisible by 4 and not by 100, or divisible by 400. The % operator gives the remainder, and a remainder of 0 means divisible.",
+    "3": "y = int(input())\nif (y % 4 == 0 and y % 100 != 0) or y % 400 == 0:\n    print(\"Leap\")\nelse:\n    print(\"Common\")"
+  },
+  "failure_explanation": "Being divisible by 4 is not enough. Years that are multiples of 100 are leap years only when they are also divisible by 400, so check all three rules together. Print exactly Leap or Common."
+}

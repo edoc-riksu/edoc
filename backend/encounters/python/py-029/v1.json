@@ -1,0 +1,72 @@
+{
+  "id": "py-029",
+  "version": 1,
+  "language": "python",
+  "title": "Median of Three",
+  "difficulty": "medium",
+  "module": "conditions",
+  "order": 9,
+  "concepts": [
+    "conditionals",
+    "input-output"
+  ],
+  "problem": "Read three integers on one line. Print the middle one: the number that would be in second place if the three were sorted from smallest to largest. If some are equal, the middle value is still the second one in sorted order. For example, 3 1 2 gives 2 and 5 5 1 gives 5.",
+  "starter_code": "# Read three integers on one line.\n# Print the middle one.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "3 1 2",
+        "expected_output": "2",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "5 5 1",
+        "expected_output": "5",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "10 9 100",
+        "expected_output": "10",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "9 4 6",
+        "expected_output": "6",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "-1 -5 -3",
+        "expected_output": "-3",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "7 7 7",
+        "expected_output": "7",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "8 8 2",
+        "expected_output": "8",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "The middle number is neither the smallest nor the largest. Think about how you could rule those two out, or how you could put the numbers in order.",
+    "2": "You can compare the numbers in pairs with if/elif, or put the three numbers in order and take the one in the middle. Make sure equal numbers and negative numbers still work.",
+    "3": "a, b, c = map(int, input().split())\nif (a <= b <= c) or (c <= b <= a):\n    print(b)\nelif (b <= a <= c) or (c <= a <= b):\n    print(a)\nelse:\n    print(c)"
+  },
+  "failure_explanation": "The answer is the number that is neither the smallest nor the largest, and the numbers can come in any order. Watch out for equal numbers: with two equal values, the middle one is still that repeated value. Use <= and not <, and remember negative numbers compare like any other."
+}

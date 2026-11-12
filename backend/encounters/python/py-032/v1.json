@@ -1,0 +1,72 @@
+{
+  "id": "py-032",
+  "version": 1,
+  "language": "python",
+  "title": "Count Words",
+  "difficulty": "easy",
+  "module": "strings",
+  "order": 2,
+  "concepts": [
+    "strings",
+    "input-output"
+  ],
+  "problem": "Read one line of text made of words separated by single spaces. Print how many words it has. For example, the quick brown fox gives 4.",
+  "starter_code": "# Read one line of words separated by spaces.\n# Print how many words there are.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "the quick brown fox",
+        "expected_output": "4",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "hello",
+        "expected_output": "1",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "a b",
+        "expected_output": "2",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "one two three four five six",
+        "expected_output": "6",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "python is fun",
+        "expected_output": "3",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "x",
+        "expected_output": "1",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "to be or not to be that is the question",
+        "expected_output": "10",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Words are separated by spaces, so counting the separators gives a number that is off by one. Think about a way to cut the line into its words instead.",
+    "2": "Text has a method that splits it into a list of words. The built-in len() tells you how many items a list has.",
+    "3": "print(len(input().split()))"
+  },
+  "failure_explanation": "Count the words, not the spaces: a line with one word has no spaces at all, and a line always has one more word than it has gaps. Splitting the line into a list of words and counting the list avoids the off-by-one. Print only the number."
+}

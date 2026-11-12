@@ -1,0 +1,72 @@
+{
+  "id": "py-024",
+  "version": 1,
+  "language": "python",
+  "title": "Ticket Price",
+  "difficulty": "easy",
+  "module": "conditions",
+  "order": 4,
+  "concepts": [
+    "conditionals",
+    "input-output"
+  ],
+  "problem": "Read an age. Print the ticket price in dollars as a number: 0 if the age is under 5, 5 if it is 5 to 12, 10 if it is 13 to 64, and 7 if it is 65 or older. For example, 30 gives 10.",
+  "starter_code": "# Read an age.\n# Print the ticket price as a number.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "30",
+        "expected_output": "10",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "3",
+        "expected_output": "0",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "5",
+        "expected_output": "5",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "12",
+        "expected_output": "5",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "13",
+        "expected_output": "10",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "64",
+        "expected_output": "10",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "65",
+        "expected_output": "7",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "There are four age groups. Think about the age where each group starts and the age where it ends.",
+    "2": "Use an if/elif/else chain. Test the youngest group first with a less-than, then use less-than or equal for the ages in between, and let else take the oldest group.",
+    "3": "age = int(input())\nif age < 5:\n    print(0)\nelif age <= 12:\n    print(5)\nelif age <= 64:\n    print(10)\nelse:\n    print(7)"
+  },
+  "failure_explanation": "Look closely at the ages where the price changes: an age exactly on the edge of a group belongs to that group. Under 5 means 5 itself is not free. Print just the number, with no dollar sign."
+}

@@ -1,0 +1,73 @@
+{
+  "id": "py-040",
+  "version": 1,
+  "language": "python",
+  "title": "Most Common Letter",
+  "difficulty": "hard",
+  "module": "strings",
+  "order": 10,
+  "concepts": [
+    "strings",
+    "loops",
+    "conditionals"
+  ],
+  "problem": "Read one line of lower-case letters with no spaces. Print the letter that appears most often. If several letters are tied for the most, print the one that comes first in the alphabet. For example, banana gives a.",
+  "starter_code": "# Read one line of lower-case letters.\n# Print the letter that appears most often (the earliest in the alphabet on a tie).\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "banana",
+        "expected_output": "a",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "abcabc",
+        "expected_output": "a",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "x",
+        "expected_output": "x",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "hello",
+        "expected_output": "l",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "mississippi",
+        "expected_output": "i",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "zebra",
+        "expected_output": "a",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "aabbbcc",
+        "expected_output": "b",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "You need to know how many times each letter appears, and then pick the biggest count. Think about what should happen when two letters have the same count.",
+    "2": "Go through the distinct letters in alphabetical order and keep the one with the highest count so far. Replace it only when a letter has a strictly higher count, so on a tie the earlier letter stays.",
+    "3": "text = input()\nbest = \"\"\nfor ch in sorted(set(text)):\n    if best == \"\" or text.count(ch) > text.count(best):\n        best = ch\nprint(best)"
+  },
+  "failure_explanation": "Count every letter, then choose the largest count. When letters are tied, the one earliest in the alphabet must win, which is not necessarily the one that appears first in the text. A text with a single letter must also work. Print only the letter, not its count."
+}

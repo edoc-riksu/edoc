@@ -1,0 +1,73 @@
+{
+  "id": "py-039",
+  "version": 1,
+  "language": "python",
+  "title": "Caesar Cipher",
+  "difficulty": "hard",
+  "module": "strings",
+  "order": 9,
+  "concepts": [
+    "strings",
+    "loops",
+    "arithmetic"
+  ],
+  "problem": "Read a whole number k on the first line, then a text of lower-case letters and spaces on the second line. Shift every letter k places forward in the alphabet, wrapping around from z back to a, and leave the spaces unchanged. Print the result. For example, 3 and abc xyz gives def abc.",
+  "starter_code": "# Line 1: the shift k. Line 2: text of lower-case letters and spaces.\n# Print the text with every letter shifted k places forward (z wraps to a).\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "3\nabc xyz",
+        "expected_output": "def abc",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "1\nhello",
+        "expected_output": "ifmmp",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "0\nhello",
+        "expected_output": "hello",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "13\nuryyb jbeyq",
+        "expected_output": "hello world",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "25\nbcd",
+        "expected_output": "abc",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "5\nthe end",
+        "expected_output": "ymj jsi",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "30\nxyz",
+        "expected_output": "bcd",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Each letter has a position in the alphabet, from 0 for a to 25 for z. Think about shifting the position and then turning it back into a letter.",
+    "2": "Turn a letter into its position with ord(letter) - ord(\"a\"), add k, and use % 26 to wrap around. chr() turns a number back into a character. Spaces must be copied as they are, and k can be larger than 26.",
+    "3": "k = int(input())\ntext = input()\nresult = \"\"\nfor ch in text:\n    if ch == \" \":\n        result += ch\n    else:\n        result += chr((ord(ch) - ord(\"a\") + k) % 26 + ord(\"a\"))\nprint(result)"
+  },
+  "failure_explanation": "Work with the letter's position in the alphabet and wrap it with the remainder after dividing by 26, so that z goes back to a and a shift larger than 26 still works. Spaces are not letters and must be copied unchanged, and a shift of zero must leave the text exactly as it was."
+}

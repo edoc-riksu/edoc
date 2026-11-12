@@ -1,0 +1,72 @@
+{
+  "id": "py-021",
+  "version": 1,
+  "language": "python",
+  "title": "Sign of a Number",
+  "difficulty": "easy",
+  "module": "conditions",
+  "order": 1,
+  "concepts": [
+    "conditionals",
+    "input-output"
+  ],
+  "problem": "Read one integer. Print Positive if it is greater than zero, Negative if it is less than zero, and Zero if it is exactly zero. For example, 5 gives Positive.",
+  "starter_code": "# Read one integer.\n# Print Positive, Negative or Zero.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "5",
+        "expected_output": "Positive",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "-3",
+        "expected_output": "Negative",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "0",
+        "expected_output": "Zero",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "1",
+        "expected_output": "Positive",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "-1",
+        "expected_output": "Negative",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "100",
+        "expected_output": "Positive",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "-250",
+        "expected_output": "Negative",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "There are three possible answers and every number fits exactly one of them. Think about which comparison separates each pair.",
+    "2": "Use if, elif and else. Test for greater than zero first, then for less than zero, and let else take the last case. Make sure zero itself is never called positive or negative.",
+    "3": "n = int(input())\nif n > 0:\n    print(\"Positive\")\nelif n < 0:\n    print(\"Negative\")\nelse:\n    print(\"Zero\")"
+  },
+  "failure_explanation": "A number is Positive only if it is strictly greater than zero and Negative only if it is strictly less than zero; zero is neither. Using >= or <= puts zero in the wrong group. Print the words exactly as shown, with a capital first letter."
+}

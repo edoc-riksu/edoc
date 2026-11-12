@@ -1,0 +1,73 @@
+{
+  "id": "py-038",
+  "version": 1,
+  "language": "python",
+  "title": "Anagram Check",
+  "difficulty": "medium",
+  "module": "strings",
+  "order": 8,
+  "concepts": [
+    "strings",
+    "conditionals",
+    "input-output"
+  ],
+  "problem": "Read two words made of lower-case letters, one per line. Print Yes if the second word uses exactly the same letters as the first, each the same number of times and in any order, and No otherwise. For example, listen and silent gives Yes.",
+  "starter_code": "# Line 1: the first word. Line 2: the second word.\n# Print Yes if they use exactly the same letters, otherwise No.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "listen\nsilent",
+        "expected_output": "Yes",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "cat\ncar",
+        "expected_output": "No",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "aab\nabb",
+        "expected_output": "No",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "abc\ncab",
+        "expected_output": "Yes",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "ab\nabc",
+        "expected_output": "No",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "a\na",
+        "expected_output": "Yes",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "night\nthing",
+        "expected_output": "Yes",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Two words are anagrams when they are made of the same letters. Think about a way to compare the letters while ignoring their order.",
+    "2": "If you put the letters of each word in alphabetical order, two anagrams become identical. Make sure that a letter that appears twice in one word has to appear twice in the other.",
+    "3": "first = input()\nsecond = input()\nif sorted(first) == sorted(second):\n    print(\"Yes\")\nelse:\n    print(\"No\")"
+  },
+  "failure_explanation": "It is not enough for both words to contain the same set of letters: each letter must appear the same number of times, and the two words must have the same length. Compare the letters after putting them in order, and print exactly Yes or No."
+}

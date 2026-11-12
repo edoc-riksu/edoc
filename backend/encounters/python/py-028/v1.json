@@ -1,0 +1,72 @@
+{
+  "id": "py-028",
+  "version": 1,
+  "language": "python",
+  "title": "Rock Paper Scissors",
+  "difficulty": "medium",
+  "module": "conditions",
+  "order": 8,
+  "concepts": [
+    "conditionals",
+    "input-output"
+  ],
+  "problem": "Two players each choose rock, paper or scissors. Read the two choices as two words on one line (player 1 first). Print Player 1 if player 1 wins, Player 2 if player 2 wins, and Draw if both chose the same. Rock beats scissors, scissors beats paper, and paper beats rock. For example, rock scissors gives Player 1.",
+  "starter_code": "# Read the two choices on one line (player 1 first).\n# Print Player 1, Player 2 or Draw.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "rock scissors",
+        "expected_output": "Player 1",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "paper scissors",
+        "expected_output": "Player 2",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "paper paper",
+        "expected_output": "Draw",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "scissors paper",
+        "expected_output": "Player 1",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "rock paper",
+        "expected_output": "Player 2",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "paper rock",
+        "expected_output": "Player 1",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "scissors rock",
+        "expected_output": "Player 2",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Handle the draw first. Then decide how to describe the three winning pairs, so you do not need nine separate cases.",
+    "2": "Keep a small table of what beats what (a dictionary works well). If player 1's choice beats player 2's choice, player 1 wins; otherwise, if it is not a draw, player 2 wins.",
+    "3": "a, b = input().split()\nbeats = {\"rock\": \"scissors\", \"scissors\": \"paper\", \"paper\": \"rock\"}\nif a == b:\n    print(\"Draw\")\nelif beats[a] == b:\n    print(\"Player 1\")\nelse:\n    print(\"Player 2\")"
+  },
+  "failure_explanation": "Check for a draw first, then check whether player 1's choice beats player 2's. If it does not and it is not a draw, player 2 has won. Make sure all three winning pairs are covered, in both directions, and print the words exactly as shown."
+}
