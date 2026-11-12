@@ -1,0 +1,74 @@
+{
+  "id": "py-020",
+  "version": 1,
+  "language": "python",
+  "title": "Collatz Steps",
+  "difficulty": "hard",
+  "module": "loops",
+  "order": 10,
+  "concepts": [
+    "loops",
+    "conditionals",
+    "arithmetic",
+    "input-output"
+  ],
+  "problem": "Read one positive integer N. Repeat these rules until the number becomes 1: if it is even, halve it; if it is odd, multiply it by 3 and add 1. Print how many steps it took. For example, 6 goes 6, 3, 10, 5, 16, 8, 4, 2, 1, which is 8 steps, and 1 needs 0 steps.",
+  "starter_code": "# Read one positive integer N.\n# Apply the even/odd rules until the number is 1, and print the number of steps.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "6",
+        "expected_output": "8",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "1",
+        "expected_output": "0",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "2",
+        "expected_output": "1",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "3",
+        "expected_output": "7",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "7",
+        "expected_output": "16",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "27",
+        "expected_output": "111",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "16",
+        "expected_output": "4",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Each step depends on whether the current number is even or odd, and you do not know in advance how many steps there will be.",
+    "2": "Use a loop that keeps going while the number is not 1. Inside it, use % to test for even or odd, change the number, and add one to a step counter. Use whole-number division (//) so the number stays an integer.",
+    "3": "n = int(input())\nsteps = 0\nwhile n != 1:\n    if n % 2 == 0:\n        n //= 2\n    else:\n        n = 3 * n + 1\n    steps += 1\nprint(steps)"
+  },
+  "failure_explanation": "Keep applying the rule until the number reaches 1, and count every change, including the last one that lands on 1. Start the counter at 0, because a starting number of 1 needs no steps. Use // and not / when halving so the number stays a whole number, and remember that an odd number becomes 3 times itself plus 1, not just 3 times itself."
+}
