@@ -129,6 +129,42 @@ Structured-ish logging via the standard `logging` module
 submission ID, verdict, and runtime — never the player's source code or
 hidden expected outputs.
 
+## Run paths (plan Day 12)
+
+Code runs in two places. The **server** (Piston, Python 3.10) does every scored
+run and the "run against the samples" practice run. The **browser** (Pyodide,
+`edoc-galaxy/src/lib/pyDebugRunner.js`, the debug console with the player's own
+input) is practice only: it never touches the judge, hull, attempts or score.
+For a player the two must give the same result, so:
+
+- **Check:** from `edoc-galaxy/`, `npm install --no-save pyodide@0.26.2`, then
+  `PYTHON=python3.10 node scripts/check-run-parity.mjs`. It runs the reference
+  solution of every encounter on every test input, plus 18 small programs that
+  are easy to get different, in both places, and fails if what they print
+  differs. It uses the server's comparison rules (`app/judge/comparator.py`:
+  line endings unified, trailing spaces and trailing blank lines ignored).
+  Last run, 2026-11-12, against Python 3.10 and Pyodide 3.12.1: 40 encounters
+  (py-001 to py-040), 280 runs, no differences.
+- **What the browser runner does to match the server:** stdin is the test input
+  exactly as given, so `input()` and `sys.stdin.read()` see the same text; every
+  run starts with an empty set of variables; all output arrives, including text
+  with no newline at the end; and a program that never ends is stopped
+  (`timedOut: true`) instead of freezing the page. Before this, text printed
+  with `end=""` was lost and then appeared in the next run, a variable from one
+  run was visible in the next, and an endless loop froze the page, because
+  the page's own timer never fires while Python runs.
+- **Still different, on purpose or not fixable in the browser:** Pyodide is
+  Python 3.12 and the server is 3.10, so a few error messages read differently;
+  the error text is a short message without the file name and line of the
+  server's traceback; there is no memory limit in the browser; the browser's
+  time limit is 5 seconds (tracing makes Python slower) against the encounter's
+  own limit (usually 2 seconds) on the server; one long step inside Python,
+  such as a huge power, cannot be interrupted; and `sys.exit()` shows as an
+  error message. If the debug console ever needs a hard limit, run Pyodide in a
+  Web Worker and stop the worker.
+- **Rule for changes:** if `pyDebugRunner.js` or the server's run settings
+  change, run the check again before merging.
+
 ## Running it
 
 ### With Docker (full stack, including Piston)
