@@ -1,0 +1,233 @@
+/*
+ * Shared Dialog and Drawer (src/ui/Dialog.js, Drawer.js).
+ * Colours come from the tokens in globals.css. Unlike .ui-panel these are
+ * nearly opaque: text on top of the galaxy has to stay readable.
+ */
+
+/* ---------- scrim ---------- */
+.ui-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: rgba(4, 7, 16, 0.7);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: ui-overlay-in 180ms ease-out both;
+}
+.ui-overlay--dialog {
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.ui-overlay--drawer {
+  display: flex;
+}
+.ui-overlay--right {
+  justify-content: flex-end;
+}
+.ui-overlay--left {
+  justify-content: flex-start;
+}
+.ui-overlay--bottom {
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.ui-overlay-panel {
+  position: relative;
+  color: var(--ink);
+  background: rgba(8, 14, 36, 0.94);
+  border: 1px solid var(--glass-edge);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.ui-overlay-panel:focus {
+  outline: none;
+}
+.ui-overlay-panel:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+/* ---------- Dialog ---------- */
+.ui-dialog {
+  --tone: var(--teal);
+  display: grid;
+  gap: 10px;
+  width: min(420px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  padding: 24px 26px 22px;
+  border-radius: 18px;
+  animation: ui-dialog-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.ui-dialog--teal {
+  border-color: rgba(94, 234, 212, 0.34);
+}
+.ui-dialog--danger {
+  --tone: #fb7185;
+  border-color: rgba(251, 113, 133, 0.4);
+}
+.ui-dialog--center {
+  justify-items: center;
+  text-align: center;
+}
+.ui-dialog-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  color: var(--tone);
+}
+.ui-dialog-title {
+  margin: 4px 0 0;
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+}
+.ui-dialog-body {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.ui-dialog-body strong {
+  color: var(--ink);
+}
+.ui-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+.ui-dialog--center .ui-dialog-actions {
+  justify-content: center;
+}
+
+/* ---------- Drawer ---------- */
+.ui-drawer {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.ui-overlay--right .ui-drawer,
+.ui-overlay--left .ui-drawer {
+  width: min(420px, 100%);
+  height: 100%;
+}
+.ui-overlay--right .ui-drawer {
+  border-width: 0 0 0 1px;
+  border-radius: 20px 0 0 20px;
+  animation: ui-drawer-in-right 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.ui-overlay--left .ui-drawer {
+  border-width: 0 1px 0 0;
+  border-radius: 0 20px 20px 0;
+  animation: ui-drawer-in-left 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.ui-overlay--bottom .ui-drawer {
+  width: min(640px, 100%);
+  max-height: min(80dvh, 640px);
+  border-width: 1px 1px 0;
+  border-radius: 20px 20px 0 0;
+  animation: ui-drawer-in-bottom 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.ui-drawer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px 14px 22px;
+  border-bottom: 1px solid var(--glass-edge);
+}
+.ui-drawer-titles {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.ui-drawer-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.ui-drawer-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 22px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.ui-drawer-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--glass-edge);
+}
+
+/* ---------- motion ---------- */
+@keyframes ui-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ui-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+@keyframes ui-drawer-in-right {
+  from {
+    transform: translateX(32px);
+    opacity: 0;
+  }
+}
+@keyframes ui-drawer-in-left {
+  from {
+    transform: translateX(-32px);
+    opacity: 0;
+  }
+}
+@keyframes ui-drawer-in-bottom {
+  from {
+    transform: translateY(32px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-overlay,
+  .ui-dialog,
+  .ui-drawer {
+    animation: none !important;
+  }
+}
+
+/* A drawer is the whole screen on a phone. */
+@media (max-width: 480px) {
+  .ui-overlay--right .ui-drawer,
+  .ui-overlay--left .ui-drawer {
+    width: 100% !important;
+    border-radius: 0;
+    border-width: 0;
+  }
+  .ui-dialog {
+    padding: 22px 20px 18px;
+  }
+  .ui-dialog-actions > * {
+    flex: 1 1 auto;
+  }
+}
