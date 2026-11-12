@@ -1,0 +1,208 @@
+/* Bolt the companion: the animated avatar and the three hint levels (src/art/BoltAvatar.js, HintLevelCard.js, hintLevels.js). */
+
+.bolt-avatar {
+  position: relative;
+  display: inline-block;
+  flex: none;
+}
+.bolt-avatar canvas {
+  display: block;
+}
+
+/* ---------- the three hint levels ----------
+   Each level has its own colour (--hl), border weight, pips, glyph and word, so the three differ in more than colour. */
+.hl {
+  --hl: #5eead4;
+  --hl-rgb: 94, 234, 212;
+  position: relative;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--hl-rgb), 0.22);
+  border-left-width: 3px;
+  background: rgba(var(--hl-rgb), 0.05);
+}
+.hl-1 { --hl: #5eead4; --hl-rgb: 94, 234, 212; }
+.hl-2 { --hl: #f3b25c; --hl-rgb: 243, 178, 92; border-left-width: 4px; }
+.hl-3 { --hl: #ff8f7a; --hl-rgb: 255, 143, 122; border-left-width: 6px; }
+.hl.is-revealed {
+  border-color: rgba(var(--hl-rgb), 0.5);
+  background: rgba(var(--hl-rgb), 0.11);
+}
+.hl.is-locked {
+  opacity: 0.72;
+  border-style: dashed;
+  border-left-style: solid;
+  background: rgba(120, 150, 210, 0.04);
+}
+.hl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.hl-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--hl);
+}
+.hl-glyph {
+  flex: none;
+}
+.hl-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.hl-pips {
+  display: inline-flex;
+  gap: 3px;
+}
+.hl-pips i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--hl);
+  opacity: 0.55;
+}
+.hl-pips i.is-on {
+  background: var(--hl);
+  opacity: 1;
+}
+.hl-text,
+.hl-blurb,
+.hl-locked {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.hl-text {
+  color: var(--ink);
+}
+.hl-blurb {
+  margin-bottom: 8px;
+  color: var(--ink-soft);
+}
+.hl-locked {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+.hl-reveal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--hl-rgb), 0.55);
+  background: rgba(var(--hl-rgb), 0.14);
+  color: var(--hl);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hl-reveal:hover {
+  background: rgba(var(--hl-rgb), 0.24);
+}
+.hl-reveal:focus-visible {
+  outline: 2px solid var(--hl);
+  outline-offset: 2px;
+}
+.hl-cost {
+  padding-left: 8px;
+  border-left: 1px solid rgba(var(--hl-rgb), 0.4);
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+@keyframes hl-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.hl.is-revealed .hl-text {
+  animation: hl-in 0.28s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hl.is-revealed .hl-text {
+    animation: none;
+  }
+}
+
+/* ---------- review page (src/art/CompanionLab.js) ---------- */
+.cm-lab {
+  display: grid;
+  gap: 14px;
+}
+.cm-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.cm-controls .is-active {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.cm-stage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-edge);
+  background: radial-gradient(60% 80% at 20% 20%, rgba(120, 140, 200, 0.14), transparent 70%), #0a1126;
+}
+.cm-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: flex-end;
+  flex: 1 1 280px;
+}
+.cm-sizes figure {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+}
+.cm-panel {
+  width: min(300px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(10, 17, 38, 0.98);
+  border: 1px solid var(--glass-edge);
+  border-top: 3px solid #f3b25c;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+.cm-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cm-name {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink);
+}
+.cm-role {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.cm-foot {
+  margin: 4px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--glass-edge);
+  font-size: 11.5px;
+  color: var(--ink-dim);
+}

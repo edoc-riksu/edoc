@@ -4,6 +4,7 @@ import LandingLab from "../../art/LandingLab";
 import VictoryLab from "../../art/VictoryLab";
 import DefeatLab from "../../art/DefeatLab";
 import CockpitLab from "../../art/CockpitLab";
+import CompanionLab from "../../art/CompanionLab";
 
 export const metadata = { title: "Art preview · edoc" };
 
@@ -25,6 +26,7 @@ export default async function ArtPreview({ searchParams }) {
       <CockpitLab hull={Number.isFinite(hull) ? hull : 100} />
       <VictoryLab />
       <DefeatLab />
+      <CompanionLab />
       <LandingLab sev={Number.isFinite(sev) ? sev : 0} at={Number.isFinite(at) ? at : null} />
     </main>
   );
