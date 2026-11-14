@@ -109,10 +109,16 @@ export async function runOnPyodide(pyodide, { code, stdin = "", timeLimitMs = TI
   } catch (e) {
     const message = String(e?.message || e);
     timedOut = message.includes("EdocTimeLimitExceeded");
-    stderr += message;
+    // The raw exception name means nothing to a player, so say what happened
+    // and keep the traceback lines that show where it was stuck.
+    stderr += timedOut
+      ? message.replace(/EdocTimeLimitExceeded: Time limit exceeded\s*$/, "") +
+        `Time limit exceeded: your program was still running after ${timeLimitMs / 1000} seconds. ` +
+        "Check for a loop that never ends."
+      : message;
   } finally {
     try {
-      pyodide.runPython("import sys\nsys.settrace(None)\nsys.stdout.flush()\nsys.stderr.flush()\nsys.stdin = sys.__stdin__", { globals });
+      pyodide.runPython(TRACE_CLEANUP, { globals, filename: "<edoc-cleanup>" });
     } catch {
       // Nothing to clean up if the player's code replaced sys.stdout.
     }
@@ -125,18 +131,51 @@ export async function runOnPyodide(pyodide, { code, stdin = "", timeLimitMs = TI
   return { stdout: stdout.trimEnd(), stderr: stderr.trimEnd(), timedOut };
 }
 
-// Runs inside Python before the player's code. Not a BaseException subclass
-// by accident: "except Exception" in the player's code must not swallow it.
+// Runs inside Python before the player's code. The stop is a BaseException
+// subclass on purpose: "except Exception" in the player's code must not
+// swallow it.
+//
+// It is raised from a line-event hook in sys.monitoring (Python 3.12+, which
+// is what Pyodide 0.26 is). The older sys.settrace is not enough: Python
+// switches a trace function off after it raises once, so a loop wrapped in a
+// bare "except:" (for example a read-until-the-end loop that catches the
+// EOFError) would catch the one raise and then run forever. A monitoring
+// hook stays on, so every line after the deadline raises again, and the
+// player's own except block, which is not protected by the same try, lets it
+// out. Only lines of the player's own code (file name "<exec>") are timed;
+// Pyodide's and our own cleanup code (named "<edoc-cleanup>") are left alone.
 const TRACE_SETUP = `
 import io, sys, time
 sys.stdin = io.StringIO(__edoc_stdin)
 class EdocTimeLimitExceeded(BaseException):
     pass
 __edoc_deadline = time.monotonic() + __edoc_limit
-def __edoc_trace(frame, event, arg):
-    if time.monotonic() > __edoc_deadline:
-        sys.settrace(None)
-        raise EdocTimeLimitExceeded("Time limit exceeded")
-    return __edoc_trace
-sys.settrace(__edoc_trace)
+if hasattr(sys, "monitoring"):
+    __edoc_tool = 3
+    sys.monitoring.use_tool_id(__edoc_tool, "edoc-time-limit")
+    def __edoc_line(code, line):
+        if code.co_filename == "<exec>" and time.monotonic() > __edoc_deadline:
+            raise EdocTimeLimitExceeded("Time limit exceeded")
+    sys.monitoring.register_callback(__edoc_tool, sys.monitoring.events.LINE, __edoc_line)
+    sys.monitoring.set_events(__edoc_tool, sys.monitoring.events.LINE)
+else:
+    def __edoc_trace(frame, event, arg):
+        if frame.f_code.co_filename != "<exec>":
+            return None
+        if time.monotonic() > __edoc_deadline:
+            raise EdocTimeLimitExceeded("Time limit exceeded")
+        return __edoc_trace
+    sys.settrace(__edoc_trace)
+`;
+
+const TRACE_CLEANUP = `
+import sys
+if hasattr(sys, "monitoring"):
+    sys.monitoring.set_events(3, 0)
+    sys.monitoring.register_callback(3, sys.monitoring.events.LINE, None)
+    sys.monitoring.free_tool_id(3)
+sys.settrace(None)
+sys.stdout.flush()
+sys.stderr.flush()
+sys.stdin = sys.__stdin__
 `;

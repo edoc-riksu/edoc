@@ -108,13 +108,26 @@ for (const [name, [code, stdin]] of Object.entries(PROBES)) {
 }
 console.log(`Edge-case programs: ${Object.keys(PROBES).length} compared.`);
 
-// 3. A program that never ends must be stopped, and the next run must work.
-const endless = await runOnPyodide(pyodide, { code: 'print("before")\nwhile True:\n    pass', stdin: "", timeLimitMs: 1000 });
-if (!endless.timedOut || endless.stdout !== "before")
-  problems.push(`endless loop: expected a time-limit stop after printing "before", got ${JSON.stringify(endless)}`);
-const after = await runOnPyodide(pyodide, { code: 'print("fine")', stdin: "" });
-if (after.stdout !== "fine") problems.push(`run after a time-limit stop printed ${JSON.stringify(after.stdout)}`);
-console.log("Endless loop: stopped, and the next run works.");
+// 3. A program that never ends must be stopped, whatever it is wrapped in, with
+// the output printed so far kept and a readable message, and the next run must
+// work. (A bare "except:" used to let a loop dodge the limit.)
+const ENDLESS = {
+  "plain loop": 'print("before")\nwhile True:\n    pass',
+  "loop inside a function": 'print("before")\ndef f():\n    while True:\n        x = 1\nf()',
+  "read until the end, bare except": 'print("before")\nwhile True:\n    try:\n        x = int(input())\n    except:\n        pass',
+  "except BaseException": 'print("before")\nwhile True:\n    try:\n        x = int(input())\n    except BaseException:\n        pass',
+  "except Exception": 'print("before")\nwhile True:\n    try:\n        x = int(input())\n    except Exception:\n        pass',
+  "nested bare excepts": 'print("before")\nwhile True:\n    try:\n        while True:\n            try:\n                pass\n            except:\n                pass\n    except:\n        pass',
+  "try with finally": 'print("before")\nwhile True:\n    try:\n        pass\n    finally:\n        pass',
+};
+for (const [name, code] of Object.entries(ENDLESS)) {
+  const r = await runOnPyodide(pyodide, { code, stdin: "", timeLimitMs: 1000 });
+  if (!r.timedOut || r.stdout !== "before" || !r.stderr.includes("Time limit exceeded: your program was still running"))
+    problems.push(`endless loop "${name}": expected a stop after printing "before" with a readable message, got ${JSON.stringify(r)}`);
+  const after = await runOnPyodide(pyodide, { code: 'print("fine")', stdin: "" });
+  if (after.stdout !== "fine") problems.push(`run after the stop of "${name}" printed ${JSON.stringify(after.stdout)}`);
+}
+console.log(`Endless loops: ${Object.keys(ENDLESS).length} shapes stopped, and the next run works each time.`);
 
 if (problems.length) {
   console.log(`\n${problems.length} difference(s):`);
