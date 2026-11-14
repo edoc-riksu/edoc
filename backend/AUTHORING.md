@@ -12,7 +12,8 @@ You write one JSON file; the scripts and tests check it for you.
   thing the player is learning.
 - **The module and the order.** The module is the group it belongs to (for
   example `python-basics`). The order is its position in that module, starting
-  at 1. Two encounters in one module cannot share an order.
+  at 1. Two encounters in one module cannot share an order. See "Modules"
+  below for how many a module holds.
 - **The concept tags.** Pick from `encounters/concepts.json`. The **first tag
   is the main concept**: it is the one named when a player loses. If you need
   a tag that is not in the list, ask Backend 1 to add it; do not invent one.
@@ -110,6 +111,32 @@ a pull request titled like `D26 backend: encounter py-004 reverse a string`,
 and say in the pull request which encounters you added. The owner of the
 encounters (Backend 1) is the natural reviewer. Merging to `main` deploys to
 staging.
+
+## Modules: how many, and which one
+
+A module is one topic on the planet map. Every module has **8 to 10
+encounters**, and there must be at least two modules; `pytest tests/unit`
+fails otherwise. Today there are two:
+
+| Module | Encounters | Difficulty |
+| --- | --- | --- |
+| `python-basics` | py-001 to py-010 | easy, then medium |
+| `loops` | py-018, py-019, py-012, py-013, py-011, py-014 to py-017, py-020 | medium, then hard |
+
+- **The order is the position in the module, not the id.** `py-020` can be
+  encounter 10 of `loops` while `py-011` is encounter 5. Inside a module a
+  player never meets an easier encounter after a harder one, so put new ones
+  where their difficulty fits.
+- **A module that already has 10 is full.** To add more, start a new module.
+  It needs 8 encounters before the tests pass again, so write them together.
+- **Pick a slug that matches a pin on the module map** (for example
+  `strings`, `lists`, `functions`, `conditions`; the list is in
+  `edoc-galaxy/src/screens/modules/ModuleListScreen.js`), so the pin turns on
+  by itself. Tell Frontend 2 so the module gets its art, and say in the pull
+  request that the seed has to be re-run (`npm run db:seed`) on every database.
+- **To move an encounter to another module or position, add a new version**
+  (see the next section) with the new `module` and `order`. Never edit the old
+  version file.
 
 ## Changing an encounter after it has been played
 

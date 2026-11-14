@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 import httpx
@@ -30,7 +31,18 @@ class PistonClient:
         base_url: str,
         request_timeout_seconds: float = 15.0,
         http_client: httpx.AsyncClient | None = None,
+        max_concurrent: int = 8,
+        queue_wait_timeout_seconds: float = 20.0,
     ) -> None:
+        # Piston runs on one small VM. Without a cap, a burst of submissions
+        # would all hit it at once and every one of them would time out. Above
+        # the cap, a run waits for a free slot, and if none frees up in time it
+        # fails fast as "Piston unavailable" (a SYSTEM_ERROR, never a wrong
+        # answer) so the player can simply try again.
+        if max_concurrent < 1:
+            raise ValueError("max_concurrent must be at least 1")
+        self._slots = asyncio.Semaphore(max_concurrent)
+        self._queue_wait_timeout_seconds = queue_wait_timeout_seconds
         self._base_url = base_url.rstrip("/")
         self._owns_client = http_client is None
         self._client = http_client or httpx.AsyncClient(timeout=request_timeout_seconds)
@@ -40,6 +52,38 @@ class PistonClient:
             await self._client.aclose()
 
     async def execute(
+        self,
+        *,
+        language: str,
+        version: str,
+        code: str,
+        stdin: str = "",
+        timeout_ms: int = 2000,
+        memory_limit_bytes: int | None = None,
+    ) -> ExecutionResult:
+        try:
+            await asyncio.wait_for(
+                self._slots.acquire(), timeout=self._queue_wait_timeout_seconds
+            )
+        except asyncio.TimeoutError as exc:
+            logger.error(
+                "execution queue is full: waited %.0f s for a free slot",
+                self._queue_wait_timeout_seconds,
+            )
+            raise PistonUnavailableError("Execution queue is full") from exc
+        try:
+            return await self._execute(
+                language=language,
+                version=version,
+                code=code,
+                stdin=stdin,
+                timeout_ms=timeout_ms,
+                memory_limit_bytes=memory_limit_bytes,
+            )
+        finally:
+            self._slots.release()
+
+    async def _execute(
         self,
         *,
         language: str,

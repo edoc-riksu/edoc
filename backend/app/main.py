@@ -23,6 +23,8 @@ async def lifespan(app: FastAPI):
     piston_client = PistonClient(
         base_url=settings.piston_base_url,
         request_timeout_seconds=settings.piston_request_timeout_seconds,
+        max_concurrent=settings.max_concurrent_executions,
+        queue_wait_timeout_seconds=settings.execution_queue_wait_seconds,
     )
     harness = TestHarness(piston_client)
 

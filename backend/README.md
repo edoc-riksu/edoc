@@ -235,6 +235,18 @@ code allocates gradually instead of in one go.
 - Python 3.14 (the codespace default) cannot install the pinned
   `pydantic-core`; a Python 3.12 virtual environment worked.
 
+## Concurrency cap (plan Day 41)
+
+Piston runs on one small VM, so the service lets only a limited number of runs
+be inside Piston at once: `MAX_CONCURRENT_EXECUTIONS`, default 8. Extra runs
+wait for a free slot, up to `EXECUTION_QUEUE_WAIT_SECONDS` (default 20). If
+none frees up, the run fails with the normal "Piston unavailable" error, which
+the API reports as a `SYSTEM_ERROR` with no rating, so the player can just try
+again and nothing is scored wrong. A submission's hidden tests run one after
+another and each takes a slot on its own, so one slow submission cannot hold a
+slot for its whole judging. The default is a starting point: re-check it with
+the load test (plan Day 25) once the Azure VM exists.
+
 ## Scoring is server-side only (plan Day 26)
 
 Checked on 2026-10-31 against `main` at `ec258f1`, by reading every path in
