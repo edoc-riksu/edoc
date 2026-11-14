@@ -111,9 +111,12 @@ class PistonClient:
         except httpx.TimeoutException as exc:
             logger.error("piston request timed out: %s", exc)
             raise PistonUnavailableError("Piston request timed out") from exc
-        except httpx.ConnectError as exc:
-            logger.error("could not connect to piston at %s: %s", self._base_url, exc)
-            raise PistonUnavailableError("Could not connect to Piston") from exc
+        except httpx.TransportError as exc:
+            # Every other way the connection can fail: refused, reset, closed
+            # by Piston mid-request (a restart), broken pipe. None of these may
+            # escape as an HTTP 500.
+            logger.error("could not reach piston at %s: %s", self._base_url, exc)
+            raise PistonUnavailableError("Could not reach Piston") from exc
 
         runtime_ms = int((time.monotonic() - started) * 1000)
 
