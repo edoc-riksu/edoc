@@ -1,5 +1,5 @@
-import { db } from "../db";
 import { indexCache } from "./readCache";
+import { db } from "../db";
 
 // Progress.sectorId is a planet id (e.g. "python" - matches Module.planetId
 // and the galaxy map's PLANETS ids in src/galaxy/layout.js). `level` is how
