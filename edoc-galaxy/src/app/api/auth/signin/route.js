@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyCredentials } from "../../../../lib/server/pilotStore";
 import { createSessionToken, SESSION_COOKIE_NAME, maxAgeForRemember } from "../../../../lib/server/sessionToken";
-import { rateLimit, getClientIp } from "../../../../lib/server/rateLimit";
+import { sharedRateLimit, getClientIp } from "../../../../lib/server/rateLimit";
 import { logger, withErrorLogging } from "../../../../lib/logger";
 import { normalizeEmail } from "../../../../lib/authValidation";
 
@@ -18,7 +18,7 @@ export const POST = withErrorLogging(async function POST(request) {
   const remember = body?.remember === true;
 
   const ip = getClientIp(request);
-  const limited = rateLimit(`signin:${ip}:${email || "unknown"}`, { limit: 8, windowMs: 10 * 60 * 1000 });
+  const limited = await sharedRateLimit(`signin:${ip}:${email || "unknown"}`, { limit: 8, windowMs: 10 * 60 * 1000 });
   if (!limited.allowed) {
     return NextResponse.json({ retryAfter: Math.ceil(limited.retryAfterMs / 1000) }, { status: 429 });
   }
