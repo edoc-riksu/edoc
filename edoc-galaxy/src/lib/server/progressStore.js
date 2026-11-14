@@ -1,6 +1,7 @@
 import { db } from "../db";
 import { completionSnapshot } from "./completion.mjs";
 import { masterySummary } from "./mastery";
+import { moduleProgress, recentAttempts, starTotals } from "./profileSummary";
 
 // Progress.sectorId is a planet id (e.g. "python" - matches Module.planetId
 // and the galaxy map's PLANETS ids in src/galaxy/layout.js). `level` is how
@@ -214,20 +215,30 @@ export async function getConceptMastery(userId) {
 
 /** Real numbers for the pilot profile screen - plan Day 18. */
 export async function getProfileStats(userId) {
-  const [totalAttempts, allAttempts, solvedGroups, progress, concepts, hintsUsedSum, elapsedMsSum, modulesCompleted] = await Promise.all([
+  const [totalAttempts, allAttempts, solvedGroups, progress, concepts, hintsUsedSum, elapsedMsSum, modulesCompleted, modules, completions] = await Promise.all([
     db.attempt.count({ where: { userId } }),
     // Ordered oldest-first per encounter so the first entry seen for each
     // encounterId below is that encounter's actual first attempt.
-    db.attempt.findMany({ where: { userId }, select: { encounterId: true, verdict: true }, orderBy: { createdAt: "asc" } }),
+    db.attempt.findMany({
+      where: { userId },
+      select: { encounterId: true, verdict: true, stars: true, createdAt: true },
+      orderBy: { createdAt: "asc" }
+    }),
     db.attempt.findMany({ where: { userId, verdict: "ACCEPTED" }, select: { encounterId: true }, distinct: ["encounterId"] }),
     db.progress.findMany({ where: { userId }, select: { sectorId: true, level: true } }),
     getConceptMastery(userId),
     db.attempt.aggregate({ where: { userId }, _sum: { hintsUsed: true } }),
     db.attempt.aggregate({ where: { userId }, _sum: { elapsedMs: true } }),
-    db.completion.count({ where: { userId } })
+    db.completion.count({ where: { userId } }),
+    db.module.findMany({
+      orderBy: [{ planetId: "asc" }, { order: "asc" }],
+      include: { encounters: { select: { id: true, title: true }, orderBy: { order: "asc" } } }
+    }),
+    db.completion.findMany({ where: { userId }, select: { moduleSlug: true, completedAt: true } })
   ]);
 
   const encountersSolved = solvedGroups.length;
+  const titleById = new Map(modules.flatMap((m) => m.encounters.map((e) => [e.id, e.title])));
 
   // First-attempt rate: of the encounters this pilot has ever attempted,
   // what fraction were solved on that very first try (not just eventually).
@@ -248,6 +259,11 @@ export async function getProfileStats(userId) {
     mastery: masterySummary(concepts),
     modulesCompleted,
     hintsUsed: hintsUsedSum._sum.hintsUsed ?? 0,
-    timeCodingMs: elapsedMsSum._sum.elapsedMs ?? 0
+    timeCodingMs: elapsedMsSum._sum.elapsedMs ?? 0,
+    // Plan Day 36: per-module progress (so the screen needs no request per
+    // module), stars earned from the saved ratings, and the latest attempts.
+    modules: moduleProgress(modules, new Set(solvedGroups.map((g) => g.encounterId)), completions),
+    stars: starTotals(allAttempts, titleById.size),
+    recentAttempts: recentAttempts(allAttempts, titleById)
   };
 }

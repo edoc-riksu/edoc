@@ -111,6 +111,8 @@ export const POST = withErrorLogging(async function POST(request) {
                     runtimeMs: result.execution.runtime_ms,
                     hintsUsed,
                     elapsedMs: elapsedMs ?? 0,
+                    // Plan Day 36: keep the rating the service gave (null if unrated).
+                    stars: Number.isInteger(result.rating?.stars) ? result.rating.stars : null,
                 },
             });
         } catch (error) {

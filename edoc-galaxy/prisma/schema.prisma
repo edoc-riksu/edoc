@@ -130,6 +130,10 @@ model Attempt {
   // to Submit (CodeConsole.js's startedAtRef) — powers the profile's
   // "Time coding" stat. Sent by the client, like hintsUsed/runtimeMs.
   elapsedMs   Int      @default(0)
+  // Star rating (0 to 3) the execution service gave this submission, from
+  // attempts and time (plan Day 15). Null for attempts saved before it was
+  // recorded (plan Day 36) and for SYSTEM_ERROR, which is not rated.
+  stars       Int?     @db.SmallInt
   createdAt   DateTime @default(now())
 
   @@index([userId, encounterId])
