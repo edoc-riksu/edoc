@@ -1,0 +1,73 @@
+{
+  "id": "py-047",
+  "version": 1,
+  "language": "python",
+  "title": "Merge Two Sorted Lists",
+  "difficulty": "hard",
+  "module": "lists",
+  "order": 7,
+  "concepts": ["lists", "loops", "input-output"],
+  "problem": "The input has four lines: a whole number N, then N integers in increasing order, then a whole number M, then M integers in increasing order. N can be 0, and then its line of numbers is empty. Print all N + M numbers merged into one increasing list, separated by spaces, keeping repeats. For example, 1 4 7 and 2 4 9 merge into 1 2 4 4 7 9.",
+  "starter_code": "# Line 1: N. Line 2: N sorted integers (empty if N is 0).\n# Line 3: M. Line 4: M sorted integers.\n# Print all the numbers merged into one sorted list, keeping repeats.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "3\n1 4 7\n3\n2 4 9",
+        "expected_output": "1 2 4 4 7 9",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "2\n5 6\n1\n1",
+        "expected_output": "1 5 6",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "0\n\n3\n1 2 3",
+        "expected_output": "1 2 3",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "1\n5\n4\n1 2 3 4",
+        "expected_output": "1 2 3 4 5",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "3\n1 1 1\n2\n1 1",
+        "expected_output": "1 1 1 1 1",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "4\n-9 -2 3 8\n3\n-10 0 100",
+        "expected_output": "-10 -9 -2 0 3 8 100",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "3\n2 10 30\n3\n9 11 40",
+        "expected_output": "2 9 10 11 30 40",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Both lists are already in order. Think about repeatedly taking the smaller of the two front numbers.",
+    "2": "Keep one position in each list. While both have numbers left, append the smaller front number and move that position on; then add whatever is left of the other list. Compare as integers, keep repeats, and remember that an empty line gives an empty list.",
+    "3": "input()\na = list(map(int, input().split()))\ninput()\nb = list(map(int, input().split()))\nout, i, j = [], 0, 0\nwhile i < len(a) and j < len(b):\n    if a[i] <= b[j]:\n        out.append(a[i])\n        i += 1\n    else:\n        out.append(b[j])\n        j += 1\nout += a[i:] + b[j:]\nprint(' '.join(map(str, out)))"
+  },
+
+  "failure_explanation": "Keep every number, including repeats, and compare them as integers: sorted as text, a longer number can land before a shorter one that starts with a bigger digit. A list can be empty, so reading its line must give an empty list rather than crash, and the leftover numbers of the longer list go at the end."
+}

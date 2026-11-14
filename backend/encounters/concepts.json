@@ -24,6 +24,11 @@
       "id": "strings",
       "name": "strings",
       "note": "Work with text: letters, words, slicing and joining."
+    },
+    {
+      "id": "lists",
+      "name": "lists",
+      "note": "Store several values in order and work through them by position."
     }
   ]
 }
