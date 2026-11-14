@@ -109,3 +109,17 @@ model Attempt {
   @@index([userId, encounterId])
   @@map("attempts")
 }
+
+// Shared rate-limit counters (plan Day 37). One row per limit key (for
+// example "submission:<userId>"), counted in a fixed time window. Kept in
+// Postgres so every server instance sees the same count; an in-memory
+// counter let concurrent requests slip past (DEPLOYMENT.md section 9).
+// Rows are disposable: expired ones are deleted from time to time.
+model RateLimitBucket {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+  @@map("rate_limit_buckets")
+}

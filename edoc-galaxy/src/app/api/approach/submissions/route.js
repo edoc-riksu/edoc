@@ -8,8 +8,12 @@ import {
     SESSION_COOKIE_NAME,
 } from "../../../../lib/server/sessionToken";
 import { recordAcceptedAttempt } from "../../../../lib/server/progressStore";
-import { rateLimit } from "../../../../lib/server/rateLimit";
+import { sharedRateLimit } from "../../../../lib/server/rateLimit";
 import { withErrorLogging } from "../../../../lib/logger";
+
+// Plan Day 37 cost control: at most this many judged submissions per player
+// per 24 hours (the sandbox costs real compute per run).
+const DAILY_SUBMISSION_LIMIT = 300;
 
 const BACKEND_URL =
     process.env.EXECUTION_API_URL ||
@@ -34,12 +38,20 @@ export const POST = withErrorLogging(async function POST(request) {
     // signed-in player rather than per IP. 20/5min comfortably covers
     // normal retry-until-it-passes play without leaving the sandbox open
     // to being hammered by a script.
-    const limited = rateLimit(`submission:${userId}`, { limit: 20, windowMs: 5 * 60 * 1000 });
-    if (!limited.allowed) {
-        return NextResponse.json(
-            { error: "Too many submissions. Please wait a moment.", retryAfter: Math.ceil(limited.retryAfterMs / 1000) },
-            { status: 429 }
-        );
+    // Plan Day 37: counted in the database so concurrent requests on
+    // different instances share one count. The daily budget caps what one
+    // player can cost in sandbox time; normal play stays well under it.
+    for (const [key, opts, message] of [
+        [`submission:${userId}`, { limit: 20, windowMs: 5 * 60 * 1000 }, "Too many submissions. Please wait a moment."],
+        [`submission-day:${userId}`, { limit: DAILY_SUBMISSION_LIMIT, windowMs: 24 * 60 * 60 * 1000 }, "You've reached today's submission limit. It resets within 24 hours."]
+    ]) {
+        const limited = await sharedRateLimit(key, opts);
+        if (!limited.allowed) {
+            return NextResponse.json(
+                { error: message, retryAfter: Math.ceil(limited.retryAfterMs / 1000) },
+                { status: 429 }
+            );
+        }
     }
 
     const body = await request.json();

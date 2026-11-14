@@ -88,6 +88,10 @@ Cause: Vercel can run multiple separate instances of the function side by side u
 
 Not a correctness bug in normal single-user play (confirmed working sequentially), and not urgent today - the plan already schedules the real fix at Week 6 Day 37 ("Cost controls on code execution") and Week 7 Day 43 ("Rate limits and abuse checks"). The real fix is a shared counter all instances read from (e.g. a Redis/Upstash counter, or a Postgres row with an atomic increment) instead of in-memory. Flagging now so it's not forgotten, not fixing it today - fixing it today would be ahead of the plan's own schedule for this.
 
+**Fixed (plan Day 37).** Sign-in, sign-up and submission limits now count in Postgres (`rate_limit_buckets`, migration `20261114120000_add_rate_limit_buckets`) through `sharedRateLimit()` in `src/lib/server/rateLimit.js`: one atomic insert-or-update per request, timed by the database clock, so every instance shares one count. If the database can't be reached, it falls back to the old per-instance counter rather than blocking everyone. Submissions also have a **daily budget of 300 per player** (24-hour window) as a cost control on sandbox time. To re-check: repeat the 15-concurrent sign-in test above; attempts beyond the 8th should now get `429`.
+
+Still open: practice **Run** goes from the browser straight to the execution service (`NEXT_PUBLIC_EXECUTION_API_URL`), so it isn't limited per player here. Backend 1's concurrency cap (#93) bounds the cost on the server side; routing Run through a proxy like Submit would need a console change (Frontend 2).
+
 ## 10. Execution service (`backend/`)
 
 The Python service that runs and judges a player's code. It is **not** deployed by Vercel: it needs Docker, and Piston (the sandbox it runs code in) needs a privileged container, which Vercel and most app platforms don't allow. It runs on its own small server; the Vercel site calls it over HTTPS.

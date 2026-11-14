@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createUser, findByCallsign, findByEmail, suggestCallsigns } from "../../../../lib/server/pilotStore";
 import { createSessionToken, SESSION_COOKIE_NAME, maxAgeForRemember } from "../../../../lib/server/sessionToken";
-import { rateLimit, getClientIp } from "../../../../lib/server/rateLimit";
+import { sharedRateLimit, getClientIp } from "../../../../lib/server/rateLimit";
 import { logger, withErrorLogging } from "../../../../lib/logger";
 import {
   normalizeCallsign,
@@ -14,7 +14,7 @@ import {
 
 export const POST = withErrorLogging(async function POST(request) {
   const ip = getClientIp(request);
-  const limited = rateLimit(`signup:${ip}`, { limit: 10, windowMs: 60 * 60 * 1000 });
+  const limited = await sharedRateLimit(`signup:${ip}`, { limit: 10, windowMs: 60 * 60 * 1000 });
   if (!limited.allowed) {
     return NextResponse.json({ retryAfter: Math.ceil(limited.retryAfterMs / 1000) }, { status: 429 });
   }
