@@ -1,0 +1,73 @@
+{
+  "id": "py-033",
+  "version": 1,
+  "language": "python",
+  "title": "Reverse a String",
+  "difficulty": "easy",
+  "module": "strings",
+  "order": 3,
+  "concepts": [
+    "strings",
+    "loops",
+    "input-output"
+  ],
+  "problem": "Read one line of text and print it backwards. For example, stressed gives desserts.",
+  "starter_code": "# Read one line of text.\n# Print it backwards.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "stressed",
+        "expected_output": "desserts",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "abc",
+        "expected_output": "cba",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "a",
+        "expected_output": "a",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "racecar",
+        "expected_output": "racecar",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "Hello World",
+        "expected_output": "dlroW olleH",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "12345",
+        "expected_output": "54321",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "python",
+        "expected_output": "nohtyp",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "The last letter has to come out first. Think about reading the text from the other end.",
+    "2": "You can build the answer by going through the letters from the last one to the first, or use slicing with a step of -1.",
+    "3": "text = input()\nprint(text[::-1])"
+  },
+  "failure_explanation": "Every character must appear in reverse order, including spaces, capital letters and digits, which keep their case and value. A single character reads the same both ways, so make sure your code does not fail on very short text. Print the reversed text on one line."
+}

@@ -1,0 +1,72 @@
+{
+  "id": "py-022",
+  "version": 1,
+  "language": "python",
+  "title": "Grade Letter",
+  "difficulty": "easy",
+  "module": "conditions",
+  "order": 2,
+  "concepts": [
+    "conditionals",
+    "input-output"
+  ],
+  "problem": "Read a score from 0 to 100. Print A for 90 or more, B for 80 to 89, C for 70 to 79, D for 60 to 69, and F for anything below 60. For example, 85 gives B.",
+  "starter_code": "# Read a score from 0 to 100.\n# Print the grade letter.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "85",
+        "expected_output": "B",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "42",
+        "expected_output": "F",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "90",
+        "expected_output": "A",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "80",
+        "expected_output": "B",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "70",
+        "expected_output": "C",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "60",
+        "expected_output": "D",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "59",
+        "expected_output": "F",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Start from the highest grade and work down: the first condition that is true decides the answer.",
+    "2": "Use an if/elif chain from the top grade to the bottom, with >= for each boundary, and else for the lowest grade. Because you test from the top, each grade needs only one comparison.",
+    "3": "s = int(input())\nif s >= 90:\n    print(\"A\")\nelif s >= 80:\n    print(\"B\")\nelif s >= 70:\n    print(\"C\")\nelif s >= 60:\n    print(\"D\")\nelse:\n    print(\"F\")"
+  },
+  "failure_explanation": "A score exactly on a boundary belongs to the higher grade, so use >= and not >. Order matters in an if/elif chain: test the highest grade first, or a high score will be caught by a lower grade's test. Print only the single letter."
+}

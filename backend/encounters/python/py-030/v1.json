@@ -1,0 +1,73 @@
+{
+  "id": "py-030",
+  "version": 1,
+  "language": "python",
+  "title": "Days in a Month",
+  "difficulty": "hard",
+  "module": "conditions",
+  "order": 10,
+  "concepts": [
+    "conditionals",
+    "arithmetic",
+    "input-output"
+  ],
+  "problem": "Read a month number (1 to 12) and a year on one line. Print how many days that month has in that year. February has 29 days in a leap year and 28 otherwise (a leap year is divisible by 4, except that years divisible by 100 are not, unless they are also divisible by 400). April, June, September and November have 30 days, and every other month has 31. For example, 4 2023 gives 30.",
+  "starter_code": "# Read a month (1 to 12) and a year on one line.\n# Print the number of days in that month.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "4 2023",
+        "expected_output": "30",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "2 2024",
+        "expected_output": "29",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "2 1900",
+        "expected_output": "28",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "2 2000",
+        "expected_output": "29",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "12 2023",
+        "expected_output": "31",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "9 2021",
+        "expected_output": "30",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "11 2020",
+        "expected_output": "30",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Most months have a fixed number of days. Only one month needs the year, so deal with that one separately.",
+    "2": "Handle February on its own with a leap-year test (divisible by 4 and not by 100, or divisible by 400). For the other months, check whether the month is one of the four with 30 days, and use 31 for the rest.",
+    "3": "m, y = map(int, input().split())\nif m == 2:\n    leap = (y % 4 == 0 and y % 100 != 0) or y % 400 == 0\n    print(29 if leap else 28)\nelif m in (4, 6, 9, 11):\n    print(30)\nelse:\n    print(31)"
+  },
+  "failure_explanation": "Only February depends on the year, and its leap-year rule has three layers: divisible by 4, except by 100, unless also by 400. Years such as ones ending in 00 are the usual trap. For every other month the year does not matter, so check the four 30-day months and give all the rest 31."
+}

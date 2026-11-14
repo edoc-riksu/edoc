@@ -1,0 +1,73 @@
+{
+  "id": "py-037",
+  "version": 1,
+  "language": "python",
+  "title": "Longest Word",
+  "difficulty": "medium",
+  "module": "strings",
+  "order": 7,
+  "concepts": [
+    "strings",
+    "loops",
+    "conditionals"
+  ],
+  "problem": "Read one line of words separated by single spaces. Print the longest word. If several words are tied for the longest length, print the first of them. For example, I love programming gives programming.",
+  "starter_code": "# Read one line of words separated by spaces.\n# Print the longest word (the first one if there is a tie).\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "I love programming",
+        "expected_output": "programming",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "cat dog",
+        "expected_output": "cat",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "a",
+        "expected_output": "a",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "one three five seven",
+        "expected_output": "three",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "hi hello hey world",
+        "expected_output": "hello",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "short longer longest",
+        "expected_output": "longest",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "same size here",
+        "expected_output": "same",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Keep track of the best word you have seen so far and compare every new word with it.",
+    "2": "Split the line into words and loop over them, remembering the longest so far. Replace it only when a word is strictly longer, so that on a tie the earlier word stays.",
+    "3": "words = input().split()\nbest = words[0]\nfor w in words:\n    if len(w) > len(best):\n        best = w\nprint(best)"
+  },
+  "failure_explanation": "When two words are of equal length, the one that came first must win, so a new word has to be strictly longer than the best so far to replace it. Start with the first word as the best, so a line with a single word also works, and print the word itself, not its length."
+}

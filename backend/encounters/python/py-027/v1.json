@@ -1,0 +1,72 @@
+{
+  "id": "py-027",
+  "version": 1,
+  "language": "python",
+  "title": "Quadrant of a Point",
+  "difficulty": "medium",
+  "module": "conditions",
+  "order": 7,
+  "concepts": [
+    "conditionals",
+    "input-output"
+  ],
+  "problem": "Read two integers x and y on one line. Print Q1 if both are positive, Q2 if x is negative and y is positive, Q3 if both are negative, and Q4 if x is positive and y is negative. If the point is on an axis (x or y is 0), print Axis. For example, 3 5 gives Q1 and 0 4 gives Axis.",
+  "starter_code": "# Read x and y on one line.\n# Print Q1, Q2, Q3, Q4 or Axis.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "3 5",
+        "expected_output": "Q1",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "0 4",
+        "expected_output": "Axis",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "-2 7",
+        "expected_output": "Q2",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "-4 -1",
+        "expected_output": "Q3",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "6 -3",
+        "expected_output": "Q4",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "5 0",
+        "expected_output": "Axis",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "0 0",
+        "expected_output": "Axis",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Rule out the points on an axis first; then the signs of x and y tell you the quadrant.",
+    "2": "Test for x or y being zero first and print Axis. After that, compare the sign of x and the sign of y with if/elif, one combination per branch.",
+    "3": "x, y = map(int, input().split())\nif x == 0 or y == 0:\n    print(\"Axis\")\nelif x > 0 and y > 0:\n    print(\"Q1\")\nelif x < 0 and y > 0:\n    print(\"Q2\")\nelif x < 0 and y < 0:\n    print(\"Q3\")\nelse:\n    print(\"Q4\")"
+  },
+  "failure_explanation": "A point with a zero coordinate is on an axis and belongs to no quadrant, so test for that before the quadrants. Then check the signs of both numbers together: Q2 needs a negative x and a positive y, and Q4 is the other way round."
+}

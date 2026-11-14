@@ -1,0 +1,72 @@
+{
+  "id": "py-023",
+  "version": 1,
+  "language": "python",
+  "title": "Temperature Advice",
+  "difficulty": "easy",
+  "module": "conditions",
+  "order": 3,
+  "concepts": [
+    "conditionals",
+    "input-output"
+  ],
+  "problem": "Read a temperature in whole degrees. Print Freezing if it is 0 or below, Cold if it is 1 to 15, Mild if it is 16 to 25, and Hot if it is above 25. For example, 20 gives Mild.",
+  "starter_code": "# Read a temperature in whole degrees.\n# Print Freezing, Cold, Mild or Hot.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "20",
+        "expected_output": "Mild",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "-5",
+        "expected_output": "Freezing",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "0",
+        "expected_output": "Freezing",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "15",
+        "expected_output": "Cold",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "16",
+        "expected_output": "Mild",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "25",
+        "expected_output": "Mild",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "26",
+        "expected_output": "Hot",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Each answer covers a range of temperatures. Work out where one range ends and the next begins.",
+    "2": "Use an if/elif/else chain. Test the ranges in order from the coldest, using <= for the upper end of each range, and let else handle the hottest case.",
+    "3": "t = int(input())\nif t <= 0:\n    print(\"Freezing\")\nelif t <= 15:\n    print(\"Cold\")\nelif t <= 25:\n    print(\"Mild\")\nelse:\n    print(\"Hot\")"
+  },
+  "failure_explanation": "The edges are where this goes wrong. Zero is still Freezing, the top of each range belongs to that range, and only values above the last limit are Hot. Check whether you used < where you needed <=, and print the word with a capital first letter."
+}

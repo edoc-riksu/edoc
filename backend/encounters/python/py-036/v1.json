@@ -1,0 +1,73 @@
+{
+  "id": "py-036",
+  "version": 1,
+  "language": "python",
+  "title": "Remove Vowels",
+  "difficulty": "medium",
+  "module": "strings",
+  "order": 6,
+  "concepts": [
+    "strings",
+    "loops",
+    "conditionals"
+  ],
+  "problem": "Read one line of text. Print it with all the vowels removed. The vowels are a, e, i, o and u, in lower case and in capitals. Everything else, including spaces and digits, stays. For example, Education gives dctn.",
+  "starter_code": "# Read one line of text.\n# Print it without any vowels (a e i o u, either case).\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "Education",
+        "expected_output": "dctn",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "sky",
+        "expected_output": "sky",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "Programming Language",
+        "expected_output": "Prgrmmng Lngg",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "rhythm",
+        "expected_output": "rhythm",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "Hello World",
+        "expected_output": "Hll Wrld",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "UNDER the SEA",
+        "expected_output": "NDR th S",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "a1e2i3",
+        "expected_output": "123",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Look at the characters one by one and decide for each whether to keep it.",
+    "2": "Loop over the text and build a new piece of text from the characters that are not vowels. Remember that capital vowels count too, so compare in a way that ignores the case.",
+    "3": "text = input()\nresult = \"\"\nfor ch in text:\n    if ch.lower() not in \"aeiou\":\n        result += ch\nprint(result)"
+  },
+  "failure_explanation": "Remove vowels in both cases: a capital vowel is still a vowel. Keep every other character exactly as it was, including spaces, digits and capital consonants, and do not change the case of the letters you keep. Print the result on one line."
+}

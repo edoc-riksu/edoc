@@ -7,7 +7,8 @@ export const CONCEPTS = {
   "input-output": { id: "input-output", name: "input/output", note: "Read input, process values, and print the result." },
   arithmetic: { id: "arithmetic", name: "arithmetic", note: "Calculate with numbers using operators like + - * / and %." },
   loops: { id: "loops", name: "loops", note: "Repeat an action for a sequence of values." },
-  conditionals: { id: "conditionals", name: "conditionals", note: "Choose an action based on a condition." }
+  conditionals: { id: "conditionals", name: "conditionals", note: "Choose an action based on a condition." },
+  strings: { id: "strings", name: "strings", note: "Work with text: letters, words, slicing and joining." }
 };
 
 /** A concept the list doesn't know yet still gets a readable name, with no note. */

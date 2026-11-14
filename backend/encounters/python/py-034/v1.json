@@ -1,0 +1,73 @@
+{
+  "id": "py-034",
+  "version": 1,
+  "language": "python",
+  "title": "Count a Letter",
+  "difficulty": "easy",
+  "module": "strings",
+  "order": 4,
+  "concepts": [
+    "strings",
+    "loops",
+    "input-output"
+  ],
+  "problem": "Read a line of text, then on the next line a single letter. Print how many times that letter appears in the text. Upper case and lower case are different letters. For example, the text banana and the letter a gives 3.",
+  "starter_code": "# Line 1: a line of text. Line 2: a single letter.\n# Print how many times the letter appears in the text.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "banana\na",
+        "expected_output": "3",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "Hello\nl",
+        "expected_output": "2",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "Hello\nh",
+        "expected_output": "0",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "mississippi\ns",
+        "expected_output": "4",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "aaaa\na",
+        "expected_output": "4",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "abc def\nz",
+        "expected_output": "0",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "Banana\nB",
+        "expected_output": "1",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Look at the letters of the text one at a time and keep a count of the ones that match.",
+    "2": "Use a loop over the text. Inside it, compare the current character with the letter you were given, and add one to a counter when they are equal. Start the counter at zero.",
+    "3": "text = input()\nletter = input()\ncount = 0\nfor ch in text:\n    if ch == letter:\n        count += 1\nprint(count)"
+  },
+  "failure_explanation": "Compare each character with the letter exactly as given: a capital letter and its lower-case form are different, so do not change the case. Start your counter at zero so a letter that never appears gives 0, and print only the final count."
+}

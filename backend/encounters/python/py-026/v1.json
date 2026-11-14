@@ -1,0 +1,72 @@
+{
+  "id": "py-026",
+  "version": 1,
+  "language": "python",
+  "title": "Triangle Type",
+  "difficulty": "medium",
+  "module": "conditions",
+  "order": 6,
+  "concepts": [
+    "conditionals",
+    "input-output"
+  ],
+  "problem": "Read three positive integers on one line: the lengths of three sides. If the two shorter sides together are not longer than the longest side, they cannot form a triangle, so print Not a triangle. Otherwise print Equilateral if all three sides are equal, Isosceles if exactly two are equal, and Scalene if all three are different. For example, 3 4 5 gives Scalene and 5 5 8 gives Isosceles.",
+  "starter_code": "# Read three side lengths on one line.\n# Print Not a triangle, Equilateral, Isosceles or Scalene.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "3 4 5",
+        "expected_output": "Scalene",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "5 5 8",
+        "expected_output": "Isosceles",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "6 6 6",
+        "expected_output": "Equilateral",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "5 2 3",
+        "expected_output": "Not a triangle",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "4 4 9",
+        "expected_output": "Not a triangle",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "9 6 6",
+        "expected_output": "Isosceles",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "7 10 5",
+        "expected_output": "Scalene",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Decide whether the sides can form a triangle at all before you look at how many of them are equal.",
+    "2": "Sort the three sides so the longest is last. If the two shorter ones do not add up to more than the longest, it is not a triangle. Otherwise count how many sides are equal.",
+    "3": "a, b, c = sorted(map(int, input().split()))\nif a + b <= c:\n    print(\"Not a triangle\")\nelif a == b == c:\n    print(\"Equilateral\")\nelif a == b or b == c:\n    print(\"Isosceles\")\nelse:\n    print(\"Scalene\")"
+  },
+  "failure_explanation": "Check that a triangle is possible first: two shorter sides that add up to exactly the longest side still do not make one, and a set of sides with two equal lengths can still be impossible. The sides can come in any order, so compare every pair and not only the first two."
+}

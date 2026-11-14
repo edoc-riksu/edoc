@@ -1,0 +1,73 @@
+{
+  "id": "py-035",
+  "version": 1,
+  "language": "python",
+  "title": "Capitalize Each Word",
+  "difficulty": "medium",
+  "module": "strings",
+  "order": 5,
+  "concepts": [
+    "strings",
+    "loops",
+    "input-output"
+  ],
+  "problem": "Read one line of words separated by single spaces. The words use lower-case letters, digits and apostrophes. Print the same words with the first letter of each word in capitals. For example, the quick fox gives The Quick Fox.",
+  "starter_code": "# Read one line of lower-case words separated by spaces.\n# Print them with the first letter of every word in capitals.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "the quick fox",
+        "expected_output": "The Quick Fox",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "hello",
+        "expected_output": "Hello",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "a b c",
+        "expected_output": "A B C",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "python is fun",
+        "expected_output": "Python Is Fun",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "r2 d2",
+        "expected_output": "R2 D2",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "don't stop",
+        "expected_output": "Don't Stop",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "go to the moon",
+        "expected_output": "Go To The Moon",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Only the first letter of each word changes. Think about how to treat the first letter and the rest of a word separately.",
+    "2": "Split the line into words, change the first character of each word and keep the rest, then join the words back together with single spaces. Beware of a helper that also changes letters after an apostrophe.",
+    "3": "words = input().split()\nresult = []\nfor w in words:\n    result.append(w[0].upper() + w[1:])\nprint(\" \".join(result))"
+  },
+  "failure_explanation": "Only the first character of each word becomes a capital; the rest of the word stays as it is. Keep the single spaces between words. Be careful with words that contain an apostrophe or a digit: the letter after an apostrophe must stay lower case."
+}

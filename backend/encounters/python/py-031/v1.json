@@ -1,0 +1,72 @@
+{
+  "id": "py-031",
+  "version": 1,
+  "language": "python",
+  "title": "Shout It",
+  "difficulty": "easy",
+  "module": "strings",
+  "order": 1,
+  "concepts": [
+    "strings",
+    "input-output"
+  ],
+  "problem": "Read one line of text. Print it in capital letters with an exclamation mark added at the end. For example, hello there gives HELLO THERE!",
+  "starter_code": "# Read one line of text.\n# Print it in capital letters, followed by an exclamation mark.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "hello there",
+        "expected_output": "HELLO THERE!",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "Ok",
+        "expected_output": "OK!",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "python",
+        "expected_output": "PYTHON!",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "a",
+        "expected_output": "A!",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "Mixed Case 42",
+        "expected_output": "MIXED CASE 42!",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "already LOUD",
+        "expected_output": "ALREADY LOUD!",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "x y z",
+        "expected_output": "X Y Z!",
+        "points": 20
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Python can change the case of a whole piece of text in one step, and two pieces of text can be joined with a plus sign.",
+    "2": "Text has a method that gives back the capital-letter version of it. Add the exclamation mark to the end with +, then print the result.",
+    "3": "print(input().upper() + \"!\")"
+  },
+  "failure_explanation": "Change every letter to a capital and leave spaces, digits and punctuation alone, then add the exclamation mark once, at the very end. Print one line only, and do not add a space before the exclamation mark."
+}
