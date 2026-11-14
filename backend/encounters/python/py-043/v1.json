@@ -1,0 +1,73 @@
+{
+  "id": "py-043",
+  "version": 1,
+  "language": "python",
+  "title": "Sum of Evens",
+  "difficulty": "easy",
+  "module": "lists",
+  "order": 3,
+  "concepts": ["lists", "conditionals", "input-output"],
+  "problem": "The first line is a positive integer N. The second line holds N integers separated by spaces. Print the sum of the even numbers in the list, or 0 if there are none. For example, for 1 2 3 4 the answer is 2 + 4 = 6.",
+  "starter_code": "# The first line is N, the second line holds N integers.\n# Print the sum of the even numbers (0 if there are none).\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "4\n1 2 3 4",
+        "expected_output": "6",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "3\n1 3 5",
+        "expected_output": "0",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1\n8",
+        "expected_output": "8",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "5\n3 -4 7 -2 10",
+        "expected_output": "4",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "6\n1 2 3 4 5 6",
+        "expected_output": "12",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "4\n11 13 15 17",
+        "expected_output": "0",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "5\n0 1 0 1 9",
+        "expected_output": "0",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Look at each number and decide whether it belongs in the total.",
+    "2": "Loop over the numbers as integers and add a number when number % 2 == 0. Start the total at 0 so a list with no even numbers still prints 0. Check the value itself, not its position in the list.",
+    "3": "input()\nprint(sum(x for x in map(int, input().split()) if x % 2 == 0))"
+  },
+
+  "failure_explanation": "A number is even when number % 2 == 0, which also works for negative numbers and zero. Test each value, not its position in the list, and start the total at 0 so a list without even numbers still prints 0."
+}

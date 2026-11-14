@@ -1,0 +1,73 @@
+{
+  "id": "py-048",
+  "version": 1,
+  "language": "python",
+  "title": "Pair With Target Sum",
+  "difficulty": "hard",
+  "module": "lists",
+  "order": 8,
+  "concepts": ["lists", "conditionals", "input-output"],
+  "problem": "The first line is a positive integer N. The second line holds N integers separated by spaces. The third line holds a target T. Print \"Yes\" if two numbers at different positions in the list add up to T, and \"No\" otherwise. A number can't be paired with itself, but two equal numbers at different positions can. For example, in 1 4 6 the pair 4 + 6 makes 10, so for T = 10 the answer is Yes.",
+  "starter_code": "# The first line is N, the second line holds N integers,\n# the third line holds the target T.\n# Print \"Yes\" if two different positions add up to T, otherwise \"No\".\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "3\n1 4 6\n10",
+        "expected_output": "Yes",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "3\n1 4 6\n3",
+        "expected_output": "No",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1\n5\n10",
+        "expected_output": "No",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "2\n5 5\n10",
+        "expected_output": "Yes",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "4\n3 8 2 7\n6",
+        "expected_output": "No",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "5\n-4 9 1 13 -2\n-6",
+        "expected_output": "Yes",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "6\n10 20 30 40 50 60\n110",
+        "expected_output": "Yes",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "For each number, think about which other number it would need to reach the target.",
+    "2": "Loop over the numbers, keeping a set of the numbers seen so far. For each number x, if T - x is already in the set, a pair exists; then add x to the set. Checking the set before adding x stops a number from pairing with itself.",
+    "3": "input()\nnums = list(map(int, input().split()))\nt = int(input())\nseen = set()\nfound = False\nfor x in nums:\n    if t - x in seen:\n        found = True\n    seen.add(x)\nprint('Yes' if found else 'No')"
+  },
+
+  "failure_explanation": "The two numbers must come from different positions: one number on its own is not a pair, even if doubling it reaches the target. Two equal numbers at different positions do count. Print the words exactly as shown."
+}
