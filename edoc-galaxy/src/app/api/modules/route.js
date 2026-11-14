@@ -4,6 +4,7 @@ import { db } from "../../../lib/db";
 import { readSessionToken, SESSION_COOKIE_NAME } from "../../../lib/server/sessionToken";
 import { getModuleLockState } from "../../../lib/server/progressStore";
 import { withErrorLogging } from "../../../lib/logger";
+import { indexCache } from "../../../lib/server/readCache";
 
 // Lists modules, optionally filtered to one planet, with an encounter
 // count for display - never the encounters' own content (see Encounter
@@ -17,11 +18,15 @@ export const GET = withErrorLogging(async function GET(request) {
   const userId = readSessionToken(store.get(SESSION_COOKIE_NAME)?.value);
 
   const [modules, lockBySlug] = await Promise.all([
-    db.module.findMany({
-      where: planetId ? { planetId } : undefined,
-      orderBy: { order: "asc" },
-      include: { _count: { select: { encounters: true } } }
-    }),
+    // The module list is shared index data (cached, plan Day 39); the lock
+    // state is this player's own and is always read fresh.
+    indexCache.get(`modules:${planetId || "*"}`, () =>
+      db.module.findMany({
+        where: planetId ? { planetId } : undefined,
+        orderBy: { order: "asc" },
+        include: { _count: { select: { encounters: true } } }
+      })
+    ),
     getModuleLockState(userId)
   ]);
 

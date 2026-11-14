@@ -68,6 +68,8 @@ Measured directly against `edoc-drab.vercel.app` (staging), given the cross-regi
 
 Cold numbers (first request after a few idle minutes) running up to ~3s are expected and come from section 7's cross-region/compute-wake cost, not a code problem. If warm requests start exceeding ~1-1.5s, that's the signal something regressed - these numbers are the baseline to compare against.
 
+**Caching (plan Day 39).** The module and encounter index only changes on a re-seed, so `/api/planets`, `/api/modules`, `/api/modules/[slug]`, `/api/encounters/[id]` and the module lock check read it through a 60-second in-memory cache per server instance (`src/lib/server/readCache.js`). `/api/planets` and `/api/encounters/[id]` are the same for everyone, so they also send `Cache-Control: public, s-maxage=60, stale-while-revalidate=300` and Vercel's CDN serves repeats without running the function. Anything about one player (lock state, progress, stats) is never cached. **After a re-seed, allow about a minute** for every instance and the CDN to show the new index, or redeploy to clear it at once.
+
 ## 9. Staging checked under load (plan Day 26)
 
 Ran 25 concurrent requests against `edoc-drab.vercel.app` for each read route - no errors, but latency rises under concurrency (expected: more parallel serverless instances each paying the cross-region DB cost from section 7, not a bug):
