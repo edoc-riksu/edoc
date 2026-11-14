@@ -4,6 +4,7 @@ import { db } from "../../../../lib/db";
 import { readSessionToken, SESSION_COOKIE_NAME } from "../../../../lib/server/sessionToken";
 import { getModuleLockState } from "../../../../lib/server/progressStore";
 import { withErrorLogging } from "../../../../lib/logger";
+import { indexCache } from "../../../../lib/server/readCache";
 
 // One module and its ordered encounter list - ids, difficulty, concepts,
 // titles only. A client fetches each encounter's actual problem/tests
@@ -12,10 +13,13 @@ import { withErrorLogging } from "../../../../lib/logger";
 export const GET = withErrorLogging(async function GET(request, { params }) {
   const { slug } = await params;
 
-  const module_ = await db.module.findUnique({
-    where: { slug },
-    include: { encounters: { orderBy: { order: "asc" } } }
-  });
+  // Cached index data (plan Day 39); the lock state below is per player.
+  const module_ = await indexCache.get(`module:${slug}`, () =>
+    db.module.findUnique({
+      where: { slug },
+      include: { encounters: { orderBy: { order: "asc" } } }
+    })
+  );
 
   if (!module_) {
     return NextResponse.json({ error: "module not found" }, { status: 404 });

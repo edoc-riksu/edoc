@@ -1,3 +1,4 @@
+import { indexCache } from "./readCache";
 import { db } from "../db";
 
 // Progress.sectorId is a planet id (e.g. "python" - matches Module.planetId
@@ -112,10 +113,14 @@ export async function hasCompletedAnyModule(userId) {
  * any encounter directly regardless of this flag.
  */
 export async function getModuleLockState(userId) {
-  const modules = await db.module.findMany({
-    orderBy: [{ planetId: "asc" }, { order: "asc" }],
-    include: { encounters: { select: { id: true } } }
-  });
+  // Every module request asks for this, so the module list itself comes from
+  // the shared index cache (plan Day 39); the player's solves never do.
+  const modules = await indexCache.get("lock-modules", () =>
+    db.module.findMany({
+      orderBy: [{ planetId: "asc" }, { order: "asc" }],
+      include: { encounters: { select: { id: true } } }
+    })
+  );
 
   const solved = userId
     ? new Set(
