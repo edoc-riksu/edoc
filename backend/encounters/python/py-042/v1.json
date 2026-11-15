@@ -1,0 +1,73 @@
+{
+  "id": "py-042",
+  "version": 1,
+  "language": "python",
+  "title": "Count Occurrences",
+  "difficulty": "easy",
+  "module": "lists",
+  "order": 2,
+  "concepts": ["lists", "loops", "input-output"],
+  "problem": "The first line is a positive integer N. The second line holds N integers separated by spaces. The third line holds one integer X. Print how many times X appears in the list. For example, in 1 2 1 3 the number 1 appears 2 times.",
+  "starter_code": "# The first line is N, the second line holds N integers,\n# the third line holds X.\n# Print how many times X appears in the list.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "4\n1 2 1 3\n1",
+        "expected_output": "2",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "3\n5 6 7\n9",
+        "expected_output": "0",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1\n4\n4",
+        "expected_output": "1",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "5\n12 1 21 1 11\n1",
+        "expected_output": "2",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "6\n-3 3 -3 -3 0 3\n-3",
+        "expected_output": "3",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "4\n0 0 0 0\n0",
+        "expected_output": "4",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "5\n100 10 1 10 100\n10",
+        "expected_output": "2",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Compare X with each number in the list, one at a time.",
+    "2": "Turn the second line into a list of integers with map(int, ...), turn X into an integer too, then count the matches with a loop or the list's count() method. Counting X in the raw text of the line would also count it inside longer numbers.",
+    "3": "input()\nnums = list(map(int, input().split()))\nprint(nums.count(int(input())))"
+  },
+
+  "failure_explanation": "Compare whole numbers, not pieces of text: searching the line as text also finds X inside longer numbers. Convert both the list and X with int() so negative numbers and zero match correctly."
+}
