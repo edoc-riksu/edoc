@@ -95,7 +95,7 @@ node scripts/load-test.mjs --url https://edoc-drab.vercel.app --levels 10,25,50 
 - **No failures:** 900 of 900 requests succeeded at every level, with no errors or timeouts, and throughput grew with concurrency.
 - **The database is the slow part.** The health route, which doesn't touch the database, stays around 300 ms. Every route that reads the database pays the cross-region connection cost from DEPLOYMENT.md section 7, so its median is 0.5 to 2 s and its slowest 5% take 2 to 4 s. That is slow but usable for menus and maps. It's the main thing to improve before many players arrive.
 - **The fix is already written:** the encounter-read cache (#103) serves these routes from memory and Vercel's CDN for a minute at a time, so most of these requests will skip the database. Moving the database to the same region as the Vercel functions would cut the rest.
-- **The sign-in limit did not hold:** 15 sign-ins sent at once all got through (`401` x15, none `429`). This is the gap found on Day 26: `main` still counts limits in each server's memory. The shared limiter (#101) and the abuse checks (#43's PR) fix it.
+- **The sign-in limit did not hold:** 15 sign-ins sent at once all got through (`401` x15, none `429`). This is the gap found on Day 26: `main` still counts limits in each server's memory. The shared limiter (#101) and the abuse checks (#105) fix it.
 
 **Re-run after #101 and #103 are deployed.** Expected:
 - The sign-in burst reports "limit held": at most 8 get through and the rest get `429`.
