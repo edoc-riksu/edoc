@@ -41,3 +41,20 @@ export function loadEncounters(encountersRoot, language) {
 export function inPlayOrder(moduleEncounters) {
   return [...moduleEncounters].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
 }
+
+// The modules of one language in play order, each with its encounters in play
+// order. A module's place is set by its lowest encounter id (python-basics
+// holds py-001, so it comes first), which is how ids are handed out per module.
+// The seed writes this order on every run, so a re-seed puts modules back in
+// order after encounters move between modules (plan Day 47).
+export function modulesInOrder(encounters) {
+  const byModule = new Map();
+  for (const e of encounters) {
+    if (!byModule.has(e.module)) byModule.set(e.module, []);
+    byModule.get(e.module).push(e);
+  }
+  const firstId = (list) => list.reduce((min, e) => (e.id.localeCompare(min) < 0 ? e.id : min), list[0].id);
+  return [...byModule.entries()]
+    .sort(([, a], [, b]) => firstId(a).localeCompare(firstId(b)))
+    .map(([slug, list], order) => ({ slug, order, encounters: inPlayOrder(list) }));
+}

@@ -89,7 +89,9 @@ export async function getModuleProgress(userId, slug) {
  * called directly to equip it early.
  */
 export async function hasCompletedAnyModule(userId) {
-  const modules = await db.module.findMany({ select: { id: true }, include: { encounters: { select: { id: true } } } });
+  // `select` only: Prisma refuses a query that has both `select` and
+  // `include`, which made equipping the suit fail for everyone (plan Day 47).
+  const modules = await db.module.findMany({ select: { id: true, encounters: { select: { id: true } } } });
 
   for (const m of modules) {
     if (m.encounters.length === 0) continue;

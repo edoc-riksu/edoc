@@ -7,10 +7,19 @@ const REMEMBER_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30d — "keep me signed i
 // Read fresh on every call, not cached at module load - caching it in a
 // module-level constant meant rotating AUTH_SECRET at runtime silently had
 // no effect (tokens signed under the old secret kept validating).
-// Dev-only fallback so things work out of the box without AUTH_SECRET set;
-// a real deployment must set it.
+// Dev-only fallback so things work out of the box without AUTH_SECRET set.
+// Outside development the fallback is refused (plan Day 47): it is public in
+// this repo, so signing with it would let anyone forge a session for any
+// player. Signing then fails loudly and every token reads as signed out.
+const DEV_SECRET = "edoc-galaxy-dev-secret-do-not-use-in-production";
+
 function getSecret() {
-  return process.env.AUTH_SECRET || "edoc-galaxy-dev-secret-do-not-use-in-production";
+  if (process.env.AUTH_SECRET) return process.env.AUTH_SECRET;
+  const appEnv = process.env.APP_ENV || "development";
+  if (appEnv !== "development") {
+    throw new Error(`AUTH_SECRET is not set for APP_ENV=${appEnv}; refusing to use the development secret`);
+  }
+  return DEV_SECRET;
 }
 
 function sign(value) {
@@ -33,7 +42,12 @@ export function createSessionToken(userId, { remember = false } = {}) {
 export function readSessionToken(token) {
   if (typeof token !== "string" || !token.includes(".")) return null;
   const [encoded, signature] = token.split(".");
-  const expected = sign(encoded);
+  let expected;
+  try {
+    expected = sign(encoded);
+  } catch {
+    return null; // no usable secret: treat as signed out, never as valid
+  }
   const a = Buffer.from(signature || "", "utf8");
   const b = Buffer.from(expected, "utf8");
   if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
