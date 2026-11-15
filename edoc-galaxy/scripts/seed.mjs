@@ -8,7 +8,7 @@
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
-import { inPlayOrder, loadEncounters } from "../src/lib/server/encounterFiles.mjs";
+import { loadEncounters, modulesInOrder } from "../src/lib/server/encounterFiles.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ENCOUNTERS_ROOT = join(__dirname, "..", "..", "backend", "encounters");
@@ -22,22 +22,17 @@ async function main() {
   try {
     for (const [language, planetId] of Object.entries(LANGUAGE_TO_PLANET)) {
       const encounters = loadEncounters(ENCOUNTERS_ROOT, language);
-      const byModule = new Map();
-      for (const e of encounters) {
-        if (!byModule.has(e.module)) byModule.set(e.module, []);
-        byModule.get(e.module).push(e);
-      }
 
-      let moduleOrder = 0;
-      for (const [slug, moduleEncounters] of byModule) {
+      for (const { slug, order: moduleOrder, encounters: moduleEncounters } of modulesInOrder(encounters)) {
+        // The order is written on update too, not only on create: otherwise a
+        // database seeded before a module reshuffle keeps the old unlock order.
         const module_ = await db.module.upsert({
           where: { slug },
-          update: { planetId, title: titleCase(slug) },
+          update: { planetId, title: titleCase(slug), order: moduleOrder },
           create: { slug, planetId, title: titleCase(slug), order: moduleOrder }
         });
-        moduleOrder += 1;
 
-        for (const [order, e] of inPlayOrder(moduleEncounters).entries()) {
+        for (const [order, e] of moduleEncounters.entries()) {
           await db.encounter.upsert({
             where: { id: e.id },
             update: {
