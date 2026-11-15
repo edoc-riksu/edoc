@@ -4,6 +4,7 @@ from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.execution.piston_client import PistonClient, PistonUnavailableError
 from app.schemas.encounter import Encounter
+from app.schemas.execution import ExecutionStatus
 from app.schemas.submission import ExecutionMeta, RunResponse, RunTestResult
 from app.judge.comparator import compare_output
 
@@ -55,8 +56,12 @@ class ExecutionService:
                         test_id=test.id,
                         # Compared against the full, untruncated output -
                         # truncation below is for response size only and
-                        # must never affect correctness.
-                        passed=compare_output(result.stdout, test.expected_output),
+                        # must never affect correctness. Same rule as Submit:
+                        # the program must also have ended cleanly, so a Run
+                        # never says "passed" for code that crashed or timed
+                        # out after printing the right answer.
+                        passed=result.status == ExecutionStatus.SUCCESS
+                        and compare_output(result.stdout, test.expected_output),
                         stdout=_truncate(result.stdout, settings.run_output_char_limit),
                         stderr=_truncate(result.stderr, settings.run_output_char_limit),
                     )
