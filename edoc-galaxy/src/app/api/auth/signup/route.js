@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createUser, findByCallsign, findByEmail, suggestCallsigns } from "../../../../lib/server/pilotStore";
 import { createSessionToken, SESSION_COOKIE_NAME, maxAgeForRemember } from "../../../../lib/server/sessionToken";
-import { sharedRateLimit, getClientIp } from "../../../../lib/server/rateLimit";
+import { checkLimits, getClientIp } from "../../../../lib/server/rateLimit";
+import { BODY_LIMITS, LIMITS, tooManyRequests } from "../../../../lib/server/abuseLimits";
+import { readJsonBody } from "../../../../lib/server/requestBody";
 import { logger, withErrorLogging } from "../../../../lib/logger";
 import {
   normalizeCallsign,
@@ -14,17 +16,16 @@ import {
 
 export const POST = withErrorLogging(async function POST(request) {
   const ip = getClientIp(request);
-  const limited = await sharedRateLimit(`signup:${ip}`, { limit: 10, windowMs: 60 * 60 * 1000 });
+  const limited = await checkLimits(LIMITS.signup({ ip }));
   if (!limited.allowed) {
-    return NextResponse.json({ retryAfter: Math.ceil(limited.retryAfterMs / 1000) }, { status: 429 });
+    return NextResponse.json({ retryAfter: tooManyRequests(limited).body.retryAfter }, { status: 429 });
   }
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ fields: { form: "Malformed request body." } }, { status: 422 });
+  const parsed = await readJsonBody(request, { maxBytes: BODY_LIMITS.auth });
+  if (!parsed.ok) {
+    return NextResponse.json({ fields: { form: parsed.error } }, { status: parsed.status === 413 ? 413 : 422 });
   }
+  const body = parsed.body;
 
   const callsign = normalizeCallsign(body?.callsign);
   const email = normalizeEmail(body?.email);

@@ -8,12 +8,10 @@ import {
     SESSION_COOKIE_NAME,
 } from "../../../../lib/server/sessionToken";
 import { recordAcceptedAttempt } from "../../../../lib/server/progressStore";
-import { sharedRateLimit } from "../../../../lib/server/rateLimit";
+import { checkLimits, getClientIp } from "../../../../lib/server/rateLimit";
+import { BODY_LIMITS, LIMITS, tooManyRequests } from "../../../../lib/server/abuseLimits";
+import { readJsonBody } from "../../../../lib/server/requestBody";
 import { withErrorLogging } from "../../../../lib/logger";
-
-// Plan Day 37 cost control: at most this many judged submissions per player
-// per 24 hours (the sandbox costs real compute per run).
-const DAILY_SUBMISSION_LIMIT = 300;
 
 const BACKEND_URL =
     process.env.EXECUTION_API_URL ||
@@ -33,28 +31,21 @@ export const POST = withErrorLogging(async function POST(request) {
         );
     }
 
-    // Each submission runs real code on the execution service's sandbox -
-    // real cost, not just a database write - so this is limited per
-    // signed-in player rather than per IP. 20/5min comfortably covers
-    // normal retry-until-it-passes play without leaving the sandbox open
-    // to being hammered by a script.
-    // Plan Day 37: counted in the database so concurrent requests on
-    // different instances share one count. The daily budget caps what one
-    // player can cost in sandbox time; normal play stays well under it.
-    for (const [key, opts, message] of [
-        [`submission:${userId}`, { limit: 20, windowMs: 5 * 60 * 1000 }, "Too many submissions. Please wait a moment."],
-        [`submission-day:${userId}`, { limit: DAILY_SUBMISSION_LIMIT, windowMs: 24 * 60 * 60 * 1000 }, "You've reached today's submission limit. It resets within 24 hours."]
-    ]) {
-        const limited = await sharedRateLimit(key, opts);
-        if (!limited.allowed) {
-            return NextResponse.json(
-                { error: message, retryAfter: Math.ceil(limited.retryAfterMs / 1000) },
-                { status: 429 }
-            );
-        }
+    // Each submission runs real code on the execution service's sandbox, so
+    // it is limited per player (20 per 5 minutes, 300 a day) and per IP
+    // address. The limits live in abuseLimits.js and are counted in the
+    // database so every server instance shares them (plan Days 37 and 43).
+    const limited = await checkLimits(LIMITS.submission({ userId, ip: getClientIp(request) }));
+    if (!limited.allowed) {
+        const { status, body } = tooManyRequests(limited);
+        return NextResponse.json(body, { status });
     }
 
-    const body = await request.json();
+    const parsed = await readJsonBody(request, { maxBytes: BODY_LIMITS.submission });
+    if (!parsed.ok) {
+        return NextResponse.json({ error: parsed.error }, { status: parsed.status });
+    }
+    const body = parsed.body;
     const encounterId = body?.encounter_id;
     const code = body?.code;
     // Self-reported by the console's own hint panel, which only ever reveals

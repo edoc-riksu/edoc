@@ -92,6 +92,8 @@ Not a correctness bug in normal single-user play (confirmed working sequentially
 
 Still open: practice **Run** goes from the browser straight to the execution service (`NEXT_PUBLIC_EXECUTION_API_URL`), so it isn't limited per player here. Backend 1's concurrency cap (#93) bounds the cost on the server side; routing Run through a proxy like Submit would need a console change (Frontend 2).
 
+**Abuse checks (plan Day 43).** All limits and body-size caps now live in `edoc-galaxy/src/lib/server/abuseLimits.js`. Sign-in is limited per IP and email (8 per 10 min), per account (20 per hour, against guessing spread over many IPs) and per IP (40 per 10 min, against one machine trying many accounts). Sign-up is limited per IP hourly and daily, callsign checks per IP (they reveal whether an account exists), profile saves per player, and submissions also per IP (200 per 5 min, so a classroom on one school IP still fits). Request bodies are capped (16 KB for sign-in and sign-up, 400 KB for profile, 256 KB for submissions): too large gives 413, malformed gives 400 or 422 instead of a 500. The stored limit keys keep only the kind of limit readable (`signin-account:...`) and hash the email or IP, so `rate_limit_buckets` holds no personal data. Each block is logged as `rate limited` with its kind and no personal data, which MONITORING.md uses to count abuse.
+
 ## 10. Execution service (`backend/`)
 
 The Python service that runs and judges a player's code. It is **not** deployed by Vercel: it needs Docker, and Piston (the sandbox it runs code in) needs a privileged container, which Vercel and most app platforms don't allow. It runs on its own small server; the Vercel site calls it over HTTPS.

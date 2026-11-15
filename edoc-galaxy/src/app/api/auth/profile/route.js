@@ -4,6 +4,9 @@ import { readSessionToken, SESSION_COOKIE_NAME } from "../../../../lib/server/se
 import { updateUser } from "../../../../lib/server/pilotStore";
 import { hasCompletedAnyModule } from "../../../../lib/server/progressStore";
 import { normalizeCallsign, isValidCallsign, AUTH_MESSAGES } from "../../../../lib/authValidation";
+import { checkLimits } from "../../../../lib/server/rateLimit";
+import { BODY_LIMITS, LIMITS, tooManyRequests } from "../../../../lib/server/abuseLimits";
+import { readJsonBody } from "../../../../lib/server/requestBody";
 
 // A small, square avatar JPEG/WebP at modest quality comfortably fits well
 // under this — it's a backstop against someone posting a huge data URL,
@@ -20,12 +23,19 @@ export async function PATCH(request) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ fields: { form: "Malformed request body." } }, { status: 422 });
+  // Saves can carry an avatar image, so they are limited per player and the
+  // body is capped before it is parsed (plan Day 43).
+  const limited = await checkLimits(LIMITS.profile({ userId }));
+  if (!limited.allowed) {
+    const { status, body: tooMany } = tooManyRequests(limited);
+    return NextResponse.json(tooMany, { status });
   }
+
+  const parsed = await readJsonBody(request, { maxBytes: BODY_LIMITS.profile });
+  if (!parsed.ok) {
+    return NextResponse.json({ fields: { form: parsed.error } }, { status: parsed.status === 413 ? 413 : 422 });
+  }
+  const body = parsed.body;
 
   const patch = {};
 
