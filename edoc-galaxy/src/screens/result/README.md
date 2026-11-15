@@ -43,3 +43,17 @@ What the approach screen does with them:
 - `suitProps.js`: `suitUnlockedProps({ suit, moduleName, explorer })` builds the props (`explorer` is the pilot's `user.explorer`); `SUIT_UNLOCK_MOCK` is the mock data the review page uses. Tested in `suitProps.test.js`.
 - Nothing is wired yet. When the progress check reports a newly cleared module, show this scene with the pilot's explorer, then send them to the hangar on `onEquip` (the hangar does the equipping and saving).
 - `/art/suit` is the review page (mock data, explorer picker). `?calm=1` shows reduced motion; "Phone shape" shows the tall layout. It needs WebGL, like the hangar.
+
+## Module cleared
+
+`ModuleCleared.js` is the scene for a pilot solving the last encounter of a module. Props only, like the others:
+
+```js
+<ModuleCleared moduleName="Python Basics" planetName="Python" backdrop="/art/modules/python-surface.jpg" cleared={10} total={10}
+  reward="New suit unlocked: Starfarer set" nextLabel="Next: Loops" onContinue={...} muted calm />
+```
+
+- It looks like the rest of the app: the module map's own painting fills the screen (dimmed; `backdrop`, or a code-drawn night sky without one), a medal floats inside a ring of lamps (one per encounter, 3 to 24 drawn), and one glass panel on the right - the hangar's panel - says "Module cleared" with the module name, the encounter count, the reward line and one button. On narrow windows the panel is a sheet along the bottom, as in the hangar. The lamps light one after another, a pulse leaves the ring, a tick is drawn and sparks fly out; then the panel slides in. Reduced motion (`calm`) shows the finished picture with the panel in place.
+- `moduleProps.js`: `moduleClearedProps({ module, cleared, total, planetId, planetName, reward, nextTitle })` builds the props (`backdrop` is the planet's module-map painting from `backdropFor(planetId)`; `nextLabel` is "Next: <title>" or "Back to the module map"); `MODULE_CLEARED_MOCK` is the mock data. Tested in `moduleProps.test.js`.
+- Nothing is wired yet. When the progress check reports that a module just became complete, show this scene first; if that module also earned a suit, `onContinue` goes on to `SuitUnlocked`. `reward` is where that suit line goes.
+- `/art/module-cleared` is the review page (mock data, encounter count, reward and last-module switches, painting on/off, reduced motion, phone shape).
