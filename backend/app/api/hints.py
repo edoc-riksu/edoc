@@ -4,7 +4,7 @@ from app.api.deps import get_encounter_service
 from app.api.encounters import ENCOUNTER_ID_PATTERN
 from app.core.logging import get_logger
 from app.schemas.encounter import Encounter
-from app.schemas.hint import HintCost, HintRequest, HintResponse
+from app.schemas.hint import HINT_STAR_COST, HintCost, HintRequest, HintResponse
 from app.services.encounter_service import EncounterNotFoundError, EncounterService
 
 logger = get_logger(__name__)
@@ -21,16 +21,18 @@ class HintOutOfOrderError(Exception):
 def hint_for(encounter: Encounter, body: HintRequest) -> HintResponse:
     """Hints are asked in order: level N only after levels 1 to N-1. Asking a
     level already given again is fine and returns the same text. Otherwise a
-    player could buy the walkthrough for the price of a nudge."""
+    player could buy the walkthrough for the price of a nudge. Asking a level
+    already given again costs nothing: the player paid for it the first time."""
 
     if body.level > body.highest_level_asked + 1:
         raise HintOutOfOrderError(body.highest_level_asked + 1)
+    already_have = body.level <= body.highest_level_asked
     return HintResponse(
         encounter_id=encounter.id,
         level=body.level,
         levels_total=len(encounter.hints),
         text=encounter.hints[str(body.level)],
-        cost=HintCost(),
+        cost=HintCost(stars=0 if already_have else HINT_STAR_COST[body.level]),
     )
 
 

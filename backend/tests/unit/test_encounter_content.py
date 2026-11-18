@@ -18,6 +18,7 @@ import jsonschema
 import pytest
 
 from app.schemas.encounter import Encounter
+from app.schemas.hint import HINT_STAR_COST
 from app.services.encounter_service import EncounterService
 
 CONTRACTS = Path(__file__).resolve().parents[3] / "contracts"
@@ -34,7 +35,7 @@ def _hint_response(encounter: Encounter, level: int) -> dict:
         "level": level,
         "levels_total": 3,
         "text": encounter.hints[str(level)],
-        "cost": {"fuel": 0},
+        "cost": {"stars": HINT_STAR_COST[level]},
     }
 
 
@@ -100,7 +101,8 @@ def test_every_hint_is_a_valid_hint_response(encounters_dir):
         {"level": 4},
         {"levels_total": 2},
         {"cost": {}},
-        {"cost": {"fuel": -1}},
+        {"cost": {"stars": -1}},
+        {"cost": {"fuel": 0}},
         {"unexpected": True},
     ],
 )
