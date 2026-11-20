@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AuthProvider, useAuth } from "../../context/AuthContext";
+import useStill from "../../art/useStill";
 import { modelsFor } from "../result/suitModels";
 import { explorerSpot } from "./explorerSpot";
 
@@ -12,8 +13,9 @@ import { explorerSpot } from "./explorerSpot";
  * nothing, so the surface looks exactly as it did before. The figure is the hangar's own 3D model (see public/art/ORIGIN.md),
  * on a clear canvas, with a soft shadow on the ground. `calm` (reduced motion) shows it standing still.
  */
-function Figure({ calm }) {
+function Figure({ calm: calmProp }) {
   const { user } = useAuth();
+  const calm = useStill(calmProp);
   const canvasRef = useRef(null);
   const [box, setBox] = useState(null);
   const [ready, setReady] = useState(false);

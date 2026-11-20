@@ -35,9 +35,11 @@ export default function SurfaceScreen({ planetId, planetName, hull }) {
 
   useEffect(() => {
     try {
-      const s = { sound: true, motion: "full", ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") || {}) };
-      setSoundEnabled(s.sound);
-      setReduced(s.motion === "reduced");
+      // what the pilot chose in Settings wins; with no choice saved, the system's reduced-motion setting decides
+      const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") || {};
+      const os = !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      setSoundEnabled(saved.sound ?? true);
+      setReduced(saved.motion ? saved.motion === "reduced" : os);
     } catch {}
   }, []);
 
