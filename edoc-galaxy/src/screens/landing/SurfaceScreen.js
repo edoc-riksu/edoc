@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User } from "lucide-react";
 import SurfaceScene from "../../art/SurfaceScene";
+import SurfaceExplorer from "./SurfaceExplorer";
 import Button from "../../ui/Button";
 import HullBar from "../../ui/HullBar";
 import { severityFor } from "../../art/lander";
@@ -69,6 +70,7 @@ export default function SurfaceScreen({ planetId, planetName, hull }) {
       <div className="ap-scene">
         <SurfaceScene severity={sev} calm={reduced} onHover={(o) => { setLit(o); if (o) sfx.hover(); }} onPick={() => { sfx.select(); say(`${w.ship} Hull at ${Math.round(hull)}%.`); }} />
       </div>
+      <SurfaceExplorer calm={reduced} />
 
       <header className="ap-top">
         <nav className="ap-crumb" aria-label="Where you are">
