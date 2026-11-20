@@ -179,3 +179,38 @@
     min-height: 44px;
   }
 }
+
+/* the pilot's explorer on the surface, standing on the ground next to the ship (SurfaceExplorer.js) */
+.sf-explorer {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.7s ease 0.5s;
+}
+.sf-explorer.is-ready {
+  opacity: 1;
+}
+.sf-explorer--calm {
+  transition: none;
+}
+.sf-explorer-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.sf-explorer-shadow {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -3%;
+  height: 7%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(2, 8, 12, 0.6), rgba(2, 8, 12, 0) 70%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-explorer {
+    transition: none;
+  }
+}
