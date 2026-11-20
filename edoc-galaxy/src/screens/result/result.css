@@ -104,7 +104,7 @@
 .ec-keys {
   margin: 0;
   font-size: 12.5px;
-  color: var(--ink-dim);
+  color: var(--ink-soft);
 }
 .ec-keys kbd {
   padding: 1px 7px;
