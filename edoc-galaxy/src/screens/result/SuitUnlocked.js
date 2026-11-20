@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import HangarSuitStage from "./HangarSuitStage";
 import Button from "../../ui/Button";
 import Panel from "../../ui/Panel";
+import useStill from "../../art/useStill";
 import { sfx } from "../../galaxy/audio";
 import "./suit.css";
 
@@ -16,7 +17,7 @@ import "./suit.css";
  * `explorerId` ("vega", "kael", "taro" or "mira", the pilot's own explorer from the hangar) picks who stands on the podium;
  * they change from the base suit into the new one. `reason` says what earned it; `blurb` is one line about the suit (both optional). "Equip" is the main action (Enter does the
  * same); "Later" (or Escape) closes the scene and leaves the suit in the hangar. `replay` plays the reveal again when its number
- * changes. `muted` turns the chime off; `calm` is reduced motion and shows the finished frame.
+ * changes. `muted` turns the chime off; `calm` is reduced motion and shows the finished frame (the system's reduced-motion setting does the same).
  */
 export default function SuitUnlocked({
   suitName = "New suit",
@@ -29,9 +30,10 @@ export default function SuitUnlocked({
   explorerId,
   replay = 0,
   muted = false,
-  calm = false
+  calm: calmProp = false
 }) {
   const btn = useRef(null);
+  const calm = useStill(calmProp);
 
   useEffect(() => {
     btn.current?.focus();

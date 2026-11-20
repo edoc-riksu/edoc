@@ -6,6 +6,7 @@ import MedalScene from "../../art/MedalScene";
 import { lampCount, lampTimes } from "../../art/medal";
 import Button from "../../ui/Button";
 import Panel from "../../ui/Panel";
+import useStill from "../../art/useStill";
 import { sfx } from "../../galaxy/audio";
 import "./module-cleared.css";
 
@@ -33,9 +34,10 @@ export default function ModuleCleared({
   onContinue,
   replay = 0,
   muted = false,
-  calm = false
+  calm: calmProp = false
 }) {
   const btn = useRef(null);
+  const calm = useStill(calmProp);
   const lamps = lampCount(total ?? cleared);
 
   useEffect(() => {
