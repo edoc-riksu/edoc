@@ -55,6 +55,36 @@
     height: 38px;
   }
 }
+/* phones: the galaxy has five round buttons, so the title steps down and the buttons tighten until the whole bar fits (360px up) */
+@media (max-width: 440px) {
+  .shell-top {
+    padding-left: 12px;
+    padding-right: 12px;
+    gap: 6px;
+  }
+  .shell-brand {
+    gap: 5px;
+    min-width: 0;
+  }
+  .shell-wordmark {
+    font-size: 20px;
+  }
+  .shell-section {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .shell-tools {
+    gap: 5px;
+    flex: none;
+  }
+  .shell-tools .ui-btn--icon {
+    width: 36px;
+    height: 36px;
+  }
+}
 
 /* frame for pages that are not the galaxy */
 .shell {
