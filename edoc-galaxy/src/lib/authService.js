@@ -23,8 +23,13 @@ async function request(path, options = {}) {
   return { ok: res.ok, networkError: false, status: res.status, data };
 }
 
-export function signup({ callsign, email, password }) {
-  return request("/api/auth/signup", { method: "POST", body: JSON.stringify({ callsign, email, password }) });
+export function signup({ callsign, email, password, invite }) {
+  return request("/api/auth/signup", { method: "POST", body: JSON.stringify({ callsign, email, password, invite }) });
+}
+
+// Plan Day 52: whether sign-up currently needs an invite code.
+export function getSignupOptions() {
+  return request("/api/auth/signup", { method: "GET" });
 }
 
 export function signin({ email, password, remember }) {

@@ -1,5 +1,5 @@
 "use client";
-import React, { Suspense, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import * as authService from "../../lib/authService";
@@ -13,13 +13,14 @@ import RateLimitButton from "../../components/auth/RateLimitButton";
 import NetworkBanner from "../../components/auth/NetworkBanner";
 
 const FIELD_IDS = {
+  invite: "signup-invite",
   callsign: "signup-callsign",
   email: "signup-email",
   password: "signup-password",
   confirmPassword: "signup-confirm-password",
   acceptedTerms: "signup-terms"
 };
-const EMPTY_ERRORS = { callsign: "", email: "", password: "", confirmPassword: "", acceptedTerms: "" };
+const EMPTY_ERRORS = { invite: "", callsign: "", email: "", password: "", confirmPassword: "", acceptedTerms: "" };
 
 function safeReturnTo(value, fallback = "/") {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return fallback;
@@ -31,7 +32,10 @@ function SignupForm() {
   const searchParams = useSearchParams();
   const { setUser } = useAuth();
 
-  const [values, setValues] = useState({ callsign: "", email: "", password: "", confirmPassword: "", acceptedTerms: false });
+  // Plan Day 52: during the closed test, sign-up needs an invite code. An
+  // invite link (/signup?invite=EDOC-...) fills it in.
+  const [inviteOnly, setInviteOnly] = useState(false);
+  const [values, setValues] = useState({ invite: searchParams.get("invite") || "", callsign: "", email: "", password: "", confirmPassword: "", acceptedTerms: false });
   const [errors, setErrors] = useState(EMPTY_ERRORS);
   const [submitted, setSubmitted] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
@@ -41,6 +45,17 @@ function SignupForm() {
   const [serverError, setServerError] = useState(false);
   const callsignCheckTimer = useRef(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    authService.getSignupOptions().then((result) => {
+      if (!cancelled && result.ok) setInviteOnly(Boolean(result.data?.inviteOnly));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const showInvite = inviteOnly || Boolean(values.invite);
+
   const setField = (field, value) => {
     setValues((v) => ({ ...v, [field]: value }));
     if (field !== "callsign") setSuggestions([]);
@@ -48,6 +63,8 @@ function SignupForm() {
 
   const validateField = (field, value, allValues = values) => {
     switch (field) {
+      case "invite":
+        return !inviteOnly || value.trim() ? "" : "Enter the invite code from your invite.";
       case "callsign":
         return isValidCallsign(value) ? "" : AUTH_MESSAGES.callsign;
       case "email":
@@ -95,6 +112,7 @@ function SignupForm() {
 
     setSubmitted(true);
     const nextErrors = {
+      invite: validateField("invite", values.invite),
       callsign: validateField("callsign", values.callsign),
       email: validateField("email", values.email),
       password: validateField("password", values.password),
@@ -109,7 +127,12 @@ function SignupForm() {
     setServerError(false);
     setRetryAfter(0);
 
-    const result = await authService.signup({ callsign: values.callsign, email: values.email, password: values.password });
+    const result = await authService.signup({
+      callsign: values.callsign,
+      email: values.email,
+      password: values.password,
+      invite: values.invite
+    });
     setSubmitting(false);
 
     if (result.networkError) {
@@ -166,6 +189,22 @@ function SignupForm() {
 
       <form onSubmit={handleSubmit} noValidate className="gx-auth-form">
         {submitted && <ErrorSummary errors={errors} onFocusField={focusField} completionText="create your pilot" />}
+
+        {showInvite && (
+          <TextField
+            id={FIELD_IDS.invite}
+            label="Invite code"
+            helperText="edoc is invite-only while we test. It's in your invite, like EDOC-7KQ4-M2XH-9RTP."
+            value={values.invite}
+            onChange={(e) => setField("invite", e.target.value)}
+            onBlur={handleBlur("invite")}
+            error={errors.invite}
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            required={inviteOnly}
+          />
+        )}
 
         <div className="gx-auth-field">
           <TextField

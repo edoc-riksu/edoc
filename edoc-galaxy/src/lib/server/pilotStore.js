@@ -1,6 +1,7 @@
 import { db } from "../db";
 import { hashPassword, verifyPassword } from "../auth";
 import { normalizeCallsign, normalizeEmail } from "../authValidation";
+import { redeemInvite } from "./invites.mjs";
 
 // Real storage backend (Postgres via Prisma), replacing the old
 // file/Redis-backed authStore.js. Same function names and same shapes as
@@ -23,18 +24,30 @@ export async function findById(id) {
   return db.user.findUnique({ where: { id } });
 }
 
-export async function createUser({ callsign, email, password }) {
-  const cleanCallsign = normalizeCallsign(callsign);
-  const cleanEmail = normalizeEmail(email);
+// `inviteCode` (plan Day 52) is a normalized invite code, or null while
+// sign-up is open. With one, the invite's use and the new account are saved
+// in one transaction: if the account can't be created (callsign or email
+// taken), the use is given back.
+export async function createUser({ callsign, email, password, inviteCode = null }, deps = {}) {
+  const client = deps.db || db;
+  const data = {
+    pilotCallsign: normalizeCallsign(callsign),
+    email: normalizeEmail(email),
+    passwordHash: hashPassword(password)
+  };
 
   try {
-    const user = await db.user.create({
-      data: {
-        pilotCallsign: cleanCallsign,
-        email: cleanEmail,
-        passwordHash: hashPassword(password)
-      }
-    });
+    const user = inviteCode
+      ? await client.$transaction(async (tx) => {
+          const inviteId = await redeemInvite(tx, inviteCode);
+          if (!inviteId) {
+            const err = new Error("Invite no longer valid");
+            err.code = "INVITE_INVALID";
+            throw err;
+          }
+          return tx.user.create({ data: { ...data, inviteId } });
+        })
+      : await client.user.create({ data });
     return toPublicUser(user);
   } catch (error) {
     // P2002 is Prisma's unique-constraint-violation code - this is the
