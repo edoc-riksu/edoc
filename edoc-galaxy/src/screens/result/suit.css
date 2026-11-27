@@ -96,7 +96,8 @@
 }
 
 /* narrow windows: the panel becomes a sheet along the bottom, as in the hangar */
-@media (max-width: 900px) {
+/* narrow and tall (a phone held upright, a tablet): the panel becomes a sheet along the bottom, as in the hangar */
+@media (max-width: 900px) and (min-height: 480px) {
   .su .su-panel {
     top: auto;
     bottom: 0;
@@ -106,6 +107,34 @@
     max-height: 58dvh;
     border-radius: 18px 18px 0 0;
     clip-path: none;
+  }
+  .su-info-blurb {
+    display: none;
+  }
+}
+/* a phone held sideways is too short for a sheet (it would cover the scene and push the buttons off): the panel stays at the side, smaller */
+@media (max-height: 479px) {
+  .su .su-panel {
+    top: 10px;
+    right: 10px;
+    width: min(250px, 46%);
+    max-height: calc(100% - 20px);
+    padding: 12px 14px;
+  }
+  .su .ui-panel-head {
+    margin-bottom: 8px;
+  }
+  .su .t-title {
+    font-size: 17px;
+    white-space: nowrap;
+  }
+  .su .ui-btn--lg {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  .su-info {
+    padding: 8px 10px;
+    margin-bottom: 8px;
   }
   .su-info-blurb {
     display: none;
