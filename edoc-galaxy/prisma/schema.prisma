@@ -19,6 +19,10 @@ model User {
   // "vega" | "taro" for explorer, "base" | "starfarer" for suit.
   explorer      String     @default("vega")
   suit          String     @default("base")
+  // Plan Day 52: the invite this account signed up with (null for accounts
+  // made before the invite gate, or while sign-up is open).
+  inviteId      String?
+  invite        Invite?    @relation(fields: [inviteId], references: [id], onDelete: SetNull)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   progress      Progress[]
@@ -122,4 +126,23 @@ model RateLimitBucket {
 
   @@index([resetAt])
   @@map("rate_limit_buckets")
+}
+
+// Plan Day 52: invite codes for the closed test. Only a SHA-256 hash of each
+// code is stored, so a database leak doesn't hand out working invites; the
+// code itself is shown once, when scripts/invites.mjs creates it. Each code
+// can be used `maxUses` times (1 for one tester, more for a class), and can
+// expire or be revoked. `label` says who it is for, e.g. "tester 3".
+model Invite {
+  id        String    @id @default(cuid())
+  codeHash  String    @unique
+  label     String
+  maxUses   Int       @default(1)
+  uses      Int       @default(0)
+  expiresAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  users     User[]
+
+  @@map("invites")
 }
