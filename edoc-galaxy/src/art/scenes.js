@@ -131,9 +131,26 @@ const sidePath = (g, w, h, left, begin = true) => {
   g.closePath();
 };
 
+/**
+ * A softened copy of a sprite, made once. The far rocks used to be blurred while drawing (ctx.filter on every rock, every
+ * frame), which cost most of the frame time on the approach screen; baking the blur once makes the same look free.
+ */
+function bakeBlur(src, px) {
+  if (typeof document === "undefined") return src;
+  const c = document.createElement("canvas");
+  c.width = src.width;
+  c.height = src.height;
+  const g = c.getContext("2d");
+  if (!g || typeof g.filter !== "string") return src;
+  g.filter = `blur(${px}px)`;
+  g.drawImage(src, 0, 0);
+  return c;
+}
+
 export function makeApproach(seed = 7) {
   const r = rng(seed);
   const sprites = [0, 1, 2, 3, 4, 5].map((i) => makeAsteroid(seed * 31 + i * 17, 176, i % 3));
+  const soft = sprites.map((s) => [1.2, 2.4, 3.6].map((px) => bakeBlur(s, px))); // three softness levels for the far rocks
   const bigs = [makeAsteroid(seed * 97 + 5, 480, 1), makeAsteroid(seed * 53 + 2, 480, 0)];
   const rocks = Array.from({ length: 64 }, () => {
     const z = r(); // 0 far .. 1 near
@@ -142,7 +159,7 @@ export function makeApproach(seed = 7) {
   const sideRocks = Array.from({ length: 7 }, () => ({ x: r(), y: r(), size: 0.05 + r() * 0.09, spr: Math.floor(r() * 6), ph: r() * TAU }));
   const grime = makeNebula(seed + 4, 220, 124, [[40, 46, 56], [20, 24, 30], [60, 56, 50]], 0.7, 1);
   return {
-    seed, sprites, bigs, rocks, sideRocks, grime,
+    seed, sprites, soft, bigs, rocks, sideRocks, grime,
     nebula: makeNebula(seed + 1, 360, 202, [[10, 70, 84], [46, 150, 126], [58, 60, 130]], 0.46, 0.85),
     planet: makeWorld(seed + 2, 420),
     stars: makeStars(seed + 3, 300)
@@ -182,7 +199,6 @@ function drawSpace(g, w, h, A, S) {
 
   const big = S.big; // {x, y, s} in canvas px
   const sorted = [...A.rocks].sort((a, b) => a.z - b.z);
-  const blur = typeof g.filter === "string";
   for (const k of sorted) {
     const u = (k.along + (calm ? 0 : t * 0.0035 * (0.4 + k.z))) % 1;
     const par = 0.5 + k.z * 1.4;
@@ -192,8 +208,8 @@ function drawSpace(g, w, h, A, S) {
     if (Math.hypot(x - big.x, y - big.y) < big.s * 0.78) continue;
     g.save();
     g.globalAlpha = 0.45 + 0.55 * k.z;
-    if (blur && k.z < 0.3) g.filter = `blur(${((0.3 - k.z) * 3).toFixed(1)}px)`;
-    g.drawImage(A.sprites[k.spr], x - sz / 2, y - sz / 2, sz, sz);
+    const soft = k.z < 0.3 ? Math.min(3, Math.ceil((0.3 - k.z) / 0.1)) : 0; // the farthest rocks are drawn softer
+    g.drawImage(soft ? A.soft[k.spr][soft - 1] : A.sprites[k.spr], x - sz / 2, y - sz / 2, sz, sz);
     g.restore();
   }
 
