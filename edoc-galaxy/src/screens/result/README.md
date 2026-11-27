@@ -27,6 +27,7 @@ What the approach screen does with them:
 - `resultProps.js`: pure functions that turn a result into scene props. Tested in `resultProps.test.js`. Hidden tests are only ever counted ("2 hidden tests"), never named.
 - `ResultHost.js`: picks the scene for a result.
 - `EncounterCleared.js`, `HullDepleted.js`: the scenes (props only, nothing fetched or saved).
+- The `/art/...` review pages are closed (404) on the live production site and open in development and on Vercel preview builds. Set `SHOW_ART_PREVIEWS=1` to open them anywhere (see `src/art/previewAccess.js`).
 - `/art/results`: a review page that feeds the scenes API-shaped results. `?scene=win|winFull|lose|loseLoops|loseNoApi`, `&calm=1`.
 
 ## New suit unlocked
