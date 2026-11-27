@@ -1,0 +1,74 @@
+{
+  "id": "py-050",
+  "version": 1,
+  "language": "python",
+  "title": "Product of All Others",
+  "difficulty": "hard",
+  "module": "lists",
+  "order": 10,
+  "concepts": [
+    "lists",
+    "loops",
+    "arithmetic",
+    "input-output"
+  ],
+  "problem": "The first line is a positive integer N. The second line holds N integers separated by spaces. For every position in the list, work out the product of all the other numbers (leave out the number at that position) and print the answers on one line separated by spaces. If N is 1 there are no other numbers, and the product of nothing is 1. For example, 1 2 3 4 gives 24 12 8 6.",
+  "starter_code": "# The first line is N, the second line holds N integers.\n# For each position, print the product of all the OTHER numbers,\n# separated by spaces on one line.\n\n# Write your code here\n",
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "points": 0,
+        "input": "4\n1 2 3 4",
+        "expected_output": "24 12 8 6"
+      },
+      {
+        "id": "sample-2",
+        "points": 0,
+        "input": "3\n2 5 3",
+        "expected_output": "15 6 10"
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "points": 20,
+        "input": "1\n9",
+        "expected_output": "1"
+      },
+      {
+        "id": "hidden-2",
+        "points": 20,
+        "input": "3\n0 4 5",
+        "expected_output": "20 0 0"
+      },
+      {
+        "id": "hidden-3",
+        "points": 20,
+        "input": "4\n0 0 3 2",
+        "expected_output": "0 0 0 0"
+      },
+      {
+        "id": "hidden-4",
+        "points": 20,
+        "input": "4\n-1 2 -3 4",
+        "expected_output": "-24 12 -8 6"
+      },
+      {
+        "id": "hidden-5",
+        "points": 20,
+        "input": "2\n7 -3",
+        "expected_output": "-3 7"
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 2000
+  },
+  "hints": {
+    "1": "Each answer leaves out exactly one position. Think about a list that has a zero in it, and about a list with only one number, before you pick a method.",
+    "2": "Dividing the total product by the number at each position breaks when a number is zero. Instead give every position its own inner loop that multiplies all the numbers except the one at that position, comparing positions (indexes) rather than values so repeated numbers are not skipped.",
+    "3": "n = int(input())\nv = list(map(int, input().split()))\nout = []\nfor i in range(n):\n    p = 1\n    for j in range(n):\n        if j != i:\n            p *= v[j]\n    out.append(p)\nprint(' '.join(map(str, out)))"
+  },
+  "failure_explanation": "Each answer is the product of every number except the one at its own position. Dividing the total product by that number does not work when the list contains a zero, and a list with a single number has no other numbers, so its answer is 1. When you skip a position, compare positions rather than values, so equal numbers elsewhere in the list are still multiplied in."
+}
