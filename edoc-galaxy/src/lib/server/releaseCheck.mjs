@@ -22,7 +22,7 @@ export const DEFAULT_EXPECT = {
 // py-001 (Sum of Two Integers), the same smoke test as DEPLOYMENT.md section 10.
 const PY001_SOLUTION = "a, b = map(int, input().split())\nprint(a + b)";
 
-export async function runReleaseCheck({ baseUrl, executionUrl, expect = {}, fetchImpl = fetch, now = () => Date.now() }) {
+export async function runReleaseCheck({ baseUrl, executionUrl, expect = {}, bypassToken, fetchImpl = fetch, now = () => Date.now() }) {
   const want = { ...DEFAULT_EXPECT, ...expect };
   const base = String(baseUrl).replace(/\/+$/, "");
   const results = [];
@@ -30,7 +30,10 @@ export async function runReleaseCheck({ baseUrl, executionUrl, expect = {}, fetc
   async function call(path, init = {}, root = base) {
     const started = now();
     try {
-      const res = await fetchImpl(`${root}${path}`, { redirect: "follow", ...init, signal: AbortSignal.timeout(45000) });
+      // Vercel previews sit behind a login unless given the project's
+      // "Protection Bypass for Automation" secret.
+      const headers = { ...(init.headers || {}), ...(bypassToken && root === base ? { "x-vercel-protection-bypass": bypassToken } : {}) };
+      const res = await fetchImpl(`${root}${path}`, { redirect: "follow", ...init, headers, signal: AbortSignal.timeout(45000) });
       const text = await res.text();
       let json = null;
       try {
@@ -38,7 +41,10 @@ export async function runReleaseCheck({ baseUrl, executionUrl, expect = {}, fetc
       } catch {
         json = null;
       }
-      return { status: res.status, json, text, ms: now() - started };
+      // An API route answering with a web page means something in front of
+      // the app (usually Vercel's login) answered instead.
+      const page = json === null && /<html/i.test(text);
+      return { status: res.status, json, text, page, ms: now() - started };
     } catch (error) {
       return { status: 0, json: null, text: "", ms: now() - started, error: error?.message || String(error) };
     }
@@ -49,7 +55,11 @@ export async function runReleaseCheck({ baseUrl, executionUrl, expect = {}, fetc
     results.push({ name, status: slow ? "warn" : status, detail: slow ? `${detail} (slow: ${ms} ms)` : detail, ms });
   }
 
-  const unreachable = (r) => (r.status === 0 ? `no answer: ${r.error}` : `HTTP ${r.status}`);
+  const unreachable = (r) => {
+    if (r.status === 0) return `no answer: ${r.error}`;
+    if (r.page) return `HTTP ${r.status} with a web page instead of JSON: behind Vercel's login? (use --bypass)`;
+    return `HTTP ${r.status}`;
+  };
 
   // 1. Health: up, right environment, database reachable.
   const health = await call("/api/health");
@@ -68,7 +78,7 @@ export async function runReleaseCheck({ baseUrl, executionUrl, expect = {}, fetc
   // 2. The galaxy map's planet list.
   const planets = await call("/api/planets");
   const python = planets.json?.planets?.find((p) => p.planetId === "python");
-  if (planets.status !== 200) record("planets", "fail", unreachable(planets), planets.ms);
+  if (planets.status !== 200 || planets.page) record("planets", "fail", unreachable(planets), planets.ms);
   else if (!python) record("planets", "fail", "no python planet: the database hasn't been seeded", planets.ms);
   else record("planets", "pass", `python planet, ${python.moduleCount} module(s)`, planets.ms);
 
@@ -76,7 +86,7 @@ export async function runReleaseCheck({ baseUrl, executionUrl, expect = {}, fetc
   const modules = await call("/api/modules?planet=python");
   const list = modules.json?.modules || [];
   const encounters = list.reduce((sum, m) => sum + (Number(m.encounterCount) || 0), 0);
-  if (modules.status !== 200) record("content", "fail", unreachable(modules), modules.ms);
+  if (modules.status !== 200 || modules.page) record("content", "fail", unreachable(modules), modules.ms);
   else if (encounters < want.minEncounters) {
     record("content", "fail", `${encounters} encounters in ${list.length} module(s), expected ${want.minEncounters}+: re-run npm run db:seed`, modules.ms);
   } else record("content", "pass", `${encounters} encounters in ${list.length} modules`, modules.ms);
@@ -95,13 +105,13 @@ export async function runReleaseCheck({ baseUrl, executionUrl, expect = {}, fetc
 
   // 6. Signed-out requests are refused cleanly, not with a 500.
   const me = await call("/api/auth/me");
-  if (me.status === 401) record("signed-out guard", "pass", "/api/auth/me is 401 without a session", me.ms);
+  if (me.status === 401 && !me.page) record("signed-out guard", "pass", "/api/auth/me is 401 without a session", me.ms);
   else record("signed-out guard", "fail", `/api/auth/me gave ${unreachable(me)} without a session`, me.ms);
 
   // 7. The invite gate (plan Day 52).
   const gate = await call("/api/auth/signup");
   if (gate.status !== 200 || typeof gate.json?.inviteOnly !== "boolean") {
-    record("invite gate", want.inviteOnly ? "fail" : "warn", "not in this build (PR #117)", gate.ms);
+    record("invite gate", want.inviteOnly ? "fail" : "warn", gate.page ? unreachable(gate) : "not in this build (PR #117)", gate.ms);
   } else if (gate.json.inviteOnly !== want.inviteOnly) {
     record("invite gate", "fail", `inviteOnly is ${gate.json.inviteOnly}, expected ${want.inviteOnly}: check INVITE_ONLY`, gate.ms);
   } else if (gate.json.inviteOnly) {
@@ -125,7 +135,8 @@ export async function runReleaseCheck({ baseUrl, executionUrl, expect = {}, fetc
 
   // 8. Admin metrics are never public.
   const metrics = await call("/api/admin/metrics");
-  if (metrics.status === 200) record("metrics locked", "fail", "/api/admin/metrics answered without a token", metrics.ms);
+  if (metrics.page && metrics.status !== 404) record("metrics locked", "warn", `can't tell: ${unreachable(metrics)}`, metrics.ms);
+  else if (metrics.status === 200) record("metrics locked", "fail", "/api/admin/metrics answered without a token", metrics.ms);
   else record("metrics locked", "pass", `HTTP ${metrics.status} without a token`, metrics.ms);
 
   // 9. Art review pages stay off the live site (plan Day 57, PR #116).

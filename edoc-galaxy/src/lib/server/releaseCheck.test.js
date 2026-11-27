@@ -122,6 +122,32 @@ describe("runReleaseCheck", () => {
   });
 });
 
+describe("a site behind Vercel's login", () => {
+  const login = async () => new Response("<!DOCTYPE html><html><body>Log in to Vercel</body></html>", { status: 200 });
+
+  it("says the API answered with a login page instead of passing or blaming the app", async () => {
+    const r = byName(await runReleaseCheck({ baseUrl: "https://site.test", fetchImpl: login }));
+    expect(r.health.status).toBe("fail");
+    expect(r.health.detail).toMatch(/web page instead of JSON.*--bypass/);
+    expect(r["signed-out guard"].status).toBe("fail");
+    expect(r["metrics locked"].status).toBe("warn");
+    expect(r.planets.detail).toMatch(/web page/);
+    expect(r.content.detail).toMatch(/web page/);
+  });
+
+  it("sends the bypass secret to the site, never to the judging service", async () => {
+    const seen = [];
+    const site = fakeSite();
+    const fetchImpl = async (url, init) => {
+      seen.push([url, init.headers?.["x-vercel-protection-bypass"]]);
+      return site.fetchImpl(url, init);
+    };
+    await runReleaseCheck({ baseUrl: "https://site.test", executionUrl: "https://exec.test", bypassToken: "tok", fetchImpl });
+    expect(seen.filter(([u]) => u.startsWith("https://site.test")).every(([, h]) => h === "tok")).toBe(true);
+    expect(seen.filter(([u]) => u.startsWith("https://exec.test")).every(([, h]) => h === undefined)).toBe(true);
+  });
+});
+
 describe("formatResults", () => {
   it("prints one aligned line per check", () => {
     const text = formatResults([

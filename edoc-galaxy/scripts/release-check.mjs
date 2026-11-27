@@ -9,6 +9,9 @@
 // --open       sign-up is expected to be open (default: invite-only)
 // --min-encounters N   how many encounters the index must hold (default 40)
 // --execution  also check the judging service and submit py-001's sample answer once
+// --bypass T   Vercel "Protection Bypass for Automation" secret, to check a
+//              preview deployment that is behind Vercel's login
+//              (or set VERCEL_AUTOMATION_BYPASS_SECRET)
 // --every N    keep checking every N minutes; prints one line per round and
 //              the full table whenever something changes. Ctrl+C to stop.
 //
@@ -31,6 +34,7 @@ if (!args.url || args.url === true) {
 const options = {
   baseUrl: args.url,
   executionUrl: typeof args.execution === "string" ? args.execution : undefined,
+  bypassToken: typeof args.bypass === "string" ? args.bypass : process.env.VERCEL_AUTOMATION_BYPASS_SECRET,
   expect: {
     env: typeof args.env === "string" ? args.env : "production",
     inviteOnly: !args.open,
