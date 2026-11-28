@@ -58,7 +58,7 @@
     },
     "tests": {
       "type": "array",
-      "description": "One entry per hidden test. Empty when verdict is SYSTEM_ERROR because the sandbox was unavailable.",
+      "description": "One entry per hidden test (tests after the first timeout are listed with skipped: true). Empty when verdict is SYSTEM_ERROR because the sandbox was unavailable.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -72,6 +72,10 @@
           },
           "passed": {
             "type": "boolean"
+          },
+          "skipped": {
+            "type": "boolean",
+            "description": "True when this test was not run because an earlier one timed out (it counts as not passed). The verdict is then TIME_LIMIT_EXCEEDED: show 'timed out, try again', not a list of failed tests. Always present; false when the test ran."
           }
         }
       }

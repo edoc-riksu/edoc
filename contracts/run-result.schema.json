@@ -18,7 +18,9 @@
           "test_id": { "type": "string" },
           "passed": { "type": "boolean" },
           "stdout": { "type": "string", "description": "Cut to 4,000 characters." },
-          "stderr": { "type": "string", "description": "Cut to 4,000 characters." }
+          "stderr": { "type": "string", "description": "Cut to 4,000 characters." },
+          "timed_out": { "type": "boolean", "description": "This test hit the time limit. Always present." },
+          "skipped": { "type": "boolean", "description": "Not run because an earlier test timed out. Always present." }
         }
       }
     },

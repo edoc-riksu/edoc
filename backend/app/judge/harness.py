@@ -11,6 +11,10 @@ class JudgeOutcome(BaseModel):
     passed: bool
     status: ExecutionStatus
     points: int
+    # True when this test was never run because an earlier one timed out. It
+    # counts as not passed (and its points as not earned) but says nothing
+    # about the player's code, so it never changes the verdict.
+    skipped: bool = False
 
 
 class HarnessRun(BaseModel):
@@ -42,7 +46,23 @@ class TestHarness:
         max_runtime_ms = 0
         total_runtime_ms = 0
 
+        timed_out = False
+
         for test in tests:
+            if timed_out:
+                # One timeout already tells the player what they need to know,
+                # and every further test would just wait out the limit again.
+                outcomes.append(
+                    JudgeOutcome(
+                        test_id=test.id,
+                        passed=False,
+                        status=ExecutionStatus.TIMEOUT,
+                        points=test.points,
+                        skipped=True,
+                    )
+                )
+                continue
+
             result = await self._piston.execute(
                 language=language,
                 version=version,
@@ -53,6 +73,7 @@ class TestHarness:
             )
             max_runtime_ms = max(max_runtime_ms, result.runtime_ms)
             total_runtime_ms += result.runtime_ms
+            timed_out = result.status == ExecutionStatus.TIMEOUT
 
             passed = result.status == ExecutionStatus.SUCCESS and compare_output(
                 result.stdout, test.expected_output

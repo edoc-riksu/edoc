@@ -102,7 +102,7 @@ class JudgeService:
             score.total,
             attempt_number,
             elapsed_ms,
-            len(run.outcomes),
+            sum(not o.skipped for o in run.outcomes),
             run.max_runtime_ms,
             run.total_runtime_ms,
             wall_ms,
@@ -114,7 +114,11 @@ class JudgeService:
             verdict=verdict,
             score=score,
             tests=[
-                TestResult(test_id=outcome.test_id, passed=outcome.passed)
+                TestResult(
+                    test_id=outcome.test_id,
+                    passed=outcome.passed,
+                    skipped=outcome.skipped,
+                )
                 for outcome in run.outcomes
             ],
             execution=ExecutionMeta(runtime_ms=run.max_runtime_ms),
