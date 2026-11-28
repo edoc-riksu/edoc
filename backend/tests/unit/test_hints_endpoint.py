@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.mock_main import app as mock_app
+from app.schemas.hint import HINT_STAR_COST
 from app.services.encounter_service import EncounterService
 
 CONTRACTS = Path(__file__).resolve().parents[3] / "contracts"
@@ -41,7 +42,7 @@ def test_each_level_is_served_in_order_with_the_encounter_text(client, encounter
         "level": level,
         "levels_total": 3,
         "text": hints[str(level)],
-        "cost": {"fuel": 0},
+        "cost": {"stars": HINT_STAR_COST[level]},
     }
     jsonschema.validate(body, HINT_SCHEMA)
 
@@ -60,7 +61,22 @@ def test_skipping_ahead_is_refused_with_the_level_to_ask_first(client, level, hi
 def test_asking_an_earlier_level_again_returns_the_same_text(client):
     first = _ask(client, 1).json()
     again = _ask(client, 1, highest=3).json()
-    assert again == first
+    assert {**again, "cost": first["cost"]} == first
+
+
+def test_hint_costs_are_one_two_and_four_stars(client):
+    costs = [_ask(client, level, highest=level - 1).json()["cost"] for level in (1, 2, 3)]
+    assert costs == [{"stars": 1}, {"stars": 2}, {"stars": 4}]
+
+
+@pytest.mark.parametrize("level,highest", [(1, 1), (2, 2), (1, 3), (3, 3)])
+def test_a_level_the_player_already_has_costs_nothing(client, level, highest):
+    assert _ask(client, level, highest=highest).json()["cost"] == {"stars": 0}
+
+
+def test_asking_all_three_in_order_costs_seven_stars(client):
+    total = sum(_ask(client, level, highest=level - 1).json()["cost"]["stars"] for level in (1, 2, 3))
+    assert total == 7
 
 
 def test_unknown_encounter_is_404(client):
