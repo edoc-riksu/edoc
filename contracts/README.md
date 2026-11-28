@@ -62,7 +62,7 @@ Agreed in the review of PR #22 (Frontend 2). Backend 2 still to confirm decision
 
 ## Encounter order and concepts
 
-- **Order.** Every encounter has an `order` (1, 2, 3, ...) inside its module. The list endpoint returns encounters in play order, so a screen never sorts them itself.
+- **Order.** Every encounter has an `order` (1, 2, 3, ...) inside its module. The list endpoint returns encounters in play order, so a screen never sorts them itself. Without a `module` filter, modules come in the order a player meets them: by the lowest encounter id each one holds (so `python-basics`, which holds `py-001`, is first), the same rule the seed uses to number the modules.
 - **Concept tags.** Every encounter has at least one concept. The first is its **main concept** (`concept` in the list): it is the concept named when a player is defeated. Tags come from one agreed list, `backend/encounters/concepts.json` (`id`, `name`, `note`), so the same idea is never spelled two ways.
 - **Hint tiers.** Every encounter has exactly three hint levels, checked when the encounter file is loaded. That is why `hint_levels` is always 3.
 
