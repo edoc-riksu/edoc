@@ -28,6 +28,8 @@ async def lifespan(app: FastAPI):
     )
     harness = TestHarness(piston_client)
 
+    app.state.piston_client = piston_client
+
     app.state.encounter_service = EncounterService(settings.encounters_dir)
     app.state.execution_service = ExecutionService(piston_client)
     app.state.judge_service = JudgeService(harness, load_concepts(settings.encounters_dir))

@@ -42,10 +42,41 @@ class PistonClient:
         if max_concurrent < 1:
             raise ValueError("max_concurrent must be at least 1")
         self._slots = asyncio.Semaphore(max_concurrent)
+        self._max_concurrent = max_concurrent
+        self._in_use = 0
         self._queue_wait_timeout_seconds = queue_wait_timeout_seconds
         self._base_url = base_url.rstrip("/")
         self._owns_client = http_client is None
         self._client = http_client or httpx.AsyncClient(timeout=request_timeout_seconds)
+
+    @property
+    def max_concurrent(self) -> int:
+        return self._max_concurrent
+
+    @property
+    def in_use(self) -> int:
+        """How many runs are in Piston right now (not counting the ones still waiting for a slot)."""
+        return self._in_use
+
+    async def runtimes(self, timeout_seconds: float = 2.0) -> list[dict]:
+        """What Piston has installed. A quick probe for the readiness check: it
+        never waits for a run slot, and it fails fast. Raises PistonUnavailableError
+        when Piston cannot be reached or answers with something we can't read."""
+        try:
+            response = await self._client.get(
+                f"{self._base_url}/api/v2/runtimes", timeout=timeout_seconds
+            )
+        except httpx.TransportError as exc:  # includes every kind of timeout
+            raise PistonUnavailableError("Could not reach Piston") from exc
+        if response.status_code != 200:
+            raise PistonUnavailableError(f"Piston returned status {response.status_code}")
+        try:
+            body = response.json()
+        except ValueError as exc:
+            raise PistonUnavailableError("Unexpected Piston response shape") from exc
+        if not isinstance(body, list):
+            raise PistonUnavailableError("Unexpected Piston response shape")
+        return [item for item in body if isinstance(item, dict)]
 
     async def aclose(self) -> None:
         if self._owns_client:
@@ -71,6 +102,7 @@ class PistonClient:
                 self._queue_wait_timeout_seconds,
             )
             raise PistonUnavailableError("Execution queue is full") from exc
+        self._in_use += 1
         try:
             return await self._execute(
                 language=language,
@@ -81,6 +113,7 @@ class PistonClient:
                 memory_limit_bytes=memory_limit_bytes,
             )
         finally:
+            self._in_use -= 1
             self._slots.release()
 
     async def _execute(

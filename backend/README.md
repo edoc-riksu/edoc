@@ -44,7 +44,8 @@ Isolated Python execution
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/health` | Liveness check |
+| GET | `/health` | Liveness check (process is up). Cheap, never touches Piston; Docker uses it |
+| GET | `/health/ready` | Readiness check: 200 only when Piston answers, has the Python runtime we ask for, and encounters are loaded. Otherwise 503 with the reason. Also reports runs in progress vs the cap. Use this one for the uptime monitor and after a deploy |
 | GET | `/api/v1/encounters?module=` | Encounter summaries in play order (id, title, difficulty, order, main concept) - no problem text or tests |
 | GET | `/api/v1/encounters/{id}` | Public encounter view (prompt, starter code, sample tests only — never hidden tests, hints, or the failure explanation) |
 | POST | `/api/v1/encounters/{id}/hints` | One hint level (1 nudge, 2 approach, 3 walkthrough), asked in order. Body `{level, highest_level_asked}`; 409 if a level is skipped |

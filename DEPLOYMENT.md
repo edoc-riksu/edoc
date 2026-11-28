@@ -129,12 +129,15 @@ Only Caddy is reachable from the internet. Piston and the backend have no publis
 curl https://<EDOC_DOMAIN>/health
 # -> {"status":"ok"}
 
+curl https://<EDOC_DOMAIN>/health/ready
+# -> {"status":"ok","piston":"ok","python_version":"3.10.0","encounters":48,"executions":{"running":0,"max":8}}
+
 curl -s https://<EDOC_DOMAIN>/api/v1/submissions -H 'content-type: application/json' \
   -d '{"encounter_id":"py-001","code":"a, b = map(int, input().split())\nprint(a + b)"}'
 # -> "verdict":"ACCEPTED" with "score":{"earned":100,"total":100}
 ```
 
-Then open the web app, run code in the console and submit once. If `/health` works but a submission returns `SYSTEM_ERROR`, Python isn't installed in Piston yet (step 5). If the browser console shows a CORS error, the site's URL isn't in `CORS_ALLOWED_ORIGINS`.
+Then open the web app, run code in the console and submit once. If `/health` works but `/health/ready` returns 503 (or a submission returns `SYSTEM_ERROR`), look at its `piston` field: `unreachable` means the execution service can't reach Piston, `python_missing` means Python isn't installed in Piston yet (step 5). Point the uptime monitor at `/health/ready`, not `/health`. If the browser console shows a CORS error, the site's URL isn't in `CORS_ALLOWED_ORIGINS`.
 
 ### Updating and operating
 
