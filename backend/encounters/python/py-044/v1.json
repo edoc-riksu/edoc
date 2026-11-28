@@ -1,0 +1,73 @@
+{
+  "id": "py-044",
+  "version": 1,
+  "language": "python",
+  "title": "Remove Duplicates",
+  "difficulty": "medium",
+  "module": "lists",
+  "order": 4,
+  "concepts": ["lists", "conditionals", "input-output"],
+  "problem": "The first line is a positive integer N. The second line holds N integers separated by spaces. Print the numbers with repeats removed, keeping only the first time each number appears, in the original order, separated by spaces. For example, 3 1 3 2 1 becomes 3 1 2.",
+  "starter_code": "# The first line is N, the second line holds N integers.\n# Print each number once, the first time it appears, in the original order.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "5\n3 1 3 2 1",
+        "expected_output": "3 1 2",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "3\n7 8 9",
+        "expected_output": "7 8 9",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1\n5",
+        "expected_output": "5",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "6\n9 8 9 7 8 9",
+        "expected_output": "9 8 7",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "5\n4 4 4 4 4",
+        "expected_output": "4",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "7\n-1 2 -1 3 2 -1 0",
+        "expected_output": "-1 2 3 0",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "6\n10 1 10 2 1 20",
+        "expected_output": "10 1 2 20",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Keep track of the numbers you have already kept, and skip one you have seen before.",
+    "2": "Loop over the numbers, keep a set of the ones already seen, and only add a number to the result the first time you meet it. Turning the whole list into a set loses the original order, so that alone is not enough.",
+    "3": "input()\nseen, out = set(), []\nfor x in input().split():\n    if x not in seen:\n        seen.add(x)\n        out.append(x)\nprint(' '.join(out))"
+  },
+
+  "failure_explanation": "Keep the numbers in the order they first appear: a set or sorted() removes the repeats but also changes the order. Keep each number only the first time you meet it, and print the result separated by spaces."
+}

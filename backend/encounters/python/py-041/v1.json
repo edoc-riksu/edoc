@@ -1,0 +1,73 @@
+{
+  "id": "py-041",
+  "version": 1,
+  "language": "python",
+  "title": "Reverse the List",
+  "difficulty": "easy",
+  "module": "lists",
+  "order": 1,
+  "concepts": ["lists", "loops", "input-output"],
+  "problem": "The first line of input is a positive integer N. The second line holds N integers separated by spaces. Print the same numbers in reverse order, on one line, separated by single spaces. For example, 1 2 3 becomes 3 2 1.",
+  "starter_code": "# The first line is N, the count of numbers.\n# The second line holds N integers separated by spaces.\n# Print them in reverse order, separated by spaces.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "3\n1 2 3",
+        "expected_output": "3 2 1",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "4\n10 20 30 40",
+        "expected_output": "40 30 20 10",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1\n7",
+        "expected_output": "7",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "5\n12 3 45 6 78",
+        "expected_output": "78 6 45 3 12",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "4\n-1 -2 -3 -4",
+        "expected_output": "-4 -3 -2 -1",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "6\n5 5 1 5 2 2",
+        "expected_output": "2 2 5 1 5 5",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "3\n100 0 -100",
+        "expected_output": "-100 0 100",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Read the numbers into a list first, then think about walking through it from the back.",
+    "2": "Use input().split() to get a list of the numbers, reverse the list (not the text of the line), then print it with ' '.join(...). Reversing the whole line as text would also flip the digits inside each number.",
+    "3": "input()\nprint(' '.join(input().split()[::-1]))"
+  },
+
+  "failure_explanation": "Reverse the order of the numbers, not the characters of the line: reversing the text turns the digits of a longer number around as well. Print the result as numbers separated by single spaces, not as a Python list with brackets and commas."
+}

@@ -1,0 +1,73 @@
+{
+  "id": "py-045",
+  "version": 1,
+  "language": "python",
+  "title": "Rotate Left",
+  "difficulty": "medium",
+  "module": "lists",
+  "order": 5,
+  "concepts": ["lists", "arithmetic", "input-output"],
+  "problem": "The first line is a positive integer N. The second line holds N integers separated by spaces. The third line holds a whole number K (0 or more). Move every number K places to the left, with numbers that fall off the front coming back at the end, and print the result separated by spaces. For example, 1 2 3 4 5 rotated left by 2 becomes 3 4 5 1 2. K can be bigger than N.",
+  "starter_code": "# The first line is N, the second line holds N integers,\n# the third line holds K.\n# Rotate the list K places to the left and print it.\n\n# Write your code here\n",
+
+  "tests": {
+    "sample": [
+      {
+        "id": "sample-1",
+        "input": "5\n1 2 3 4 5\n2",
+        "expected_output": "3 4 5 1 2",
+        "points": 0
+      },
+      {
+        "id": "sample-2",
+        "input": "3\n7 8 9\n0",
+        "expected_output": "7 8 9",
+        "points": 0
+      }
+    ],
+    "hidden": [
+      {
+        "id": "hidden-1",
+        "input": "1\n42\n5",
+        "expected_output": "42",
+        "points": 20
+      },
+      {
+        "id": "hidden-2",
+        "input": "4\n1 2 3 4\n4",
+        "expected_output": "1 2 3 4",
+        "points": 20
+      },
+      {
+        "id": "hidden-3",
+        "input": "4\n1 2 3 4\n6",
+        "expected_output": "3 4 1 2",
+        "points": 20
+      },
+      {
+        "id": "hidden-4",
+        "input": "5\n10 20 30 40 50\n1",
+        "expected_output": "20 30 40 50 10",
+        "points": 20
+      },
+      {
+        "id": "hidden-5",
+        "input": "6\n-1 -2 -3 -4 -5 -6\n9",
+        "expected_output": "-4 -5 -6 -1 -2 -3",
+        "points": 20
+      }
+    ]
+  },
+
+  "limits": {
+    "timeout_ms": 2000
+  },
+
+  "hints": {
+    "1": "Think about where the first K numbers end up, and what rotating by exactly N does.",
+    "2": "Use K % N so that rotating by more than N wraps around, then join two slices: the part from position K to the end, followed by the part before K.",
+    "3": "n = int(input())\nv = input().split()\nk = int(input()) % n\nprint(' '.join(v[k:] + v[:k]))"
+  },
+
+  "failure_explanation": "Rotating by N brings every number back to where it started, so use K % N before slicing; otherwise a K larger than the list gives the wrong answer. Rotate to the left: the numbers at the front move to the end."
+}
