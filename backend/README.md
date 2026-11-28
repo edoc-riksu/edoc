@@ -255,7 +255,7 @@ image with Python 3.10.0 installed, backend at `main` before PR #50. 9 of the
 
 | Case | What the test sends | Result |
 | --- | --- | --- |
-| Infinite loop, Submit | `while True: pass` | Stopped. `TIME_LIMIT_EXCEEDED`, score 0, about 11 s wall time for the 5 hidden tests (limit in the test: 30 s). |
+| Infinite loop, Submit | `while True: pass` | Stopped. `TIME_LIMIT_EXCEEDED`, score 0. Measured before Day 52: about 11 s wall time, one 2 s timeout per hidden test. Since Day 52 the tests after the first timeout are not run (about 2 s). |
 | Infinite loop, Run | the same | Returned instead of hanging; no test passed. |
 | Memory hog | asks for about 2 GB (limit 256 MB) | Stopped. The test accepts `RUNTIME_ERROR` or `TIME_LIMIT_EXCEEDED`, because Piston can report a memory kill as a timeout. |
 | Huge output | prints 500,000 characters | Stopped. Response stayed within the output limit plus slack. |

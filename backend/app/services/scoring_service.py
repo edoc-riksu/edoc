@@ -32,11 +32,14 @@ def score_outcomes(outcomes: list[JudgeOutcome]) -> tuple[ScoreBreakdown, Verdic
     total = sum(o.points for o in outcomes)
     earned = sum(o.points for o in outcomes if o.passed)
 
+    # Tests that were never run (after a timeout) count in the total but say
+    # nothing about the code, so they do not take part in the verdict.
     per_test_verdicts = [
         Verdict.ACCEPTED
         if o.passed
         else _STATUS_TO_VERDICT.get(o.status, Verdict.WRONG_ANSWER)
         for o in outcomes
+        if not o.skipped
     ]
 
     return ScoreBreakdown(earned=earned, total=total), worst_verdict(per_test_verdicts)

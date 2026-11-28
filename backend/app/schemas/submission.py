@@ -27,6 +27,10 @@ class SubmissionRequest(BaseModel):
 class TestResult(BaseModel):
     test_id: str
     passed: bool
+    # True when this test was not run because an earlier one timed out. The
+    # verdict is then TIME_LIMIT_EXCEEDED: show "timed out, try again", not a
+    # list of failed tests.
+    skipped: bool = False
 
 
 class ScoreBreakdown(BaseModel):
@@ -86,6 +90,10 @@ class RunTestResult(BaseModel):
     passed: bool
     stdout: str
     stderr: str
+    # This test hit the time limit.
+    timed_out: bool = False
+    # Not run because an earlier test timed out.
+    skipped: bool = False
 
 
 class RunResponse(BaseModel):

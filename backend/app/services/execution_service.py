@@ -39,8 +39,15 @@ class ExecutionService:
         total_runtime_ms = 0
         started = time.monotonic()
 
+        timed_out = False
         try:
             for test in encounter.tests.sample:
+                if timed_out:
+                    # Same rule as Submit: after one timeout the rest are not run.
+                    results.append(
+                        RunTestResult(test_id=test.id, passed=False, stdout="", stderr="", skipped=True)
+                    )
+                    continue
                 result = await self._piston.execute(
                     language=encounter.language,
                     version=settings.python_runtime_version,
@@ -51,6 +58,7 @@ class ExecutionService:
                 )
                 max_runtime_ms = max(max_runtime_ms, result.runtime_ms)
                 total_runtime_ms += result.runtime_ms
+                timed_out = result.status == ExecutionStatus.TIMEOUT
                 results.append(
                     RunTestResult(
                         test_id=test.id,
@@ -64,6 +72,7 @@ class ExecutionService:
                         and compare_output(result.stdout, test.expected_output),
                         stdout=_truncate(result.stdout, settings.run_output_char_limit),
                         stderr=_truncate(result.stderr, settings.run_output_char_limit),
+                        timed_out=timed_out,
                     )
                 )
         except PistonUnavailableError as exc:
