@@ -116,12 +116,19 @@ staging.
 
 A module is one topic on the planet map. Every module has **8 to 10
 encounters**, and there must be at least two modules; `pytest tests/unit`
-fails otherwise. Today there are two:
+fails otherwise. Today there are five:
 
 | Module | Encounters | Difficulty |
 | --- | --- | --- |
 | `python-basics` | py-001 to py-010 | easy, then medium |
 | `loops` | py-018, py-019, py-012, py-013, py-011, py-014 to py-017, py-020 | medium, then hard |
+| `conditions` | py-021 to py-030 | easy, medium, then hard |
+| `strings` | py-031 to py-040 | easy, medium, then hard |
+| `lists` | py-041 to py-048 (8, room for 2 more) | easy, medium, then hard |
+
+The list endpoint and the seed order the modules by the lowest encounter id each
+one holds, so a new module's first encounter must have a higher id than every
+module before it.
 
 - **The order is the position in the module, not the id.** `py-020` can be
   encounter 10 of `loops` while `py-011` is encounter 5. Inside a module a
