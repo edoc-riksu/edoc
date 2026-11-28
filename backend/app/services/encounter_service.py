@@ -41,7 +41,8 @@ class EncounterService:
     ) -> list[Encounter]:
         """All encounters (latest version of each), optionally narrowed to one
         module and/or language. Sorted the way a player meets them: by module,
-        then the encounter's own order, then difficulty, then id.
+        then the encounter's own order, then difficulty, then id. Modules
+        are ordered by the lowest encounter id they hold, not by name.
 
         One broken encounter file must not take the whole list down. When a
         module or language is given, files are matched on the raw JSON first,
@@ -72,9 +73,17 @@ class EncounterService:
             if language is not None and encounter.language != language:
                 continue
             found.append(encounter)
+        # Modules come in the order a player meets them: by the lowest encounter
+        # id each one holds (python-basics holds py-001, so it is first). This is
+        # the same rule the seed uses to number the modules, so the list and the
+        # database never disagree. Sorting by module name would put "conditions"
+        # before "python-basics".
+        first_id: dict[str, str] = {}
+        for e in found:
+            first_id[e.module] = min(e.id, first_id.get(e.module, e.id))
         return sorted(
             found,
-            key=lambda e: (e.module, e.order, DIFFICULTY_RANK[e.difficulty], e.id),
+            key=lambda e: (first_id[e.module], e.module, e.order, DIFFICULTY_RANK[e.difficulty], e.id),
         )
 
     def _latest_path(self, encounter_id: str) -> Path:
